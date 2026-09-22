@@ -1,26 +1,60 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --google-blue: #1a73e8;
+  --google-blue-hover: #1557b0;
+  --google-blue-light: #e8f0fe;
+  --google-surface: #f8fafc;
+  --google-surface-variant: #f1f5f9;
+  --google-border: #e2e8f0;
+  --google-text: #0f172a;
+  --google-text-secondary: #475569;
+  --google-success: #0d652d;
+  --google-success-light: #e6f4ea;
+  --google-error: #d93025;
+  --google-error-light: #fce8e6;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--google-surface);
+  color: var(--google-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Google Sans", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Material 3 Touch Targets & High-Contrast Focus */
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+input:focus-visible, button:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--google-blue);
+  outline-offset: 2px;
+}
+
+/* Google-style Elevated Surface Shadows */
+.m3-surface-elevation-1 {
+  box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.12), 0 1px 2px 0 rgba(60, 64, 67, 0.08);
+}
+
+.m3-surface-elevation-2 {
+  box-shadow: 0 2px 6px 2px rgba(60, 64, 67, 0.15), 0 1px 2px 0 rgba(60, 64, 67, 0.3);
+}
+
+.m3-surface-elevation-3 {
+  box-shadow: 0 4px 12px 0 rgba(60, 64, 67, 0.16), 0 2px 4px 0 rgba(60, 64, 67, 0.12);
+}
+
+/* Print Styles for Pass */
+@media print {
+  body {
+    background: white;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
 }

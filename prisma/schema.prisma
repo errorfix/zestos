@@ -1,0 +1,50 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Event {
+  id            String         @id @default(cuid())
+  title         String
+  category      String         // e.g., Technical, Cultural, E-Sports
+  feeAmount     Int            // Stored in paise (INR 100 = 10000)
+  minTeamSize   Int            @default(1)
+  maxTeamSize   Int            @default(1)
+  registrations Registration[]
+}
+
+model Registration {
+  id                String       @id @default(cuid())
+  eventId           String
+  event             Event        @relation(fields: [eventId], references: [id])
+  leadName          String
+  leadEmail         String
+  status            String       @default("PENDING") // PENDING, PAID, FAILED
+  razorpayOrderId   String?      @unique
+  razorpayPaymentId String?      @unique
+  teamMembers       TeamMember[]
+  tickets           Ticket[]
+  createdAt         DateTime     @default(now())
+}
+
+model TeamMember {
+  id             String       @id @default(cuid())
+  registrationId String
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  fullName       String
+  rollNumber     String?
+}
+
+model Ticket {
+  id             String       @id @default(cuid())
+  ticketCode     String       @unique // e.g., LV-TKT-2026-X89K
+  registrationId String
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  status         String       @default("ISSUED") // ISSUED, CHECKED_IN
+  securityHash   String       // HMAC-SHA256 signature for offline validation
+}
