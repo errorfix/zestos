@@ -31,8 +31,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 100000, // ₹1,000 / Team
     minTeamSize: 3,
     maxTeamSize: 8,
-    prize1: '₹15,000 + Minerva Trophy',
-    prize2: '₹7,500 + Runner-up Trophy',
     description:
       'A live band competition featuring singers and instrumentalists. Bands compete through live performances showcasing coordination, stage presence, and musical synergy.',
     rules:
@@ -51,8 +49,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 100000, // ₹1,000 / Team
     minTeamSize: 2,
     maxTeamSize: 2,
-    prize1: '₹6,000 + Trophy',
-    prize2: '₹3,000 + Certificate',
     description:
       'A two-performer Hindi vocal competition focused on harmony, vocal quality and presentation. Participants can perform with live instruments or permitted backing tracks.',
     rules: 'Time limit: 4-6 minutes. Live acoustic instrument or single backing track permitted.',
@@ -70,8 +66,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 100000, // ₹1,000 / Team
     minTeamSize: 3,
     maxTeamSize: 15,
-    prize1: '₹10,000 + Trophy',
-    prize2: '₹5,000 + Certificate',
     description:
       'A group Hindi singing competition where teams showcase vocal coordination, musical arrangement and stage presentation.',
     rules: 'Time limit: 8 minutes. Minimum 3 singers on stage. Classical, semi-classical, or folk arrangements allowed.',
@@ -89,8 +83,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 15000, // ₹150 / Day base
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: '₹5,000 + Arya Trophy',
-    prize2: '₹2,500 + Certificate',
     description:
       'A solo Hindi singing competition testing vocal ability, pitch, rhythm, expression and lyrical clarity.',
     rules: 'Time limit: 3-5 minutes. Karaokes must be uploaded in advance.',
@@ -110,8 +102,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 15000, // ₹150 / Day base
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: '₹5,000 + Trophy',
-    prize2: '₹2,500 + Certificate',
     description:
       'An individual dance performance open to different dance styles and music choices. Participants are evaluated on execution, choreography, expressions and stage presence.',
     rules: 'Performance duration: 3-5 minutes. Props allowed with prior approval. Audio tracks must be uploaded prior to event.',
@@ -129,8 +119,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 100000, // ₹1,000 / Team
     minTeamSize: 2,
     maxTeamSize: 2,
-    prize1: '₹7,000 + Trophy',
-    prize2: '₹3,500 + Certificate',
     description:
       'A two-person dance performance focused on coordination, synchronization and stage chemistry.',
     rules: 'Performance duration: 4-6 minutes. Chemistry and synchronized rhythm will be prioritized by judges.',
@@ -148,8 +136,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 100000, // ₹1,000 / Team
     minTeamSize: 4,
     maxTeamSize: 20,
-    prize1: '₹15,000 + Razmadaz Trophy',
-    prize2: '₹8,000 + Certificate',
     description:
       'A high-energy western group dance competition featuring choreography, formations, synchronization and stage presence.',
     rules: 'Time duration: 6-10 minutes. Any western genre: Hip-Hop, Popping, Contemporary, Jazz, etc.',
@@ -167,8 +153,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 100000, // ₹1,000 / Team
     minTeamSize: 4,
     maxTeamSize: 25,
-    prize1: '₹15,000 + Nachleve Trophy',
-    prize2: '₹8,000 + Certificate',
     description:
       "A traditional dance showcase celebrating India's diverse folk cultures through choreography, costumes, music and cultural storytelling.",
     rules: 'Time duration: 6-10 minutes. Authentic traditional folk costumes and music required.',
@@ -188,8 +172,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 100000, // ₹1,000 / Team
     minTeamSize: 5,
     maxTeamSize: 25,
-    prize1: '₹12,000 + Trophy',
-    prize2: '₹6,000 + Certificate',
     description:
       'A street-play competition focused on storytelling and delivering a meaningful message through live performance, creativity and team coordination.',
     rules: 'Time duration: 15-20 minutes. Acoustic instruments only (dholak, gulal, dafli allowed). No electronic amplification.',
@@ -207,8 +189,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 100000, // ₹1,000 / Team
     minTeamSize: 4,
     maxTeamSize: 20,
-    prize1: '₹12,000 + Trophy',
-    prize2: '₹6,000 + Certificate',
     description:
       'A theatrical production involving acting, storytelling and stage coordination. Teams present a Hindi or bilingual play within the prescribed performance duration.',
     rules: 'Time duration: 25-30 minutes plus 5 minutes setup. Stage script and BGM track list must be submitted.',
@@ -226,8 +206,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 15000, // ₹150 / Day base
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: '₹4,000 + Trophy',
-    prize2: '₹2,000 + Certificate',
     description:
       'A solo theatrical performance where one participant portrays a character or communicates a story through dialogue and expression.',
     rules: 'Time duration: 3-5 minutes. Language: Hindi or English.',
@@ -247,8 +225,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 100000, // ₹1,000 / Team
     minTeamSize: 6,
     maxTeamSize: 25,
-    prize1: '₹20,000 + Grand Trophy',
-    prize2: '₹10,000 + Runner-up Trophy',
     description:
       'A team-based fashion presentation combining models, costumes, theme, music and storytelling.',
     rules: 'Time duration: 12-15 minutes on ramp. Soundtrack and lighting sheet must be pre-uploaded.',
@@ -268,8 +244,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 15000, // ₹150 / Day base
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: '₹3,000 + Trophy',
-    prize2: '₹1,500 + Certificate',
     description:
       'A visual and pop-culture challenge where participants identify scenes, characters, dialogues, music or visual clues. Multiple rounds test observation, memory and quick thinking.',
     rules: 'Buzzer round rules apply. Negative marking in final lightning round.',
@@ -287,8 +261,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 15000, // ₹150 / Day base
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: '₹4,000 + Trophy',
-    prize2: '₹2,000 + Certificate',
     description:
       'An open-mic style literary event where participants can explore poetry, storytelling, music, monologues, comedy and spoken word.',
     rules: 'Time limit: 4 minutes per performer. Original compositions earn bonus points.',
@@ -308,8 +280,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 4,
     maxTeamSize: 8,
-    prize1: 'Champion Medals & Certificates',
-    prize2: 'Runner-up Medals',
     description:
       'A team-based strength and coordination challenge (tug of war) where teams compete head-to-head while following safety and referee instructions.',
     venue: 'Sports Ground',
@@ -326,8 +296,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: 'Strong Arm Trophy',
-    prize2: 'Runner-up Certificate',
     description:
       'A one-on-one arm-strength challenge (arm wrestling) where participants compete through successive elimination rounds.',
     venue: 'Student Activity Center',
@@ -344,8 +312,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: 'Crowd Favorite Trophy',
-    prize2: 'Certificate of Excellence',
     description:
       'An open talent showcase giving participants a short platform to present their unique abilities and entertain the audience.',
     venue: 'Central Lawn Stage',
@@ -362,8 +328,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 4,
     maxTeamSize: 6,
-    prize1: 'Coordination Gold Medals',
-    prize2: 'Runner-up Certificates',
     description:
       'A teamwork and coordination challenge where participants pass a hoop through the entire team without breaking their connection.',
     venue: 'Main Foyer',
@@ -380,8 +344,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: 'Winner Gift Hamper',
-    prize2: 'Certificate',
     description: 'A fun coordination challenge combining balloon control with cup stacking.',
     venue: 'SAC Hall',
     date: 'Day 1',
@@ -397,8 +359,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: 'Fitness Champion Trophy',
-    prize2: 'Certificate of Merit',
     description:
       'A physical endurance challenge based on push-ups, where participants compete to complete the maximum valid repetitions.',
     venue: 'Gymnasium Arena',
@@ -415,8 +375,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 2,
     maxTeamSize: 2,
-    prize1: 'Gold Medals',
-    prize2: 'Silver Medals',
     description:
       'A blindfolded navigation challenge requiring verbal communication and complete trust between teammates.',
     venue: 'Obstacle Course (Block B)',
@@ -433,8 +391,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: 'Heavyweight Trophy',
-    prize2: 'Certificate',
     description: 'An individual strength challenge focused on deadlift performance and valid repetitions.',
     venue: 'Gymnasium Arena',
     date: 'Day 2',
@@ -450,8 +406,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: 'Winner Hamper',
-    prize2: 'Runner-up Gift',
     description: 'A classic elimination game involving music, movement and lightning-fast reactions.',
     venue: 'Central Lawn',
     date: 'Day 2',
@@ -467,8 +421,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: 'Faculty Star Memento',
-    prize2: 'Special Recognition Award',
     description:
       'A special talent showcase exclusively for faculty members, giving professors an opportunity to present their talents.',
     venue: 'Main Auditorium',
@@ -485,8 +437,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: 'Bicep King Trophy',
-    prize2: 'Certificate',
     description:
       'An individual strength challenge based on bicep curls, where participants compete for the highest number of valid repetitions.',
     venue: 'Gymnasium Arena',
@@ -503,8 +453,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 2,
     maxTeamSize: 4,
-    prize1: 'Graffiti Masters Trophy',
-    prize2: 'Runner-up Memento',
     description:
       'A collaborative live-art challenge where teams transform a blank surface into a creative artwork based on an on-the-spot theme.',
     venue: 'Art Alley (Behind Block C)',
@@ -521,8 +469,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 2,
     maxTeamSize: 2,
-    prize1: 'Best Duo Trophies',
-    prize2: 'Runner-up Medals',
     description:
       'A pair-based coordination challenge built around teamwork and communication, progressing through elimination rounds and a final challenge.',
     venue: 'Amphitheatre Courtyard',
@@ -539,8 +485,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: 'Sharpshooter Trophy',
-    prize2: 'Certificate',
     description:
       'A precision-based target challenge (darts & archery) where participants attempt to score maximum points through limited attempts.',
     venue: 'Activity Arena',
@@ -557,8 +501,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 2,
     maxTeamSize: 4,
-    prize1: 'Smash Champions Trophy',
-    prize2: 'Medals',
     description:
       'A fast-paced team sporting challenge focused on quick reactions, coordination and competitive play.',
     venue: 'Badminton / TT Courts',
@@ -575,8 +517,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 1,
     maxTeamSize: 1,
-    prize1: 'Pop Culture Wiz Trophy',
-    prize2: 'Certificate',
     description:
       'A fun visual and pop-culture challenge built around emoji-based clues, testing recognition and quick thinking.',
     venue: 'Seminar Hall 3',
@@ -595,8 +535,6 @@ export const SEED_EVENTS: InitialEventData[] = [
     feeAmount: 0, // FREE
     minTeamSize: 4,
     maxTeamSize: 5,
-    prize1: '₹10,000 Prize Pool + Esports Trophy',
-    prize2: '₹5,000 + Certificates',
     description:
       'A competitive esports tournament featuring BGMI and Free Fire. Teams compete through official tournament formats with registered players and strict anti-cheating regulations.',
     rules:
