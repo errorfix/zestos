@@ -63,6 +63,10 @@ export default async function TicketPage({ params }: TicketPageProps) {
     eventCategory,
     eventDate,
     eventVenue,
+    dayOption: registration.dayOption,
+    trackUploadUrl: registration.trackUploadUrl,
+    trackNotes: registration.trackNotes,
+    requiresTrackUpload: registration.event?.requiresTrackUpload,
   }));
 
   return (

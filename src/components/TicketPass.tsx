@@ -11,7 +11,9 @@ import {
   Lock,
   Calendar,
   AlertTriangle,
-  QrCode as QrIcon,
+  Music,
+  UploadCloud,
+  CheckCircle2,
 } from 'lucide-react';
 import { buildQrPayload } from '@/lib/crypto';
 
@@ -26,6 +28,10 @@ export interface TicketPassData {
   eventCategory: string;
   eventDate?: string;
   eventVenue?: string;
+  dayOption?: string | null;
+  trackUploadUrl?: string | null;
+  trackNotes?: string | null;
+  requiresTrackUpload?: boolean;
 }
 
 interface TicketPassProps {
@@ -101,9 +107,16 @@ export default function TicketPass({ ticket }: TicketPassProps) {
           </span>
           <h3 className="text-xl font-bold tracking-tight mt-0.5">{ticket.eventTitle}</h3>
         </div>
-        <span className="px-3 py-1 rounded-full text-xs font-bold bg-white text-[#1a73e8] shadow-sm">
-          {ticket.eventCategory}
-        </span>
+        <div className="flex flex-col items-end gap-1">
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-white text-[#1a73e8] shadow-sm">
+            {ticket.eventCategory}
+          </span>
+          {ticket.dayOption && (
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-200 text-blue-900">
+              {ticket.dayOption === 'BOTH_DAYS' ? 'Both Days Pass' : 'Single Day Pass'}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="p-6 sm:p-8">
@@ -170,6 +183,67 @@ export default function TicketPass({ ticket }: TicketPassProps) {
             </div>
           </div>
         </div>
+
+        {/* Stage Audio / Track Upload Notification for Stage Events */}
+        {ticket.requiresTrackUpload && (
+          <div className="mt-6 p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 font-bold text-amber-950">
+                <Music className="w-4 h-4 text-amber-700" />
+                <span>Stage Media & Sound Deck Status</span>
+              </div>
+              {ticket.trackUploadUrl ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                  <CheckCircle2 className="w-3 h-3" /> Attached
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900">
+                  Action Required
+                </span>
+              )}
+            </div>
+
+            {ticket.trackUploadUrl ? (
+              <div className="space-y-1.5">
+                <p className="text-amber-900">
+                  Your track link has been routed to the stage AV engineers:
+                </p>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={ticket.trackUploadUrl.startsWith('http') ? ticket.trackUploadUrl : `https://${ticket.trackUploadUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1a73e8] underline truncate max-w-sm"
+                  >
+                    <span>{ticket.trackUploadUrl}</span>
+                    <ExternalLink className="w-3 h-3 shrink-0" />
+                  </a>
+                </div>
+                {ticket.trackNotes && (
+                  <p className="text-[11px] text-slate-600 italic">
+                    Cues: &quot;{ticket.trackNotes}&quot;
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+                <p className="text-amber-900">
+                  Please upload your audio/video backing track directly to the official Fest Drive:
+                </p>
+                <a
+                  href="https://drive.google.com/drive/folders/1ORiYoFawuMWA0fOST-qfO2uBvEEZxTOE?usp=sharing"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-sm shrink-0 transition-colors"
+                >
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  <span>Upload to Drive</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Live Cryptographic Verification Box */}
         {verificationResult && (

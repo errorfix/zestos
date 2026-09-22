@@ -9,16 +9,23 @@ generator client {
 }
 
 model Event {
-  id            String         @id @default(cuid())
-  title         String
-  category      String         // e.g., Technical, Cultural, E-Sports
-  feeAmount     Int            // Stored in paise (INR 100 = 10000)
-  minTeamSize   Int            @default(1)
-  maxTeamSize   Int            @default(1)
-  description   String?
-  venue         String?
-  date          String?
-  registrations Registration[]
+  id                  String         @id @default(cuid())
+  title               String
+  category            String         // Cultural - Music, Cultural - Dance, Cultural - Theatre, Cultural - Fashion, Literary, Informalz, Gaming
+  eventType           String         @default("Individual") // Individual, Team
+  feeAmount           Int            // Stored in paise (INR 100 = 10000, 0 = FREE)
+  minTeamSize         Int            @default(1)
+  maxTeamSize         Int            @default(1)
+  prize1              String?        // 1st Prize description
+  prize2              String?        // 2nd Prize description
+  description         String?
+  rules               String?
+  venue               String?
+  date                String?
+  status              String         @default("OPEN") // OPEN, CLOSED
+  requiresTrackUpload Boolean        @default(false)  // Audio / Video stage track needed
+  hasDayOptions       Boolean        @default(false)  // ₹150 / Day or ₹250 / Both Days
+  registrations       Registration[]
 }
 
 model Registration {
@@ -28,7 +35,10 @@ model Registration {
   leadName          String
   leadEmail         String
   status            String       @default("PENDING") // PENDING, PAID, FAILED
-  paymentMethod     String?      @default("ONLINE_RAZORPAY") // ONLINE_RAZORPAY, ONSPOT_CASH, ONSPOT_UPI
+  paymentMethod     String?      @default("ONLINE_RAZORPAY") // ONLINE_RAZORPAY, ONSPOT_CASH, ONSPOT_UPI, FREE_REGISTRATION
+  dayOption         String?      // SINGLE_DAY, BOTH_DAYS
+  trackUploadUrl    String?      // Link to Google Drive track / media asset
+  trackNotes        String?      // Stage sound / lighting cues / song name
   razorpayOrderId   String?      @unique
   razorpayPaymentId String?      @unique
   teamMembers       TeamMember[]

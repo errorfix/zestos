@@ -6,7 +6,10 @@ const onSpotSchema = z.object({
   eventId: z.string().min(1, 'Event ID is required'),
   leadName: z.string().min(2, 'Lead Attendee Name is required'),
   leadEmail: z.string().email('Valid email is required'),
-  paymentMethod: z.enum(['ONSPOT_CASH', 'ONSPOT_UPI']).default('ONSPOT_CASH'),
+  paymentMethod: z.enum(['ONSPOT_CASH', 'ONSPOT_UPI', 'FREE_REGISTRATION']).default('ONSPOT_CASH'),
+  dayOption: z.enum(['SINGLE_DAY', 'BOTH_DAYS']).optional(),
+  trackUploadUrl: z.string().optional(),
+  trackNotes: z.string().optional(),
   teamMembers: z
     .array(
       z.object({
@@ -29,9 +32,17 @@ export async function POST(req: Request) {
       );
     }
 
-    const { eventId, leadName, leadEmail, paymentMethod, teamMembers } = parsed.data;
+    const {
+      eventId,
+      leadName,
+      leadEmail,
+      paymentMethod,
+      dayOption,
+      trackUploadUrl,
+      trackNotes,
+      teamMembers,
+    } = parsed.data;
 
-    // Validate event exists and team size constraint
     const event = await getEventById(eventId);
     if (!event) {
       return NextResponse.json({ success: false, error: 'Event not found' }, { status: 404 });
@@ -58,11 +69,19 @@ export async function POST(req: Request) {
       );
     }
 
+    let calculatedFeePaise = event.feeAmount;
+    if (event.hasDayOptions) {
+      calculatedFeePaise = dayOption === 'BOTH_DAYS' ? 25000 : 15000;
+    }
+
     const result = await createOnSpotRegistration({
       eventId,
       leadName,
       leadEmail,
       paymentMethod,
+      dayOption,
+      trackUploadUrl,
+      trackNotes,
       teamMembers,
     });
 
@@ -71,7 +90,7 @@ export async function POST(req: Request) {
       registrationId: result.registrationId,
       tickets: result.tickets,
       eventTitle: event.title,
-      feeCollected: event.feeAmount / 100,
+      feeCollected: calculatedFeePaise / 100,
     });
   } catch (error) {
     return NextResponse.json(

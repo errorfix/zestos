@@ -5,12 +5,12 @@ import Link from 'next/link';
 import {
   Search,
   Download,
-  Filter,
   CheckCircle2,
-  Clock,
   ExternalLink,
-  Users,
   Ticket,
+  Music,
+  UploadCloud,
+  FileText,
 } from 'lucide-react';
 
 interface RegistrationRow {
@@ -19,6 +19,9 @@ interface RegistrationRow {
   eventTitle: string;
   eventCategory: string;
   feeAmount: number;
+  dayOption?: string | null;
+  trackUploadUrl?: string | null;
+  trackNotes?: string | null;
   leadName: string;
   leadEmail: string;
   status: string;
@@ -69,6 +72,8 @@ export default function AdminRegistrationsTable() {
       r.leadEmail.toLowerCase().includes(query) ||
       r.eventTitle.toLowerCase().includes(query) ||
       r.id.toLowerCase().includes(query) ||
+      (r.trackNotes && r.trackNotes.toLowerCase().includes(query)) ||
+      (r.trackUploadUrl && r.trackUploadUrl.toLowerCase().includes(query)) ||
       r.tickets.some((t) => t.ticketCode.toLowerCase().includes(query)) ||
       r.teamMembers.some((m) => m.fullName.toLowerCase().includes(query));
 
@@ -84,11 +89,14 @@ export default function AdminRegistrationsTable() {
       'Event Title',
       'Event Category',
       'Fee (INR)',
+      'Day Pass Option',
       'Lead Attendee Name',
       'Lead Email',
       'Payment Status',
       'Payment Method',
       'Team Members Count',
+      'Stage Track Link',
+      'Stage AV Notes',
       'Ticket Codes',
       'Gate Check-In Status',
       'Registered Date',
@@ -99,11 +107,14 @@ export default function AdminRegistrationsTable() {
       `"${r.eventTitle.replace(/"/g, '""')}"`,
       `"${r.eventCategory}"`,
       (r.feeAmount / 100).toFixed(2),
+      `"${r.dayOption || 'Standard'}"`,
       `"${r.leadName.replace(/"/g, '""')}"`,
       `"${r.leadEmail}"`,
       r.status,
       r.paymentMethod,
       1 + r.teamMembers.length,
+      `"${(r.trackUploadUrl || '').replace(/"/g, '""')}"`,
+      `"${(r.trackNotes || '').replace(/"/g, '""')}"`,
       `"${r.tickets.map((t) => t.ticketCode).join(', ')}"`,
       `"${r.tickets.map((t) => `${t.ticketCode}: ${t.status}`).join(' | ')}"`,
       `"${new Date(r.createdAt).toLocaleString()}"`,
@@ -129,11 +140,22 @@ export default function AdminRegistrationsTable() {
             Master Attendee Registry ({filtered.length})
           </h2>
           <p className="text-xs text-slate-500">
-            Real-time participant rosters, payment records, and gate check-in audit.
+            Real-time participant rosters, stage track assets, payment records, and gate audit.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <a
+            href="https://drive.google.com/drive/folders/1ORiYoFawuMWA0fOST-qfO2uBvEEZxTOE?usp=sharing"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-50 border border-amber-300 text-amber-900 hover:bg-amber-100 transition-colors shadow-xs"
+          >
+            <Music className="w-3.5 h-3.5 text-amber-700" />
+            <span>Official Stage Drive</span>
+            <ExternalLink className="w-3 h-3 text-amber-600" />
+          </a>
+
           <button
             onClick={handleExportCsv}
             disabled={registrations.length === 0}
@@ -152,7 +174,7 @@ export default function AdminRegistrationsTable() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by attendee name, email, event, or ticket code..."
+            placeholder="Search attendee, event, track note, ticket code..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-xs bg-white focus:border-[#1a73e8]"
           />
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -186,7 +208,8 @@ export default function AdminRegistrationsTable() {
             <thead>
               <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                 <th className="py-3 px-3">Lead Attendee</th>
-                <th className="py-3 px-3">Event</th>
+                <th className="py-3 px-3">Event & Day</th>
+                <th className="py-3 px-3">Stage Track / Cues</th>
                 <th className="py-3 px-3">Payment</th>
                 <th className="py-3 px-3">Passes & Gate</th>
                 <th className="py-3 px-3 text-right">Actions</th>
@@ -207,9 +230,40 @@ export default function AdminRegistrationsTable() {
 
                   <td className="py-3.5 px-3">
                     <span className="font-semibold text-slate-800 block">{reg.eventTitle}</span>
-                    <span className="text-[10px] text-slate-500 block">
-                      {reg.eventCategory} • ₹{reg.feeAmount / 100}
-                    </span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] text-slate-500">
+                        {reg.eventCategory} • ₹{reg.feeAmount / 100}
+                      </span>
+                      {reg.dayOption && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
+                          {reg.dayOption === 'BOTH_DAYS' ? 'Both Days' : 'Single Day'}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+
+                  <td className="py-3.5 px-3">
+                    {reg.trackUploadUrl ? (
+                      <div className="space-y-1">
+                        <a
+                          href={reg.trackUploadUrl.startsWith('http') ? reg.trackUploadUrl : `https://${reg.trackUploadUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1a73e8] hover:underline"
+                        >
+                          <Music className="w-3 h-3 text-amber-600 shrink-0" />
+                          <span className="truncate max-w-[140px]">View Track File</span>
+                          <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                        </a>
+                        {reg.trackNotes && (
+                          <span className="block text-[10px] text-slate-500 italic max-w-[180px] truncate" title={reg.trackNotes}>
+                            &quot;{reg.trackNotes}&quot;
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-[11px] text-slate-400">None required / attached</span>
+                    )}
                   </td>
 
                   <td className="py-3.5 px-3">

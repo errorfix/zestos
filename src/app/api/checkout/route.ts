@@ -1,18 +1,23 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getEventById, createPendingRegistration } from '@/lib/db';
+import { getEventById, createPendingRegistration, createFreeRegistration } from '@/lib/db';
 import { createRazorpayOrder } from '@/lib/razorpay';
 
 const checkoutSchema = z.object({
   eventId: z.string().min(1, 'Event ID is required'),
   leadName: z.string().min(2, 'Lead Attendee Name must be at least 2 characters'),
   leadEmail: z.string().email('A valid college email address is required'),
-  teamMembers: z.array(
-    z.object({
-      fullName: z.string().min(2, 'Team member full name is required'),
-      rollNumber: z.string().optional(),
-    })
-  ).default([]),
+  dayOption: z.enum(['SINGLE_DAY', 'BOTH_DAYS']).optional(),
+  trackUploadUrl: z.string().optional(),
+  trackNotes: z.string().optional(),
+  teamMembers: z
+    .array(
+      z.object({
+        fullName: z.string().min(2, 'Team member full name is required'),
+        rollNumber: z.string().optional(),
+      })
+    )
+    .default([]),
 });
 
 export async function POST(req: Request) {
@@ -27,7 +32,15 @@ export async function POST(req: Request) {
       );
     }
 
-    const { eventId, leadName, leadEmail, teamMembers } = parsed.data;
+    const {
+      eventId,
+      leadName,
+      leadEmail,
+      dayOption,
+      trackUploadUrl,
+      trackNotes,
+      teamMembers,
+    } = parsed.data;
 
     // 1. Fetch Event and Validate Constraints
     const event = await getEventById(eventId);
@@ -35,7 +48,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Event not found or inactive' }, { status: 404 });
     }
 
-    const totalParticipants = 1 + teamMembers.length; // Lead + additional members
+    const totalParticipants = 1 + teamMembers.length;
     if (totalParticipants < event.minTeamSize) {
       return NextResponse.json(
         {
@@ -54,25 +67,61 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Generate Razorpay Order
+    // 2. Calculate Effective Fee
+    let calculatedFeePaise = event.feeAmount;
+    if (event.hasDayOptions) {
+      if (dayOption === 'BOTH_DAYS') {
+        calculatedFeePaise = 25000; // ₹250
+      } else {
+        calculatedFeePaise = 15000; // ₹150
+      }
+    }
+
+    // 3. Handle 100% FREE Events (Informalz & Gaming / Esports)
+    if (calculatedFeePaise === 0) {
+      const freeReg = await createFreeRegistration({
+        eventId: event.id,
+        leadName,
+        leadEmail,
+        teamMembers,
+        trackUploadUrl,
+        trackNotes,
+      });
+
+      return NextResponse.json({
+        success: true,
+        registrationId: freeReg.registrationId,
+        isFree: true,
+        amount: 0,
+        currency: 'INR',
+        eventTitle: event.title,
+        tickets: freeReg.tickets,
+      });
+    }
+
+    // 4. Paid Events: Generate Razorpay Order
     const receipt = `rcpt_${Date.now().toString().slice(-8)}`;
     const razorpayOrder = await createRazorpayOrder({
-      amount: event.feeAmount,
+      amount: calculatedFeePaise,
       receipt,
       notes: {
         eventId: event.id,
         eventTitle: event.title,
         leadEmail,
+        dayOption: dayOption || 'DEFAULT',
       },
     });
 
-    // 3. Create PENDING Registration Record in Database
+    // 5. Create PENDING Registration Record in Database
     const regResult = await createPendingRegistration({
       eventId: event.id,
       leadName,
       leadEmail,
       teamMembers,
       razorpayOrderId: razorpayOrder.id,
+      dayOption,
+      trackUploadUrl,
+      trackNotes,
     });
 
     return NextResponse.json({
@@ -83,6 +132,7 @@ export async function POST(req: Request) {
       currency: razorpayOrder.currency,
       eventTitle: event.title,
       isMock: razorpayOrder.isMock,
+      isFree: false,
     });
   } catch (error) {
     console.error('Checkout initialization error:', error);

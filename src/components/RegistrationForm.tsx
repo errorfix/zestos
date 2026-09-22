@@ -10,12 +10,15 @@ import {
   AlertCircle,
   RotateCcw,
   Sparkles,
-  Lock,
-  ArrowRight,
-  ShieldCheck,
   CreditCard,
+  UploadCloud,
+  ExternalLink,
+  Music,
+  Calendar,
+  ShieldCheck,
+  Trophy,
 } from 'lucide-react';
-import { InitialEventData } from '@/lib/mockEvents';
+import { InitialEventData, STAGE_GOOGLE_DRIVE_FOLDER } from '@/lib/mockEvents';
 import {
   saveRegistrationDraft,
   loadRegistrationDraft,
@@ -43,7 +46,11 @@ export default function RegistrationForm({
   const searchParams = useSearchParams();
   const queryEventId = searchParams.get('event') || initialSelectedEventId || (events[0]?.id ?? '');
 
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedEventId, setSelectedEventId] = useState<string>(queryEventId);
+  const [dayOption, setDayOption] = useState<'SINGLE_DAY' | 'BOTH_DAYS'>('SINGLE_DAY');
+  const [trackUploadUrl, setTrackUploadUrl] = useState<string>('');
+  const [trackNotes, setTrackNotes] = useState<string>('');
   const [leadName, setLeadName] = useState<string>('');
   const [leadEmail, setLeadEmail] = useState<string>('');
   const [leadRollNumber, setLeadRollNumber] = useState<string>('');
@@ -54,10 +61,27 @@ export default function RegistrationForm({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, startTransition] = useTransition();
 
-  // Find currently active event
   const currentEvent = events.find((e) => e.id === selectedEventId) || events[0];
 
-  // Load draft on initial mount
+  // Distinct category list for filtering
+  const categories = ['ALL', 'Cultural - Music', 'Cultural - Dance', 'Cultural - Theatre', 'Cultural - Fashion', 'Literary', 'Informalz', 'Gaming'];
+
+  const filteredEvents = events.filter((e) => {
+    if (selectedCategory === 'ALL') return true;
+    return e.category.toLowerCase().includes(selectedCategory.toLowerCase());
+  });
+
+  // Calculate live payable amount
+  const calculateTotalFee = (): number => {
+    if (!currentEvent) return 0;
+    if (currentEvent.feeAmount === 0) return 0; // FREE
+    if (currentEvent.hasDayOptions) {
+      return dayOption === 'BOTH_DAYS' ? 250 : 150;
+    }
+    return currentEvent.feeAmount / 100;
+  };
+
+  // Load draft on mount
   useEffect(() => {
     const draft = loadRegistrationDraft();
     if (draft) {
@@ -72,12 +96,11 @@ export default function RegistrationForm({
     }
   }, [events]);
 
-  // Adjust team members array when event changes to meet minTeamSize requirement
+  // Adjust team member slots based on event minTeamSize
   useEffect(() => {
     if (!currentEvent) return;
     const requiredAdditional = Math.max(0, currentEvent.minTeamSize - 1);
     setTeamMembers((prev) => {
-      // If we currently have fewer members than required minimum
       if (prev.length < requiredAdditional) {
         const next = [...prev];
         while (next.length < requiredAdditional) {
@@ -85,7 +108,6 @@ export default function RegistrationForm({
         }
         return next;
       }
-      // If we exceed max allowed additional members
       const maxAdditional = Math.max(0, currentEvent.maxTeamSize - 1);
       if (prev.length > maxAdditional) {
         return prev.slice(0, maxAdditional);
@@ -123,6 +145,8 @@ export default function RegistrationForm({
     setLeadName('');
     setLeadEmail('');
     setLeadRollNumber('');
+    setTrackUploadUrl('');
+    setTrackNotes('');
     const requiredAdditional = Math.max(0, (currentEvent?.minTeamSize || 1) - 1);
     setTeamMembers(
       Array.from({ length: requiredAdditional }, () => ({ fullName: '', rollNumber: '' }))
@@ -153,7 +177,6 @@ export default function RegistrationForm({
     setTeamMembers(updated);
   };
 
-  // Submission & Payment Checkout Flow
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -183,7 +206,6 @@ export default function RegistrationForm({
 
     startTransition(async () => {
       try {
-        // 1. Initialize checkout via Next.js API
         const checkoutRes = await fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -191,6 +213,9 @@ export default function RegistrationForm({
             eventId: currentEvent.id,
             leadName,
             leadEmail,
+            dayOption: currentEvent.hasDayOptions ? dayOption : undefined,
+            trackUploadUrl: currentEvent.requiresTrackUpload ? trackUploadUrl : undefined,
+            trackNotes: currentEvent.requiresTrackUpload ? trackNotes : undefined,
             teamMembers: teamMembers.filter((m) => m.fullName.trim().length > 0),
           }),
         });
@@ -200,9 +225,16 @@ export default function RegistrationForm({
           throw new Error(checkoutData.error || 'Failed to initialize checkout');
         }
 
+        // 1. FREE Event Instant Pass Completion
+        if (checkoutData.isFree) {
+          clearRegistrationDraft();
+          router.push(`/tickets/${checkoutData.registrationId}`);
+          return;
+        }
+
         const { registrationId, orderId, amount, isMock } = checkoutData;
 
-        // 2. Open Razorpay Modal or Staging Simulator
+        // 2. Paid Event: Open Live Razorpay or Staging Simulator
         const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
         const canUseLiveModal =
           typeof window !== 'undefined' &&
@@ -216,7 +248,7 @@ export default function RegistrationForm({
             key: keyId,
             amount: amount,
             currency: 'INR',
-            name: "Lingaya's Vidyapeeth Fest",
+            name: "Lingaya's Vidyapeeth ZEST 2K26",
             description: `Pass Registration: ${currentEvent.title}`,
             order_id: orderId,
             prefill: {
@@ -228,7 +260,6 @@ export default function RegistrationForm({
             },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             handler: async function (response: any) {
-              // Verify payment on server
               const verifyRes = await fetch('/api/verify-payment', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -251,8 +282,7 @@ export default function RegistrationForm({
           const rzp = new window.Razorpay(options);
           rzp.open();
         } else {
-          // Instant Dev / Staging Simulation Fallback
-          // Simulates payment confirmation and HMAC ticket generation
+          // Staging Simulation
           const simulatedPaymentId = `pay_sim_${Date.now()}`;
           const verifyRes = await fetch('/api/verify-payment', {
             method: 'POST',
@@ -282,10 +312,11 @@ export default function RegistrationForm({
   const totalMembersCount = 1 + teamMembers.length;
   const maxAllowedAdditional = (currentEvent?.maxTeamSize || 1) - 1;
   const requiredAdditional = Math.max(0, (currentEvent?.minTeamSize || 1) - 1);
+  const totalPayableInr = calculateTotalFee();
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Draft Recovery Notification Banner */}
+      {/* Draft Recovery Notification */}
       {isDraftRestored && (
         <div className="mb-6 p-4 bg-[#e8f0fe] border border-[#d2e3fc] rounded-2xl flex items-center justify-between gap-3 text-sm text-[#174ea6] transition-all">
           <div className="flex items-center gap-2">
@@ -306,36 +337,54 @@ export default function RegistrationForm({
         </div>
       )}
 
-      {/* Error Alert */}
       {errorMessage && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3 text-sm text-red-800">
           <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
           <div className="flex-1">
-            <h4 className="font-semibold">Registration Constraint Error</h4>
+            <h4 className="font-semibold">Registration Notice</h4>
             <p>{errorMessage}</p>
           </div>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Step 1: Select Event (Google Material Cards) */}
+        {/* Step 1: Select Event (ZEST 2K26 Filterable Catalog) */}
         <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#1a73e8]">
                 Step 1 of 3
               </span>
-              <h2 className="text-xl font-bold text-slate-900">Choose Event</h2>
+              <h2 className="text-xl font-bold text-slate-900">Choose Competition or Event</h2>
             </div>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
-              {events.length} Available
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 self-start sm:self-auto">
+              {events.length} Events Across ZEST 2K26
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {events.map((evt) => {
+          {/* Category Filter Chips */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                  selectedCategory === cat
+                    ? 'bg-[#1a73e8] text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {cat === 'ALL' ? 'All Events' : cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[460px] overflow-y-auto pr-1">
+            {filteredEvents.map((evt) => {
               const isSelected = evt.id === selectedEventId;
               const isSolo = evt.minTeamSize === 1 && evt.maxTeamSize === 1;
+              const isFree = evt.feeAmount === 0;
 
               return (
                 <div
@@ -352,8 +401,16 @@ export default function RegistrationForm({
                       <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
                         {evt.category}
                       </span>
-                      <span className="font-bold text-lg text-slate-900">
-                        ₹{evt.feeAmount / 100}
+                      <span className="font-extrabold text-base text-slate-900">
+                        {isFree ? (
+                          <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            FREE
+                          </span>
+                        ) : evt.hasDayOptions ? (
+                          '₹150 / ₹250'
+                        ) : (
+                          `₹${evt.feeAmount / 100}`
+                        )}
                       </span>
                     </div>
 
@@ -369,6 +426,13 @@ export default function RegistrationForm({
                           : `Team (${evt.minTeamSize} – ${evt.maxTeamSize} members)`}
                       </span>
                     </div>
+
+                    {evt.prize1 && (
+                      <div className="mt-2 text-[11px] text-amber-800 bg-amber-50 px-2 py-1 rounded-md flex items-center gap-1.5">
+                        <Trophy className="w-3 h-3 text-amber-600 shrink-0" />
+                        <span className="truncate">1st: {evt.prize1}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
@@ -387,19 +451,133 @@ export default function RegistrationForm({
               );
             })}
           </div>
+
+          {/* Day Pass Selection for Individual events with ₹150 / ₹250 pricing */}
+          {currentEvent?.hasDayOptions && (
+            <div className="mt-6 p-5 rounded-2xl bg-blue-50/70 border border-blue-200">
+              <h4 className="text-sm font-bold text-blue-950 mb-2 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-[#1a73e8]" />
+                Select Event Access Duration
+              </h4>
+              <p className="text-xs text-blue-800 mb-3">
+                For individual competitions, you can choose single-day access or the full both-days pass:
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div
+                  onClick={() => setDayOption('SINGLE_DAY')}
+                  className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+                    dayOption === 'SINGLE_DAY'
+                      ? 'border-[#1a73e8] bg-white shadow-xs'
+                      : 'border-blue-200/80 bg-white/70 hover:bg-white'
+                  }`}
+                >
+                  <div>
+                    <span className="font-bold text-sm text-slate-900 block">Single Day Pass</span>
+                    <span className="text-xs text-slate-500">Valid for performance day</span>
+                  </div>
+                  <span className="font-extrabold text-base text-[#1a73e8]">₹150</span>
+                </div>
+
+                <div
+                  onClick={() => setDayOption('BOTH_DAYS')}
+                  className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+                    dayOption === 'BOTH_DAYS'
+                      ? 'border-[#1a73e8] bg-white shadow-xs'
+                      : 'border-blue-200/80 bg-white/70 hover:bg-white'
+                  }`}
+                >
+                  <div>
+                    <span className="font-bold text-sm text-slate-900 block">Both Days Pass</span>
+                    <span className="text-xs text-slate-500">Full festival access (Day 1 & Day 2)</span>
+                  </div>
+                  <span className="font-extrabold text-base text-[#1a73e8]">₹250</span>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
-        {/* Step 2: Primary / Lead Attendee Information */}
+        {/* Stage Audio / Video Track Upload Section (for the 12 specified stage events) */}
+        {currentEvent?.requiresTrackUpload && (
+          <section className="bg-purple-50/60 rounded-3xl p-6 sm:p-8 border-2 border-purple-200 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4 pb-4 border-b border-purple-200/80">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 mb-2">
+                  <UploadCloud className="w-4 h-4 text-purple-600" />
+                  <span>Stage Media Coordination Required</span>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">
+                  Audio / Video Track & Backstage Media
+                </h3>
+                <p className="text-xs text-slate-600 mt-1 max-w-xl">
+                  For <strong>{currentEvent.title}</strong>, performance soundtracks, karaokes, videos, or scripts are routed directly to stage sound technicians.
+                </p>
+              </div>
+
+              <a
+                href={STAGE_GOOGLE_DRIVE_FOLDER}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-purple-700 hover:bg-purple-800 text-white shadow-xs transition-colors shrink-0"
+              >
+                <span>Upload to Official Google Drive</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="trackUploadUrl"
+                  className="block text-xs font-semibold text-slate-800 mb-1"
+                >
+                  Google Drive / Cloud Share Link for Track <span className="text-slate-400">(Optional but recommended)</span>
+                </label>
+                <input
+                  id="trackUploadUrl"
+                  type="url"
+                  value={trackUploadUrl}
+                  onChange={(e) => setTrackUploadUrl(e.target.value)}
+                  placeholder="https://drive.google.com/file/d/... or uploaded file link"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-purple-200 text-slate-900 text-xs bg-white focus:border-purple-600"
+                />
+                <span className="text-[11px] text-purple-900 mt-1 block">
+                  Please ensure your Drive link permission is set to &quot;Anyone with the link can view&quot;.
+                </span>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="trackNotes"
+                  className="block text-xs font-semibold text-slate-800 mb-1"
+                >
+                  Stage Cues & Sound / Lighting Instructions <span className="text-slate-400">(Optional)</span>
+                </label>
+                <input
+                  id="trackNotes"
+                  type="text"
+                  value={trackNotes}
+                  onChange={(e) => setTrackNotes(e.target.value)}
+                  placeholder="e.g. Start audio after 5 seconds on stage; Blackout at ending chord; Song name: Dil Se"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-purple-200 text-slate-900 text-xs bg-white focus:border-purple-600"
+                />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Step 2: Primary / Lead Attendee */}
         <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
           <div className="mb-6 pb-4 border-b border-slate-100">
             <span className="text-xs font-bold uppercase tracking-wider text-[#1a73e8]">
               Step 2 of 3
             </span>
             <h2 className="text-xl font-bold text-slate-900">
-              Primary Attendee & Team Lead
+              Primary Attendee & Contact Details
             </h2>
             <p className="text-sm text-slate-500 mt-1">
-              Passes and payment confirmations will be issued to this email.
+              Official QR passes and schedule announcements will be issued to this email.
             </p>
           </div>
 
@@ -418,7 +596,7 @@ export default function RegistrationForm({
                 value={leadName}
                 onChange={(e) => setLeadName(e.target.value)}
                 placeholder="e.g. Anuj Kumar"
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 text-sm focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] bg-white"
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 text-sm focus:border-[#1a73e8] bg-white"
               />
             </div>
 
@@ -435,8 +613,8 @@ export default function RegistrationForm({
                 required
                 value={leadEmail}
                 onChange={(e) => setLeadEmail(e.target.value)}
-                placeholder="e.g. anuj@lingayas.edu"
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 text-sm focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] bg-white"
+                placeholder="e.g. student@lingayas.edu"
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 text-sm focus:border-[#1a73e8] bg-white"
               />
             </div>
 
@@ -453,13 +631,13 @@ export default function RegistrationForm({
                 value={leadRollNumber}
                 onChange={(e) => setLeadRollNumber(e.target.value)}
                 placeholder="e.g. 22BTECHCS042"
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 text-sm focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] bg-white"
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 text-sm focus:border-[#1a73e8] bg-white"
               />
             </div>
           </div>
         </section>
 
-        {/* Step 3: Dynamic Team Member Rows (if maxTeamSize > 1) */}
+        {/* Step 3: Dynamic Team Member Rows if Team event */}
         {currentEvent && currentEvent.maxTeamSize > 1 && (
           <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
@@ -549,7 +727,7 @@ export default function RegistrationForm({
                             value={member.fullName}
                             onChange={(e) => handleMemberChange(idx, 'fullName', e.target.value)}
                             placeholder="e.g. Priya Sharma"
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] bg-white"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm bg-white focus:border-[#1a73e8]"
                           />
                         </div>
 
@@ -566,7 +744,7 @@ export default function RegistrationForm({
                             value={member.rollNumber}
                             onChange={(e) => handleMemberChange(idx, 'rollNumber', e.target.value)}
                             placeholder="e.g. 22BTECHCS089"
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] bg-white"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm bg-white focus:border-[#1a73e8]"
                           />
                         </div>
                       </div>
@@ -583,20 +761,24 @@ export default function RegistrationForm({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-slate-800">
             <div>
               <span className="text-xs font-semibold tracking-wider uppercase text-blue-400">
-                Payment Breakdown
+                Payment Summary
               </span>
               <h3 className="text-2xl font-bold mt-1">
                 {currentEvent ? currentEvent.title : 'Event Registration'}
               </h3>
               <p className="text-slate-400 text-sm mt-1">
-                Includes digital passes for {totalMembersCount} attendee{totalMembersCount > 1 ? 's' : ''} with offline HMAC QR verification.
+                Includes official digital entry passes with cryptographic HMAC-SHA256 verification.
               </p>
             </div>
 
             <div className="text-left sm:text-right">
               <span className="text-sm text-slate-400 block">Total Payable Fee</span>
               <span className="text-3xl font-extrabold text-white">
-                ₹{currentEvent ? currentEvent.feeAmount / 100 : 0}
+                {totalPayableInr === 0 ? (
+                  <span className="text-emerald-400">FREE</span>
+                ) : (
+                  `₹${totalPayableInr}`
+                )}
               </span>
             </div>
           </div>
@@ -604,7 +786,7 @@ export default function RegistrationForm({
           <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-xs text-slate-400">
               <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>Razorpay Secured Gateway • 256-bit Cryptographic Tickets</span>
+              <span>Lingaya&apos;s Vidyapeeth ZEST 2K26 Official Registration Engine</span>
             </div>
 
             <button
@@ -615,12 +797,16 @@ export default function RegistrationForm({
               {isSubmitting ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Processing Checkout...</span>
+                  <span>Processing Registration...</span>
                 </>
               ) : (
                 <>
                   <CreditCard className="w-5 h-5" />
-                  <span>Pay ₹{currentEvent ? currentEvent.feeAmount / 100 : 0} & Register</span>
+                  <span>
+                    {totalPayableInr === 0
+                      ? 'Confirm Free Registration'
+                      : `Pay ₹${totalPayableInr} & Register`}
+                  </span>
                 </>
               )}
             </button>
