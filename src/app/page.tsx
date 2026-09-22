@@ -141,12 +141,17 @@ export default async function HomePage() {
             </p>
             <p className="mt-0.5">Engineered by Anuj Kumar Thakur</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <span className="flex items-center gap-1.5 text-emerald-600 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
               Engine Online
             </span>
-            <span>Prisma ORM • Supabase • Razorpay</span>
+            <Link
+              href="/admin"
+              className="text-slate-600 hover:text-[#1a73e8] font-medium transition-colors"
+            >
+              Committee Portal (Staff Login)
+            </Link>
           </div>
         </div>
       </footer>

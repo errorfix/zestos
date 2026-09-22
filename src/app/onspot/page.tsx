@@ -34,12 +34,20 @@ export default async function OnSpotPage() {
             </p>
           </div>
 
-          <Link
-            href="/checkin"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
-          >
-            Gate Check-In Console
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              Admin Hub
+            </Link>
+            <Link
+              href="/checkin"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#1a73e8] text-white hover:bg-[#1557b0] transition-colors"
+            >
+              Gate Scanner
+            </Link>
+          </div>
         </div>
 
         <OnSpotForm events={events} />
