@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Calendar, ShieldCheck, Sparkles } from 'lucide-react';
+import { Calendar, ShieldCheck, Sparkles, Scan, LayoutDashboard, Banknote } from 'lucide-react';
 
 export default function Navbar() {
   return (
@@ -20,20 +20,45 @@ export default function Navbar() {
           </div>
         </Link>
 
-        <nav className="flex items-center gap-2 sm:gap-4">
+        <nav className="flex items-center gap-1.5 sm:gap-3">
           <Link
             href="/"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:text-[#1a73e8] hover:bg-[#e8f0fe] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-700 hover:text-[#1a73e8] hover:bg-[#e8f0fe] transition-colors"
           >
             <Calendar className="w-4 h-4" />
-            <span className="hidden sm:inline">Events</span>
+            <span className="hidden md:inline">Events</span>
           </Link>
+
+          <Link
+            href="/checkin"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+          >
+            <Scan className="w-4 h-4 text-emerald-600" />
+            <span className="hidden sm:inline">Gate Check-In</span>
+          </Link>
+
+          <Link
+            href="/onspot"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50 transition-colors"
+          >
+            <Banknote className="w-4 h-4 text-blue-600" />
+            <span className="hidden sm:inline">On-Spot</span>
+          </Link>
+
+          <Link
+            href="/admin"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-700 hover:text-[#1a73e8] hover:bg-[#e8f0fe] transition-colors"
+          >
+            <LayoutDashboard className="w-4 h-4 text-[#1a73e8]" />
+            <span className="hidden sm:inline">Admin Hub</span>
+          </Link>
+
           <Link
             href="/register"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-[#1a73e8] text-white hover:bg-[#1557b0] shadow-sm transition-all focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-[#1a73e8] text-white hover:bg-[#1557b0] shadow-sm transition-all focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
           >
             <Sparkles className="w-4 h-4" />
-            <span>Register Now</span>
+            <span>Register</span>
           </Link>
         </nav>
       </div>

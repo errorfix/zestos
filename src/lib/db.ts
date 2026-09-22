@@ -1,63 +1,111 @@
 import { prisma } from './prisma';
 import { SEED_EVENTS, InitialEventData } from './mockEvents';
-import { generateTicketCode, generateTicketSecurityHash } from './crypto';
+import { generateTicketCode, generateTicketSecurityHash, verifyTicketSecurityHash } from './crypto';
+import fs from 'fs';
+import path from 'path';
 
-// In-memory fallback cache for registrations and tickets when DB connection is pending
-interface LocalRegistration {
+export interface LocalRegistration {
   id: string;
   eventId: string;
   leadName: string;
   leadEmail: string;
   status: 'PENDING' | 'PAID' | 'FAILED';
+  paymentMethod: string;
   razorpayOrderId: string | null;
   razorpayPaymentId: string | null;
   createdAt: Date;
   teamMembers: Array<{ id: string; fullName: string; rollNumber: string | null }>;
-  tickets: Array<{ id: string; ticketCode: string; status: string; securityHash: string; fullName: string }>;
+  tickets: Array<{
+    id: string;
+    ticketCode: string;
+    status: 'ISSUED' | 'CHECKED_IN';
+    securityHash: string;
+    fullName: string;
+    checkedInAt?: Date | null;
+  }>;
   event?: InitialEventData;
 }
 
-import fs from 'fs';
-import path from 'path';
+interface PersistedCache {
+  registrations: Record<string, LocalRegistration>;
+  events: Record<string, InitialEventData>;
+}
 
 const CACHE_FILE = path.join(process.cwd(), '.festos_cache.json');
 
-function saveToDisk(map: Map<string, LocalRegistration>) {
+function saveToDisk(regs: Map<string, LocalRegistration>, evts: Map<string, InitialEventData>) {
   try {
-    const data = Object.fromEntries(map.entries());
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (e) {
+    const payload: PersistedCache = {
+      registrations: Object.fromEntries(regs.entries()),
+      events: Object.fromEntries(evts.entries()),
+    };
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(payload, null, 2), 'utf-8');
+  } catch {
     // Non-fatal
   }
 }
 
-function loadFromDisk(): Map<string, LocalRegistration> {
-  const map = new Map<string, LocalRegistration>();
+function loadFromDisk(): {
+  regs: Map<string, LocalRegistration>;
+  evts: Map<string, InitialEventData>;
+} {
+  const regs = new Map<string, LocalRegistration>();
+  const evts = new Map<string, InitialEventData>();
+
+  // Initialize with seed events
+  for (const e of SEED_EVENTS) {
+    evts.set(e.id, { ...e });
+  }
+
   try {
     if (fs.existsSync(CACHE_FILE)) {
       const raw = fs.readFileSync(CACHE_FILE, 'utf-8');
-      const obj = JSON.parse(raw);
-      for (const [k, v] of Object.entries(obj)) {
-        map.set(k, v as LocalRegistration);
+      const data = JSON.parse(raw);
+      if (data.registrations) {
+        for (const [k, v] of Object.entries(data.registrations)) {
+          regs.set(k, v as LocalRegistration);
+        }
+      } else {
+        // legacy structure
+        for (const [k, v] of Object.entries(data)) {
+          regs.set(k, v as LocalRegistration);
+        }
+      }
+      if (data.events) {
+        for (const [k, v] of Object.entries(data.events)) {
+          evts.set(k, v as InitialEventData);
+        }
       }
     }
-  } catch (e) {
+  } catch {
     // Non-fatal
   }
-  return map;
+  return { regs, evts };
 }
 
 declare global {
   // eslint-disable-next-line no-var
   var festosMemoryRegistrations: Map<string, LocalRegistration> | undefined;
+  // eslint-disable-next-line no-var
+  var festosMemoryEvents: Map<string, InitialEventData> | undefined;
 }
 
+const initialDisk = loadFromDisk();
 const memoryRegistrations: Map<string, LocalRegistration> =
-  global.festosMemoryRegistrations || loadFromDisk();
+  global.festosMemoryRegistrations || initialDisk.regs;
+const memoryEvents: Map<string, InitialEventData> =
+  global.festosMemoryEvents || initialDisk.evts;
 
 if (process.env.NODE_ENV !== 'production') {
   global.festosMemoryRegistrations = memoryRegistrations;
+  global.festosMemoryEvents = memoryEvents;
 }
+
+function syncDisk() {
+  saveToDisk(memoryRegistrations, memoryEvents);
+}
+
+// ----------------- EVENT OPERATIONS -----------------
 
 export async function getEvents(): Promise<InitialEventData[]> {
   try {
@@ -66,7 +114,7 @@ export async function getEvents(): Promise<InitialEventData[]> {
     });
     if (dbEvents.length > 0) {
       return dbEvents.map((evt) => {
-        const seedMatch = SEED_EVENTS.find((s) => s.id === evt.id);
+        const mem = memoryEvents.get(evt.id);
         return {
           id: evt.id,
           title: evt.title,
@@ -74,23 +122,102 @@ export async function getEvents(): Promise<InitialEventData[]> {
           feeAmount: evt.feeAmount,
           minTeamSize: evt.minTeamSize,
           maxTeamSize: evt.maxTeamSize,
-          description: seedMatch?.description,
-          venue: seedMatch?.venue,
-          date: seedMatch?.date,
-          maxCapacity: seedMatch?.maxCapacity,
+          description: evt.description || mem?.description,
+          venue: evt.venue || mem?.venue,
+          date: evt.date || mem?.date,
+          maxCapacity: mem?.maxCapacity,
         };
       });
     }
-  } catch (err) {
-    console.warn('[DB] Prisma query failed or DB not connected, using seed events:', (err as Error).message);
+  } catch {
+    // Fall back to memory
   }
-  return SEED_EVENTS;
+  return Array.from(memoryEvents.values());
 }
 
 export async function getEventById(id: string): Promise<InitialEventData | null> {
   const events = await getEvents();
   return events.find((e) => e.id === id) || null;
 }
+
+export async function createEvent(data: {
+  title: string;
+  category: string;
+  feeAmount: number; // in paise
+  minTeamSize: number;
+  maxTeamSize: number;
+  description?: string;
+  venue?: string;
+  date?: string;
+  maxCapacity?: number;
+}): Promise<InitialEventData> {
+  const id = `evt_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+  const newEvent: InitialEventData = {
+    id,
+    ...data,
+  };
+
+  try {
+    await prisma.event.create({
+      data: {
+        id,
+        title: data.title,
+        category: data.category,
+        feeAmount: data.feeAmount,
+        minTeamSize: data.minTeamSize,
+        maxTeamSize: data.maxTeamSize,
+        description: data.description,
+        venue: data.venue,
+        date: data.date,
+      },
+    });
+  } catch {
+    // Non-fatal, use memory
+  }
+
+  memoryEvents.set(id, newEvent);
+  syncDisk();
+  return newEvent;
+}
+
+export async function updateEvent(
+  id: string,
+  data: Partial<InitialEventData>
+): Promise<InitialEventData> {
+  const existing = await getEventById(id);
+  if (!existing) {
+    throw new Error(`Event with id "${id}" not found`);
+  }
+
+  const updated: InitialEventData = {
+    ...existing,
+    ...data,
+  };
+
+  try {
+    await prisma.event.update({
+      where: { id },
+      data: {
+        title: updated.title,
+        category: updated.category,
+        feeAmount: updated.feeAmount,
+        minTeamSize: updated.minTeamSize,
+        maxTeamSize: updated.maxTeamSize,
+        description: updated.description,
+        venue: updated.venue,
+        date: updated.date,
+      },
+    });
+  } catch {
+    // Non-fatal
+  }
+
+  memoryEvents.set(id, updated);
+  syncDisk();
+  return updated;
+}
+
+// ----------------- REGISTRATION OPERATIONS -----------------
 
 export async function createPendingRegistration({
   eventId,
@@ -112,6 +239,7 @@ export async function createPendingRegistration({
         leadName,
         leadEmail,
         status: 'PENDING',
+        paymentMethod: 'ONLINE_RAZORPAY',
         razorpayOrderId,
         teamMembers: {
           create: teamMembers.map((m) => ({
@@ -122,17 +250,17 @@ export async function createPendingRegistration({
       },
     });
     return { id: reg.id };
-  } catch (err) {
-    console.warn('[DB] Prisma write failed, falling back to local session store:', (err as Error).message);
+  } catch {
     const regId = `reg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    const event = SEED_EVENTS.find((e) => e.id === eventId);
-    
+    const event = await getEventById(eventId);
+
     memoryRegistrations.set(regId, {
       id: regId,
       eventId,
       leadName,
       leadEmail,
       status: 'PENDING',
+      paymentMethod: 'ONLINE_RAZORPAY',
       razorpayOrderId,
       razorpayPaymentId: null,
       createdAt: new Date(),
@@ -142,13 +270,118 @@ export async function createPendingRegistration({
         rollNumber: m.rollNumber || null,
       })),
       tickets: [],
-      event,
+      event: event || undefined,
     });
 
-    saveToDisk(memoryRegistrations);
-
+    syncDisk();
     return { id: regId };
   }
+}
+
+/**
+ * On-Spot Fast-Track Registration for committee desks at event entrances
+ */
+export async function createOnSpotRegistration({
+  eventId,
+  leadName,
+  leadEmail,
+  paymentMethod, // 'ONSPOT_CASH' | 'ONSPOT_UPI'
+  teamMembers = [],
+}: {
+  eventId: string;
+  leadName: string;
+  leadEmail: string;
+  paymentMethod: string;
+  teamMembers: Array<{ fullName: string; rollNumber?: string }>;
+}): Promise<{ registrationId: string; tickets: Array<{ ticketCode: string; securityHash: string }> }> {
+  const event = await getEventById(eventId);
+  if (!event) {
+    throw new Error('Event not found');
+  }
+
+  const regId = `reg_spot_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  const receipt = `spot_rcpt_${Date.now()}`;
+
+  // Generate passes for lead + team members
+  const ticketsToCreate = [
+    {
+      id: `tkt_lead_${Date.now()}`,
+      ticketCode: generateTicketCode(),
+      status: 'ISSUED' as const,
+      securityHash: '',
+      fullName: leadName,
+    },
+    ...teamMembers.map((tm, idx) => ({
+      id: `tkt_tm_${idx}_${Date.now()}`,
+      ticketCode: generateTicketCode(),
+      status: 'ISSUED' as const,
+      securityHash: '',
+      fullName: tm.fullName,
+    })),
+  ];
+
+  // Calculate HMAC security hashes
+  for (const t of ticketsToCreate) {
+    t.securityHash = generateTicketSecurityHash(t.ticketCode, leadEmail);
+  }
+
+  try {
+    await prisma.registration.create({
+      data: {
+        id: regId,
+        eventId,
+        leadName,
+        leadEmail,
+        status: 'PAID',
+        paymentMethod,
+        razorpayPaymentId: receipt,
+        teamMembers: {
+          create: teamMembers.map((m) => ({
+            fullName: m.fullName,
+            rollNumber: m.rollNumber || null,
+          })),
+        },
+        tickets: {
+          create: ticketsToCreate.map((t) => ({
+            ticketCode: t.ticketCode,
+            status: 'ISSUED',
+            securityHash: t.securityHash,
+          })),
+        },
+      },
+    });
+  } catch {
+    // Non-fatal, store in memory
+  }
+
+  memoryRegistrations.set(regId, {
+    id: regId,
+    eventId,
+    leadName,
+    leadEmail,
+    status: 'PAID',
+    paymentMethod,
+    razorpayOrderId: null,
+    razorpayPaymentId: receipt,
+    createdAt: new Date(),
+    teamMembers: teamMembers.map((m, idx) => ({
+      id: `tm_${idx}_${Date.now()}`,
+      fullName: m.fullName,
+      rollNumber: m.rollNumber || null,
+    })),
+    tickets: ticketsToCreate,
+    event,
+  });
+
+  syncDisk();
+
+  return {
+    registrationId: regId,
+    tickets: ticketsToCreate.map((t) => ({
+      ticketCode: t.ticketCode,
+      securityHash: t.securityHash,
+    })),
+  };
 }
 
 export async function fulfillPaymentAndGenerateTickets({
@@ -159,7 +392,6 @@ export async function fulfillPaymentAndGenerateTickets({
   paymentId: string;
 }): Promise<{ registrationId: string; tickets: Array<{ ticketCode: string; securityHash: string }> }> {
   try {
-    // Check if in Prisma DB
     const existing = await prisma.registration.findFirst({
       where: { razorpayOrderId: orderId },
       include: { teamMembers: true, event: true },
@@ -176,7 +408,6 @@ export async function fulfillPaymentAndGenerateTickets({
         };
       }
 
-      // Generate tickets for lead + team members
       const ticketsToCreate = [
         {
           ticketCode: generateTicketCode(),
@@ -193,7 +424,6 @@ export async function fulfillPaymentAndGenerateTickets({
         }),
       ];
 
-      // Update registration and create tickets in a transaction
       await prisma.$transaction([
         prisma.registration.update({
           where: { id: existing.id },
@@ -219,18 +449,16 @@ export async function fulfillPaymentAndGenerateTickets({
         tickets: ticketsToCreate.map((t) => ({ ticketCode: t.ticketCode, securityHash: t.securityHash })),
       };
     }
-  } catch (err) {
-    console.warn('[DB] Prisma fulfillment failed, checking local memory store:', (err as Error).message);
+  } catch {
+    // Check memory store
   }
 
-  // Memory store fallback
   for (const [id, reg] of memoryRegistrations.entries()) {
     if (reg.razorpayOrderId === orderId || id === orderId) {
       reg.status = 'PAID';
       reg.razorpayPaymentId = paymentId;
 
       if (reg.tickets.length === 0) {
-        // Create ticket for lead
         const leadCode = generateTicketCode();
         reg.tickets.push({
           id: `tkt_lead_${Date.now()}`,
@@ -240,7 +468,6 @@ export async function fulfillPaymentAndGenerateTickets({
           fullName: reg.leadName,
         });
 
-        // Create tickets for each team member
         for (const tm of reg.teamMembers) {
           const tmCode = generateTicketCode();
           reg.tickets.push({
@@ -253,7 +480,7 @@ export async function fulfillPaymentAndGenerateTickets({
         }
       }
 
-      saveToDisk(memoryRegistrations);
+      syncDisk();
 
       return {
         registrationId: id,
@@ -264,6 +491,159 @@ export async function fulfillPaymentAndGenerateTickets({
 
   throw new Error(`Registration with orderId "${orderId}" not found`);
 }
+
+// ----------------- CHECK-IN OPERATIONS -----------------
+
+export async function checkInTicket({
+  ticketCode,
+  signature,
+}: {
+  ticketCode: string;
+  signature?: string;
+}): Promise<{
+  success: boolean;
+  ticketCode: string;
+  attendeeName: string;
+  eventTitle: string;
+  status: 'CHECKED_IN' | 'ALREADY_CHECKED_IN' | 'INVALID';
+  checkedInAt: Date;
+  message: string;
+}> {
+  const normalizedCode = ticketCode.trim().toUpperCase();
+
+  // 1. Try Prisma DB
+  try {
+    const dbTicket = await prisma.ticket.findUnique({
+      where: { ticketCode: normalizedCode },
+      include: {
+        registration: {
+          include: { event: true, teamMembers: true },
+        },
+      },
+    });
+
+    if (dbTicket) {
+      // Cryptographic verification if signature provided
+      if (signature) {
+        const isValidSig = verifyTicketSecurityHash(
+          dbTicket.ticketCode,
+          dbTicket.registration.leadEmail,
+          signature
+        );
+        if (!isValidSig) {
+          return {
+            success: false,
+            ticketCode: normalizedCode,
+            attendeeName: dbTicket.registration.leadName,
+            eventTitle: dbTicket.registration.event.title,
+            status: 'INVALID',
+            checkedInAt: new Date(),
+            message: 'HMAC signature verification failed. Forged or corrupted pass.',
+          };
+        }
+      }
+
+      // Replay attack check
+      if (dbTicket.status === 'CHECKED_IN') {
+        return {
+          success: false,
+          ticketCode: normalizedCode,
+          attendeeName: dbTicket.registration.leadName,
+          eventTitle: dbTicket.registration.event.title,
+          status: 'ALREADY_CHECKED_IN',
+          checkedInAt: dbTicket.checkedInAt || new Date(),
+          message: `Replay Warning: Pass already scanned and checked in on ${new Date(
+            dbTicket.checkedInAt || Date.now()
+          ).toLocaleTimeString()}.`,
+        };
+      }
+
+      // Mark Checked In
+      const now = new Date();
+      await prisma.ticket.update({
+        where: { id: dbTicket.id },
+        data: {
+          status: 'CHECKED_IN',
+          checkedInAt: now,
+        },
+      });
+
+      return {
+        success: true,
+        ticketCode: normalizedCode,
+        attendeeName: dbTicket.registration.leadName,
+        eventTitle: dbTicket.registration.event.title,
+        status: 'CHECKED_IN',
+        checkedInAt: now,
+        message: 'Access Granted: Ticket authentic and checked in.',
+      };
+    }
+  } catch {
+    // Non-fatal, check memory store
+  }
+
+  // 2. Check memory store
+  for (const reg of memoryRegistrations.values()) {
+    const ticket = reg.tickets.find((t) => t.ticketCode === normalizedCode);
+    if (ticket) {
+      if (signature) {
+        const isValidSig = verifyTicketSecurityHash(ticket.ticketCode, reg.leadEmail, signature);
+        if (!isValidSig) {
+          return {
+            success: false,
+            ticketCode: normalizedCode,
+            attendeeName: ticket.fullName,
+            eventTitle: reg.event?.title || 'Campus Event',
+            status: 'INVALID',
+            checkedInAt: new Date(),
+            message: 'HMAC signature verification failed. Pass is forged or invalid.',
+          };
+        }
+      }
+
+      if (ticket.status === 'CHECKED_IN') {
+        return {
+          success: false,
+          ticketCode: normalizedCode,
+          attendeeName: ticket.fullName,
+          eventTitle: reg.event?.title || 'Campus Event',
+          status: 'ALREADY_CHECKED_IN',
+          checkedInAt: ticket.checkedInAt || new Date(),
+          message: `Replay Warning: Pass already scanned on ${new Date(
+            ticket.checkedInAt || Date.now()
+          ).toLocaleTimeString()}.`,
+        };
+      }
+
+      const now = new Date();
+      ticket.status = 'CHECKED_IN';
+      ticket.checkedInAt = now;
+      syncDisk();
+
+      return {
+        success: true,
+        ticketCode: normalizedCode,
+        attendeeName: ticket.fullName,
+        eventTitle: reg.event?.title || 'Campus Event',
+        status: 'CHECKED_IN',
+        checkedInAt: now,
+        message: 'Access Granted: Ticket successfully verified & stamped.',
+      };
+    }
+  }
+
+  return {
+    success: false,
+    ticketCode: normalizedCode,
+    attendeeName: 'Unknown',
+    eventTitle: 'Unknown Event',
+    status: 'INVALID',
+    checkedInAt: new Date(),
+    message: `Ticket code "${normalizedCode}" not found in registration database.`,
+  };
+}
+
+// ----------------- ADMIN & REGISTRY OPERATIONS -----------------
 
 export async function getRegistrationDetails(registrationId: string) {
   try {
@@ -282,9 +662,9 @@ export async function getRegistrationDetails(registrationId: string) {
         event: dbReg.event
           ? {
               ...dbReg.event,
-              venue: seedMatch?.venue || "Lingaya's Vidyapeeth Campus",
-              date: seedMatch?.date || 'March 2026',
-              description: seedMatch?.description,
+              venue: dbReg.event.venue || seedMatch?.venue || "Lingaya's Vidyapeeth Campus",
+              date: dbReg.event.date || seedMatch?.date || 'March 2026',
+              description: dbReg.event.description || seedMatch?.description,
             }
           : null,
         tickets: dbReg.tickets.map((t, idx) => ({
@@ -293,17 +673,75 @@ export async function getRegistrationDetails(registrationId: string) {
         })),
       };
     }
-  } catch (err) {
-    console.warn('[DB] Prisma fetch registration failed, checking memory:', (err as Error).message);
+  } catch {
+    // Check memory store
   }
 
   const mem = memoryRegistrations.get(registrationId);
   if (mem) {
     return {
       ...mem,
-      event: mem.event || SEED_EVENTS.find((e) => e.id === mem.eventId) || null,
+      event: mem.event || (await getEventById(mem.eventId)),
     };
   }
 
   return null;
+}
+
+export async function getAllRegistrations() {
+  try {
+    const dbRegs = await prisma.registration.findMany({
+      include: {
+        event: true,
+        teamMembers: true,
+        tickets: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (dbRegs.length > 0) {
+      return dbRegs;
+    }
+  } catch {
+    // Fall back to memory
+  }
+
+  return Array.from(memoryRegistrations.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+export async function getAdminMetrics() {
+  const registrations = await getAllRegistrations();
+  const events = await getEvents();
+
+  let totalRevenuePaise = 0;
+  let totalIssuedTickets = 0;
+  let totalCheckedInTickets = 0;
+  const registrationsByEvent: Record<string, number> = {};
+
+  for (const reg of registrations) {
+    if (reg.status === 'PAID') {
+      const evt = events.find((e) => e.id === reg.eventId) || reg.event;
+      totalRevenuePaise += evt?.feeAmount || 0;
+      registrationsByEvent[reg.eventId] = (registrationsByEvent[reg.eventId] || 0) + 1;
+    }
+    for (const t of reg.tickets) {
+      totalIssuedTickets++;
+      if (t.status === 'CHECKED_IN') {
+        totalCheckedInTickets++;
+      }
+    }
+  }
+
+  return {
+    totalRegistrations: registrations.length,
+    paidRegistrations: registrations.filter((r) => r.status === 'PAID').length,
+    totalRevenueInr: totalRevenuePaise / 100,
+    totalIssuedTickets,
+    totalCheckedInTickets,
+    checkInPercentage:
+      totalIssuedTickets > 0 ? Math.round((totalCheckedInTickets / totalIssuedTickets) * 100) : 0,
+    totalEvents: events.length,
+    registrationsByEvent,
+  };
 }

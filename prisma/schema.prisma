@@ -15,6 +15,9 @@ model Event {
   feeAmount     Int            // Stored in paise (INR 100 = 10000)
   minTeamSize   Int            @default(1)
   maxTeamSize   Int            @default(1)
+  description   String?
+  venue         String?
+  date          String?
   registrations Registration[]
 }
 
@@ -25,6 +28,7 @@ model Registration {
   leadName          String
   leadEmail         String
   status            String       @default("PENDING") // PENDING, PAID, FAILED
+  paymentMethod     String?      @default("ONLINE_RAZORPAY") // ONLINE_RAZORPAY, ONSPOT_CASH, ONSPOT_UPI
   razorpayOrderId   String?      @unique
   razorpayPaymentId String?      @unique
   teamMembers       TeamMember[]
@@ -47,4 +51,5 @@ model Ticket {
   registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   status         String       @default("ISSUED") // ISSUED, CHECKED_IN
   securityHash   String       // HMAC-SHA256 signature for offline validation
+  checkedInAt    DateTime?
 }
