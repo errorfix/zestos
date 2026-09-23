@@ -26,6 +26,7 @@ export async function POST(req: Request) {
     const parsed = checkoutSchema.safeParse(json);
 
     if (!parsed.success) {
+      console.error('Validation error details:', JSON.stringify(parsed.error.format(), null, 2));
       return NextResponse.json(
         { error: 'Invalid form submission', details: parsed.error.format() },
         { status: 400 }
