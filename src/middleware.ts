@@ -133,12 +133,18 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 3. Delegate session refresh to Supabase
-  try {
-    return await updateSession(request);
-  } catch {
-    return NextResponse.next();
+  // 3. Delegate session refresh to Supabase ONLY for non-custom-auth routes
+  // (Our custom auth API routes handle their own responses and cookies)
+  const isAuthApi = pathname.startsWith('/api/auth');
+  if (!isAuthApi) {
+    try {
+      return await updateSession(request);
+    } catch {
+      return NextResponse.next();
+    }
   }
+
+  return NextResponse.next();
 }
 
 export const config = {
