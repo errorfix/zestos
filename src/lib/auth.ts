@@ -4,10 +4,13 @@
 
 export const ADMIN_COOKIE_NAME = 'festos_admin_session';
 
-const AUTH_SECRET =
-  process.env.ADMIN_AUTH_SECRET ||
-  process.env.RAZORPAY_KEY_SECRET ||
-  'festos-zest2k26-lingayas-master-auth-secret-key-32chars';
+function getAuthSecret(): string {
+  return (
+    process.env.ADMIN_AUTH_SECRET ||
+    process.env.RAZORPAY_KEY_SECRET ||
+    'festos-zest2k26-lingayas-master-auth-secret-key-32chars'
+  );
+}
 
 // ─── Role Definitions ────────────────────────────────────────────────────────
 
@@ -277,7 +280,7 @@ export async function createAdminSessionToken(
   };
 
   const payload = base64UrlEncode(JSON.stringify(session));
-  const signature = await computeHmacSignature(payload, AUTH_SECRET);
+  const signature = await computeHmacSignature(payload, getAuthSecret());
 
   return `${payload}.${signature}`;
 }
@@ -292,7 +295,7 @@ export async function verifyAdminSessionToken(
 
   const [payloadBase64, signature] = parts;
 
-  const expectedSig = await computeHmacSignature(payloadBase64, AUTH_SECRET);
+  const expectedSig = await computeHmacSignature(payloadBase64, getAuthSecret());
   if (signature !== expectedSig) {
     return null;
   }

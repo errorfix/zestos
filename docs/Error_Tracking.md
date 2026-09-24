@@ -16,6 +16,7 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 | **ERR-006** | 2026-09-24 13:10 | Database / Docker VPS | Prisma 7 CLI mismatch (`url` property error) & missing seed configuration | **RESOLVED** |
 | **ERR-007** | 2026-09-25 01:30 | Auth (`/api/auth/logout`) | Sign-out redirects to `localhost:3000/login` instead of `lingayaszest.tech/login` on live server | **RESOLVED** |
 | **ERR-008** | 2026-09-25 01:30 | Auth Middleware (`middleware.ts`) | "Unauthorized: Session authentication required." on Super Admin event edits — session cookie expired + missing `ADMIN_AUTH_SECRET` env var | **RESOLVED** |
+| **ERR-009** | 2026-09-25 02:20 | Database / Super Admin (`/super-admin`) | Event price & detail edits saved successfully in UI but reverted to old values after container restart — DB column missing + silent Prisma failure | **RESOLVED** |
 
 ---
 
@@ -162,6 +163,23 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
   ```bash
   echo 'ADMIN_AUTH_SECRET="2afe78eea03df8d459b466c7997c895f4a84eb61b2f2dcbe80462dc7d379388e5268f67e0d2cbd40c3807620dc7fd53a"' >> /opt/festos/.env
   cd /opt/festos && git pull origin main && docker compose build --no-cache festos-app && docker compose up -d festos-app
+  ```
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-009: Event Price / Detail Edits Not Persisting After Container Restart
+- **Component**: `src/lib/db.ts` (`updateEvent`), `prisma/schema.prisma`, VPS PostgreSQL
+- **Symptom**: Super Admin edited event pricing from `/super-admin`. The dashboard immediately reflected the new price (success toast shown), but after a container restart the old price returned. The edit appeared to work but was never durably saved.
+- **Root Cause Analysis (two compounding causes)**:
+  1. **Missing DB column (`onSpotFeeAmount`)**: `schema.prisma` had `onSpotFeeAmount Int?` added, but `prisma db push` was never run on the VPS after the schema change. Prisma threw `Invalid invocation: The column 'Event.onSpotFeeAmount' does not exist in the current database.`
+  2. **Silent `catch` in `updateEvent`**: The Prisma `event.update()` call was wrapped in `try { ... } catch { // Non-fatal }`. The exception was swallowed silently — the function still returned success and updated the in-memory `memoryEvents` map and `.festos_cache.json`. So the UI showed the new price (from memory), but the PostgreSQL database was never written. On container restart `getEvents()` fetched from Prisma (DB), overwriting memory with the old stale price.
+- **Resolution**:
+  1. **Applied schema to DB**: Ran `docker compose exec festos-app prisma db push` on the VPS. Output confirmed: `🚀 Your database is now in sync with your Prisma schema.` — added the `onSpotFeeAmount` column without data loss.
+  2. **Fixed `updateEvent` in `src/lib/db.ts`**: Replaced `prisma.event.update()` + silent catch with `prisma.event.upsert()` (handles seed events whose IDs may not exist in DB after a reset) and changed the catch to `console.error(...); throw err` so DB failures are visible and propagate as real API errors instead of fake successes.
+- **VPS Command Used**:
+  ```bash
+  docker compose exec festos-app prisma db push
   ```
 - **Status**: **RESOLVED**
 
