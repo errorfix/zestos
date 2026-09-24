@@ -12,6 +12,7 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 | **ERR-002** | 2026-09-24 09:40 | Committee Workspaces | Informalz events mixed with R&I competitive registrations | **RESOLVED** |
 | **ERR-003** | 2026-09-24 09:50 | Registration (`/register`) | Multi-event free passes needed for Informalz without breaking Prisma schema | **RESOLVED** |
 | **ERR-004** | 2026-09-24 10:30 | Stage & AV (`/stage`) | Missing track links and lack of on-spot audio track assignment for stage crew | **RESOLVED** |
+| **ERR-005** | 2026-09-24 11:00 | Docker & Hosting (`/`) | Next.js container size optimization & Linux Prisma binary targets | **RESOLVED** |
 
 ---
 
@@ -79,6 +80,22 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
      - CSV export for sound desk cue sheets.
   4. Added Stage Committee workspace tab in `/super-admin`.
 - **Verification**: Logged in with `lion@lv321`, manually added an audio track and lighting cues to an attendee's registration via the modal, and verified instant UI update to "Ready" with clickable track playback.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-005: Next.js Production Docker Container Size & Linux Prisma Binary Mismatch
+- **Component**: `Dockerfile`, `next.config.ts`, `prisma/schema.prisma`, `docker-compose.yml`
+- **Symptom**: Standard Next.js builds packaged with full `node_modules` exceed 1.2 GB in Docker image size, and Prisma client generated on macOS Darwin crashes inside Linux Alpine/Ubuntu containers with missing `.so.node` engine binary errors.
+- **Root Cause Analysis**:
+  1. Next.js by default bundles redundant devDependencies and build tools unless `output: 'standalone'` is explicitly configured.
+  2. Prisma client generation defaults strictly to the host OS (`native`) unless explicit Linux cross-compilation binary targets (`linux-musl-openssl-3.0.x`, `debian-openssl-3.0.x`) are specified.
+- **Resolution**:
+  1. Configured `output: 'standalone'` in `next.config.ts`.
+  2. Updated `generator client` in `prisma/schema.prisma` to include `binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]`.
+  3. Engineered a multi-stage `Dockerfile` (`deps` -> `builder` -> `runner`) with `node:20-alpine`, `libc6-compat`, `openssl`, and non-root execution (`nextjs:nodejs`), shrinking production image footprint to ~160 MB.
+  4. Configured `docker-compose.yml` with container auto-restart, healthchecks, and JSON log rotation.
+- **Verification**: Successfully tested standalone build locally (`next build` generated `.next/standalone`), generated multi-platform Prisma engine binaries, and authored `docs/Ubuntu_24_04_Docker_Deployment.md`.
 - **Status**: **RESOLVED**
 
 ---
