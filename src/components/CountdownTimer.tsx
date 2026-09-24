@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Clock, Sparkles } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 interface TimeLeft {
   days: number;
@@ -48,11 +48,11 @@ export default function CountdownTimer() {
 
   if (!mounted) {
     return (
-      <div className="flex items-center justify-center gap-3 py-6">
-        <div className="h-16 w-16 bg-slate-800/50 rounded-2xl animate-pulse" />
-        <div className="h-16 w-16 bg-slate-800/50 rounded-2xl animate-pulse" />
-        <div className="h-16 w-16 bg-slate-800/50 rounded-2xl animate-pulse" />
-        <div className="h-16 w-16 bg-slate-800/50 rounded-2xl animate-pulse" />
+      <div className="flex items-center justify-center gap-3 py-4">
+        <div className="h-14 w-14 bg-slate-100 rounded-xl animate-pulse" />
+        <div className="h-14 w-14 bg-slate-100 rounded-xl animate-pulse" />
+        <div className="h-14 w-14 bg-slate-100 rounded-xl animate-pulse" />
+        <div className="h-14 w-14 bg-slate-100 rounded-xl animate-pulse" />
       </div>
     );
   }
@@ -65,32 +65,29 @@ export default function CountdownTimer() {
   ];
 
   return (
-    <div className="relative inline-block w-full max-w-xl mx-auto">
-      {/* Subtle outer glow */}
-      <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-rose-500/20 rounded-3xl blur-xl opacity-70 pointer-events-none" />
-
-      <div className="relative bg-slate-900/80 backdrop-blur-xl border border-slate-700/70 p-4 sm:p-6 rounded-3xl shadow-2xl">
-        <div className="flex items-center justify-between gap-2 mb-3.5 px-1">
-          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-400">
-            <Clock className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
+    <div className="inline-block w-full max-w-lg mx-auto">
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs">
+        <div className="flex items-center justify-between gap-2 mb-3 px-1">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-700">
+            <Clock className="w-3.5 h-3.5 text-amber-600" />
             <span>Festival Countdown</span>
           </div>
-          <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span>Starts Nov 30, 2026</span>
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span>November 30, 2026</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 sm:gap-3.5">
-          {timeBlocks.map((block, idx) => (
+        <div className="grid grid-cols-4 gap-2 sm:gap-3">
+          {timeBlocks.map((block) => (
             <div
               key={block.label}
-              className="relative bg-slate-950/80 border border-slate-800 rounded-2xl p-2.5 sm:p-4 text-center group hover:border-amber-500/50 transition-colors"
+              className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 sm:p-3 text-center"
             >
-              <span className="block text-2xl sm:text-4xl font-extrabold font-mono text-white tracking-tight group-hover:text-amber-300 transition-colors">
+              <span className="block text-xl sm:text-3xl font-black font-mono text-slate-900 tracking-tight">
                 {String(block.value).padStart(2, '0')}
               </span>
-              <span className="block text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+              <span className="block text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
                 {block.label}
               </span>
             </div>
