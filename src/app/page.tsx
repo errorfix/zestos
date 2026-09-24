@@ -78,7 +78,7 @@ export default async function HomePage() {
               href="/register?category=informalz"
               className="inline-flex items-center gap-1.5 px-5 py-3 rounded-xl text-xs sm:text-sm font-semibold bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 transition-colors"
             >
-              <span>Informalz Day Pass (₹150)</span>
+              <span>Entry Pass Day 1 / Day 2</span>
             </Link>
           </div>
 
@@ -315,7 +315,7 @@ export default async function HomePage() {
               href="/register?category=informalz"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition-colors self-start sm:self-auto"
             >
-              <span>Informalz Passes (₹150 / ₹250)</span>
+              <span>Entry Pass Day 1 / Day 2 (₹150 / ₹250)</span>
             </Link>
           </div>
 
@@ -351,7 +351,7 @@ export default async function HomePage() {
                 href="/register?category=informalz"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs sm:text-sm font-semibold bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 transition-colors"
               >
-                <span>Informalz Day Pass</span>
+                <span>Entry Pass Day 1 / Day 2</span>
               </Link>
             </div>
           </div>
@@ -382,9 +382,9 @@ export default async function HomePage() {
             </div>
 
             <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-1.5">
-              <h3 className="font-bold text-slate-900 text-sm">How does the Informalz Day pass work?</h3>
+              <h3 className="font-bold text-slate-900 text-sm">How does the Entry Pass Day 1 / Day 2 work?</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Enjoy campus viewing, fun stalls, and informal games! Selecting games on Day 1 is ₹150, Day 2 is ₹150, or choose games spanning both days for ₹250 flat with full Star Night concert access.
+                Enjoy campus viewing, fun stalls, and informal games! Selecting Day 1 pass is ₹150, Day 2 pass is ₹150, or choose Both Days pass for ₹250 flat with full Star Night concert access.
               </p>
             </div>
 
@@ -584,7 +584,7 @@ export default async function HomePage() {
                 Registration
               </Link>
               <Link href="/register?category=informalz" className="hover:text-slate-900 transition-colors">
-                Informalz Passes
+                Entry Pass Day 1 / Day 2
               </Link>
               <a href="#venue" className="hover:text-slate-900 transition-colors">
                 Venue
