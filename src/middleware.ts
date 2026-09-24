@@ -133,11 +133,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 3. Delegate session refresh to Supabase
-  try {
-    return await updateSession(request);
-  } catch {
-    return NextResponse.next();
+  // 3. Only delegate to Supabase for non-protected routes
+  // (Admin routes use custom session auth, not Supabase)
+  if (!isProtectedApi && !isProtectedPage) {
+    try {
+      return await updateSession(request);
+    } catch {
+      return NextResponse.next();
+    }
   }
 }
 
