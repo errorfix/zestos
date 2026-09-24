@@ -76,7 +76,7 @@ export const ROLE_REGISTRY: RoleDefinition[] = [
   {
     id: 'MUSIC_COMMITTEE',
     label: 'Cultural Music Committee',
-    password: process.env.MUSIC_COMMITTEE_PASSWORD || 'melody@lv321',
+    password: process.env.MUSIC_COMMITTEE_PASSWORD || 'wolf@lv321',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -87,7 +87,7 @@ export const ROLE_REGISTRY: RoleDefinition[] = [
   {
     id: 'DANCE_COMMITTEE',
     label: 'Cultural Dance Committee',
-    password: process.env.DANCE_COMMITTEE_PASSWORD || 'rhythm@lv321',
+    password: process.env.DANCE_COMMITTEE_PASSWORD || 'panther@lv321',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -98,7 +98,7 @@ export const ROLE_REGISTRY: RoleDefinition[] = [
   {
     id: 'FASHION_COMMITTEE',
     label: 'Cultural Fashion Committee',
-    password: process.env.FASHION_COMMITTEE_PASSWORD || 'vogue@lv321',
+    password: process.env.FASHION_COMMITTEE_PASSWORD || 'peacock@lv321',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -109,7 +109,7 @@ export const ROLE_REGISTRY: RoleDefinition[] = [
   {
     id: 'THEATRE_COMMITTEE',
     label: 'Cultural Theatre Committee',
-    password: process.env.THEATRE_COMMITTEE_PASSWORD || 'drama@lv321',
+    password: process.env.THEATRE_COMMITTEE_PASSWORD || 'raven@lv321',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -120,7 +120,7 @@ export const ROLE_REGISTRY: RoleDefinition[] = [
   {
     id: 'LITERARY_COMMITTEE',
     label: 'Literary & Quizzing Committee',
-    password: process.env.LITERARY_COMMITTEE_PASSWORD || 'words@lv321',
+    password: process.env.LITERARY_COMMITTEE_PASSWORD || 'owl@lv321',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -131,7 +131,7 @@ export const ROLE_REGISTRY: RoleDefinition[] = [
   {
     id: 'GAMING_COMMITTEE',
     label: 'Esports & Gaming Committee',
-    password: process.env.GAMING_COMMITTEE_PASSWORD || 'nexus@lv321',
+    password: process.env.GAMING_COMMITTEE_PASSWORD || 'dragon@lv321',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -161,7 +161,7 @@ export const ROLE_REGISTRY: RoleDefinition[] = [
   {
     id: 'MANAGEMENT',
     label: 'Higher Authority & Management (Read-Only)',
-    password: process.env.MANAGEMENT_PASSWORD || 'apex@lv321',
+    password: process.env.MANAGEMENT_PASSWORD || 'eagle@lv321',
     permissions: [
       'view_dashboard',
       'view_registrations',
