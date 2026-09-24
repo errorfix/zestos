@@ -1,6 +1,6 @@
 # ─── FESTOS V2.0 PRODUCTION MULTI-STAGE DOCKERFILE ────────────────────────────
 # Designed for high-concurrency hosting on Ubuntu 24.04 LTS VPS
-# Minimal Alpine footprint (~160MB), non-root execution, Prisma OpenSSL engines.
+# Minimal Alpine footprint, non-root execution, Prisma 6 engines & migration tools.
 
 # Stage 1: Dependencies Cache
 FROM node:20-alpine AS deps
@@ -39,13 +39,18 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+# Install pinned Prisma 6.19.3 and tsx globally so db push & seed run without downloading Prisma 7
+RUN npm install -g prisma@6.19.3 tsx@4.23.15
+
 # Enforce secure least-privilege non-root execution
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy static assets and standalone bundle
+# Copy static assets, package.json, prisma schema, and src for seeding
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/src ./src
 
 # Standalone server and static assets from Next.js output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
