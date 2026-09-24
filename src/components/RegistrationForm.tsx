@@ -107,6 +107,7 @@ export default function RegistrationForm({
   const [draftSavedTimestamp, setDraftSavedTimestamp] = useState<string | null>(null);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLocked, setIsLocked] = useState<boolean>(false);
   const [isSubmitting, startTransition] = useTransition();
 
   const currentEvent =
@@ -240,6 +241,11 @@ export default function RegistrationForm({
     setTeamMembers(updated);
   };
 
+  const displayError = (msg: string) => {
+    setErrorMessage(msg);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -291,24 +297,25 @@ export default function RegistrationForm({
 
     // ───────────────── COMPETITIVE SUBMISSION ─────────────────
     if (!currentEvent) {
-      setErrorMessage('Please select an event.');
+      displayError('Please select an event.');
       return;
     }
 
     if (!leadName.trim()) {
-      setErrorMessage('Lead Attendee Full Name is required.');
+      displayError('Lead Attendee Full Name is required.');
       return;
     }
 
-    if (!leadEmail.trim() || !leadEmail.includes('@')) {
-      setErrorMessage('A valid college email address is required.');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!leadEmail.trim() || !emailRegex.test(leadEmail)) {
+      displayError('Please enter a complete and valid college email address (e.g. student@college.edu).');
       return;
     }
 
     const requiredAdditional = Math.max(0, currentEvent.minTeamSize - 1);
     for (let i = 0; i < requiredAdditional; i++) {
       if (!teamMembers[i]?.fullName.trim()) {
-        setErrorMessage(`Team Member #${i + 2} name is strictly required for this team event.`);
+        displayError(`Team Member #${i + 2} name is strictly required for this team event.`);
         return;
       }
     }
@@ -331,7 +338,17 @@ export default function RegistrationForm({
 
         const checkoutData = await checkoutRes.json();
         if (!checkoutRes.ok) {
-          throw new Error(checkoutData.error || 'Failed to initialize checkout');
+          let errorMsg = checkoutData.error || 'Failed to initialize checkout';
+          if (checkoutData.details) {
+            // Extract the first layer of field errors for display
+            const fieldErrors = Object.keys(checkoutData.details)
+              .filter(k => k !== '_errors' && checkoutData.details[k]?._errors?.length)
+              .map(k => `${k}: ${checkoutData.details[k]._errors.join(', ')}`)
+              .join(' | ');
+            if (fieldErrors) errorMsg += ` (${fieldErrors})`;
+            else errorMsg += ` ${JSON.stringify(checkoutData.details)}`;
+          }
+          throw new Error(errorMsg);
         }
 
         // 1. FREE Event Instant Pass Completion
@@ -343,6 +360,9 @@ export default function RegistrationForm({
           router.push(`/tickets/${checkoutData.registrationId}${allParam}`);
           return;
         }
+
+        // Lock the form permanently for this instance so user can't double-click if they close the modal
+        setIsLocked(true);
 
         const { registrationId, orderId, amount, isMock } = checkoutData;
 
@@ -386,7 +406,7 @@ export default function RegistrationForm({
                 clearRegistrationDraft();
                 router.push(`/tickets/${verifyData.registrationId}`);
               } else {
-                setErrorMessage(verifyData.error || 'Verification failed');
+                displayError(verifyData.error || 'Verification failed');
               }
             },
           };
