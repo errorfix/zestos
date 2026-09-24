@@ -71,6 +71,72 @@ export const ROLE_REGISTRY: RoleDefinition[] = [
     dashboard: '/informalz',
   },
   {
+    id: 'MUSIC_COMMITTEE',
+    label: 'Cultural Music Committee',
+    password: process.env.MUSIC_COMMITTEE_PASSWORD || 'melody@lv321',
+    permissions: [
+      'view_dashboard',
+      'view_registrations',
+      'access_checkin',
+    ],
+    dashboard: '/committee/music',
+  },
+  {
+    id: 'DANCE_COMMITTEE',
+    label: 'Cultural Dance Committee',
+    password: process.env.DANCE_COMMITTEE_PASSWORD || 'rhythm@lv321',
+    permissions: [
+      'view_dashboard',
+      'view_registrations',
+      'access_checkin',
+    ],
+    dashboard: '/committee/dance',
+  },
+  {
+    id: 'FASHION_COMMITTEE',
+    label: 'Cultural Fashion Committee',
+    password: process.env.FASHION_COMMITTEE_PASSWORD || 'vogue@lv321',
+    permissions: [
+      'view_dashboard',
+      'view_registrations',
+      'access_checkin',
+    ],
+    dashboard: '/committee/fashion',
+  },
+  {
+    id: 'THEATRE_COMMITTEE',
+    label: 'Cultural Theatre Committee',
+    password: process.env.THEATRE_COMMITTEE_PASSWORD || 'drama@lv321',
+    permissions: [
+      'view_dashboard',
+      'view_registrations',
+      'access_checkin',
+    ],
+    dashboard: '/committee/theatre',
+  },
+  {
+    id: 'LITERARY_COMMITTEE',
+    label: 'Literary & Quizzing Committee',
+    password: process.env.LITERARY_COMMITTEE_PASSWORD || 'words@lv321',
+    permissions: [
+      'view_dashboard',
+      'view_registrations',
+      'access_checkin',
+    ],
+    dashboard: '/committee/literary',
+  },
+  {
+    id: 'GAMING_COMMITTEE',
+    label: 'Esports & Gaming Committee',
+    password: process.env.GAMING_COMMITTEE_PASSWORD || 'nexus@lv321',
+    permissions: [
+      'view_dashboard',
+      'view_registrations',
+      'access_checkin',
+    ],
+    dashboard: '/committee/gaming',
+  },
+  {
     id: 'STAGE_COMMITTEE',
     label: 'Stage Committee',
     password: process.env.STAGE_COMMITTEE_PASSWORD || 'lion@lv321',

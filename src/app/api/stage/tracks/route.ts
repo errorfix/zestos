@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search')?.toLowerCase().trim();
     const eventIdFilter = searchParams.get('eventId');
+    const categoryFilter = searchParams.get('category');
     const trackStatusFilter = searchParams.get('trackStatus'); // 'ALL' | 'ATTACHED' | 'MISSING'
     const statusFilter = searchParams.get('status'); // 'ALL' | 'PAID' | 'PENDING'
 
@@ -58,6 +59,12 @@ export async function GET(request: NextRequest) {
 
     if (eventIdFilter && eventIdFilter !== 'ALL') {
       registrations = registrations.filter((r) => r.eventId === eventIdFilter);
+    }
+
+    if (categoryFilter && categoryFilter !== 'ALL') {
+      registrations = registrations.filter((r) =>
+        r.eventCategory.toLowerCase().includes(categoryFilter.toLowerCase())
+      );
     }
 
     if (trackStatusFilter === 'ATTACHED') {

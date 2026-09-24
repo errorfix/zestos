@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllRegistrations, getEvents } from '@/lib/db';
+import { cookies } from 'next/headers';
+import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';
+import { getAllowedCategoriesForCommittee } from '@/lib/committeeFlags';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,6 +52,28 @@ export async function GET(request: NextRequest) {
         })),
       };
     });
+
+    // Dynamic committee flags enforcement
+    const committeeParam = searchParams.get('committee');
+    let effectiveCommitteeId = committeeParam;
+
+    if (!effectiveCommitteeId) {
+      const cookieStore = await cookies();
+      const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
+      const session = await verifyAdminSessionToken(token);
+      if (session && session.roleId !== 'SUPER_ADMIN') {
+        effectiveCommitteeId = session.roleId;
+      }
+    }
+
+    if (effectiveCommitteeId) {
+      const allowedCategories = getAllowedCategoriesForCommittee(effectiveCommitteeId).map((c) =>
+        c.toLowerCase()
+      );
+      registrations = registrations.filter((r) =>
+        allowedCategories.includes(r.eventCategory.toLowerCase())
+      );
+    }
 
     if (categoryFilter) {
       registrations = registrations.filter(

@@ -21,6 +21,7 @@ import {
   Volume2,
   X,
   Filter,
+  Layers,
 } from 'lucide-react';
 
 export interface StagePerformerRow {
@@ -64,6 +65,7 @@ interface StageRegistrationsManagerProps {
   title?: string;
   subtitle?: string;
   allowEdit?: boolean;
+  categoryFilter?: 'ALL' | 'Music' | 'Dance' | 'Other' | string;
 }
 
 export default function StageRegistrationsManager({
@@ -71,6 +73,7 @@ export default function StageRegistrationsManager({
   title = 'Stage & AV Sound Console',
   subtitle = 'Strict roster of all performers registered for track-required events with live audio cues.',
   allowEdit = true,
+  categoryFilter: initialCategoryFilter = 'ALL',
 }: StageRegistrationsManagerProps) {
   const [registrations, setRegistrations] = useState<StagePerformerRow[]>([]);
   const [trackEvents, setTrackEvents] = useState<TrackEventOption[]>([]);
@@ -81,6 +84,14 @@ export default function StageRegistrationsManager({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedEventId, setSelectedEventId] = useState<string>('ALL');
   const [trackStatusFilter, setTrackStatusFilter] = useState<'ALL' | 'ATTACHED' | 'MISSING'>('ALL');
+  const resolvedCategory: 'ALL' | 'Music' | 'Dance' | 'Other' = initialCategoryFilter.toLowerCase().includes('music')
+    ? 'Music'
+    : initialCategoryFilter.toLowerCase().includes('dance')
+    ? 'Dance'
+    : initialCategoryFilter === 'ALL'
+    ? 'ALL'
+    : 'Other';
+  const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'Music' | 'Dance' | 'Other'>(resolvedCategory);
 
   // Copy feedback state
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -212,7 +223,15 @@ export default function StageRegistrationsManager({
       r.tickets.some((t) => t.ticketCode.toLowerCase().includes(q)) ||
       r.teamMembers.some((m) => m.fullName.toLowerCase().includes(q));
 
-    return matchesEvent && matchesTrackStatus && matchesSearch;
+    const matchesCategory =
+      categoryFilter === 'ALL' ||
+      (categoryFilter === 'Music' && r.eventCategory.toLowerCase().includes('music')) ||
+      (categoryFilter === 'Dance' && r.eventCategory.toLowerCase().includes('dance')) ||
+      (categoryFilter === 'Other' &&
+        !r.eventCategory.toLowerCase().includes('music') &&
+        !r.eventCategory.toLowerCase().includes('dance'));
+
+    return matchesEvent && matchesTrackStatus && matchesCategory && matchesSearch;
   });
 
   // Export Cue Sheet to CSV
@@ -262,6 +281,17 @@ export default function StageRegistrationsManager({
 
   const attachedCount = registrations.filter((r) => r.hasTrack).length;
   const missingCount = registrations.filter((r) => !r.hasTrack).length;
+  const musicTracksCount = registrations.filter((r) =>
+    r.eventCategory.toLowerCase().includes('music')
+  ).length;
+  const danceTracksCount = registrations.filter((r) =>
+    r.eventCategory.toLowerCase().includes('dance')
+  ).length;
+  const otherTracksCount = registrations.filter(
+    (r) =>
+      !r.eventCategory.toLowerCase().includes('music') &&
+      !r.eventCategory.toLowerCase().includes('dance')
+  ).length;
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
@@ -339,6 +369,65 @@ export default function StageRegistrationsManager({
 
       {/* Filter and Switcher Tabs */}
       <div className="space-y-3 pt-2">
+        {/* Category Switcher Tabs (Music / Dance / Others) */}
+        <div className="flex flex-wrap items-center gap-2 p-2 bg-slate-50 border border-slate-200/80 rounded-2xl">
+          <span className="text-xs font-bold text-slate-500 px-2 flex items-center gap-1.5">
+            <Filter className="w-3.5 h-3.5 text-slate-400" />
+            Switch Track Category:
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('ALL')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              categoryFilter === 'ALL'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            All Tracks ({registrations.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('Music')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              categoryFilter === 'Music'
+                ? 'bg-violet-600 text-white shadow-xs'
+                : 'bg-violet-50 text-violet-800 border border-violet-200 hover:bg-violet-100'
+            }`}
+          >
+            <Music className="w-3.5 h-3.5 text-violet-600" />
+            <span>Cultural Music ({musicTracksCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('Dance')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              categoryFilter === 'Dance'
+                ? 'bg-pink-600 text-white shadow-xs'
+                : 'bg-pink-50 text-pink-800 border border-pink-200 hover:bg-pink-100'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-pink-600" />
+            <span>Cultural Dance ({danceTracksCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('Other')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              categoryFilter === 'Other'
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-amber-600" />
+            <span>Theatre &amp; Fashion ({otherTracksCount})</span>
+          </button>
+        </div>
+
         {/* Track Status Segmented Buttons */}
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -350,7 +439,7 @@ export default function StageRegistrationsManager({
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            All Performers ({registrations.length})
+            All Status ({registrations.length})
           </button>
 
           <button

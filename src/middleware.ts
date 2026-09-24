@@ -3,18 +3,12 @@ import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getRoleById } from '@/lib/a
 import { updateSession } from '@/utils/supabase/middleware';
 
 // Routes requiring any authenticated committee/admin session
-const PROTECTED_PREFIXES = ['/admin', '/onspot', '/super-admin', '/informalz', '/stage'];
-const PROTECTED_API_PREFIXES = ['/api/admin', '/api/onspot', '/api/checkin', '/api/super-admin', '/api/informalz', '/api/stage'];
+const PROTECTED_PREFIXES = ['/admin', '/onspot', '/super-admin', '/informalz', '/stage', '/committee'];
+const PROTECTED_API_PREFIXES = ['/api/admin', '/api/onspot', '/api/checkin', '/api/super-admin', '/api/informalz', '/api/stage', '/api/committee'];
 
 // Routes restricted to SUPER_ADMIN role only
 const SUPER_ADMIN_PREFIXES = ['/super-admin'];
 const SUPER_ADMIN_API_PREFIXES = ['/api/super-admin'];
-
-// Committee-specific route boundaries
-const INFORMALZ_PREFIXES = ['/informalz'];
-const RI_PREFIXES = ['/admin', '/onspot'];
-const STAGE_PREFIXES = ['/stage'];
-const CHECKIN_PREFIXES = ['/checkin'];
 
 function matchesAny(pathname: string, prefixes: string[]): boolean {
   return prefixes.some(
@@ -67,7 +61,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // 3. Gate Security isolation:
-    // Gate security cannot access R&I, Stage, Informalz, or Super Admin panels / APIs
+    // Gate security can ONLY access /checkin
     if (session.roleId === 'GATE_SECURITY') {
       const isForbiddenApi = matchesAny(pathname, [
         '/api/admin',
@@ -83,30 +77,40 @@ export async function middleware(request: NextRequest) {
         );
       }
 
-      if (
-        matchesAny(pathname, RI_PREFIXES) ||
-        matchesAny(pathname, STAGE_PREFIXES) ||
-        matchesAny(pathname, INFORMALZ_PREFIXES) ||
-        matchesAny(pathname, SUPER_ADMIN_PREFIXES)
-      ) {
+      if (pathname !== '/checkin' && !pathname.startsWith('/checkin/')) {
         return NextResponse.redirect(new URL('/checkin', request.url));
       }
     }
 
-    // 4. Committee isolation:
-    // Informalz committee cannot access R&I or Stage panels
-    if (session.roleId === 'INFORMALZ_COMMITTEE' && (matchesAny(pathname, RI_PREFIXES) || matchesAny(pathname, STAGE_PREFIXES))) {
-      return NextResponse.redirect(new URL('/informalz', request.url));
-    }
+    // 4. Committee Workspace Boundary Enforcement:
+    // Super Admin has master uninhibited access across all committee workspaces.
+    // Individual committees are routed to their designated domain.
+    if (session.roleId !== 'SUPER_ADMIN' && session.roleId !== 'GATE_SECURITY') {
+      const userRole = getRoleById(session.roleId);
+      const userDashboard = userRole?.dashboard || '/admin';
 
-    // R&I committee cannot access Informalz or Stage panels
-    if (session.roleId === 'REGISTRATION_COMMITTEE' && (matchesAny(pathname, INFORMALZ_PREFIXES) || matchesAny(pathname, STAGE_PREFIXES))) {
-      return NextResponse.redirect(new URL('/admin', request.url));
-    }
+      // Check-in terminal is universally accessible for credentialed committee members
+      const isCheckin = pathname === '/checkin' || pathname.startsWith('/checkin/');
 
-    // Stage committee cannot access R&I or Informalz panels
-    if (session.roleId === 'STAGE_COMMITTEE' && (matchesAny(pathname, RI_PREFIXES) || matchesAny(pathname, INFORMALZ_PREFIXES))) {
-      return NextResponse.redirect(new URL('/stage', request.url));
+      if (!isCheckin) {
+        if (pathname.startsWith('/committee/')) {
+          if (!pathname.startsWith(userDashboard)) {
+            return NextResponse.redirect(new URL(userDashboard, request.url));
+          }
+        } else if (pathname === '/admin' || pathname.startsWith('/admin/') || pathname === '/onspot' || pathname.startsWith('/onspot/')) {
+          if (session.roleId !== 'REGISTRATION_COMMITTEE') {
+            return NextResponse.redirect(new URL(userDashboard, request.url));
+          }
+        } else if (pathname === '/informalz' || pathname.startsWith('/informalz/')) {
+          if (session.roleId !== 'INFORMALZ_COMMITTEE') {
+            return NextResponse.redirect(new URL(userDashboard, request.url));
+          }
+        } else if (pathname === '/stage' || pathname.startsWith('/stage/')) {
+          if (session.roleId !== 'STAGE_COMMITTEE') {
+            return NextResponse.redirect(new URL(userDashboard, request.url));
+          }
+        }
+      }
     }
   }
 
