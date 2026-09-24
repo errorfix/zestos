@@ -11,8 +11,8 @@ interface TimeLeft {
 }
 
 export default function CountdownTimer() {
-  // Festival target date: November 30, 2026, 09:00:00 AM IST
-  const targetDate = new Date('2026-11-30T09:00:00+05:30').getTime();
+  // Festival target date: October 30, 2026, 09:00:00 AM IST
+  const targetDate = new Date('2026-10-30T09:00:00+05:30').getTime();
 
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
     days: 0,
@@ -74,7 +74,7 @@ export default function CountdownTimer() {
           </div>
           <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>November 30, 2026</span>
+            <span>October 30, 2026</span>
           </div>
         </div>
 
