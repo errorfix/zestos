@@ -164,14 +164,14 @@ export default async function CommitteePortalPage({ params }: PageProps) {
               <span>Participant Check-In</span>
             </Link>
 
-            <Link
+            <a
               href="/api/auth/logout"
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 transition-colors"
               title="Sign Out"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden md:inline">Sign Out</span>
-            </Link>
+            </a>
           </div>
         </div>
 
