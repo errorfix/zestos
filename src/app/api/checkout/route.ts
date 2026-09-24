@@ -195,6 +195,7 @@ export async function POST(req: Request) {
       eventTitle: event.title,
       isMock: razorpayOrder.isMock,
       isFree: false,
+      keyId: process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
     });
   } catch (error) {
     console.error('Checkout initialization error:', error);

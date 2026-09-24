@@ -364,10 +364,10 @@ export default function RegistrationForm({
         // Lock the form permanently for this instance so user can't double-click if they close the modal
         setIsLocked(true);
 
-        const { registrationId, orderId, amount, isMock } = checkoutData;
+        const { registrationId, orderId, amount, isMock, keyId: returnedKeyId } = checkoutData;
 
         // 2. Paid Event: Open Live Razorpay or Staging Simulator
-        const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+        const keyId = returnedKeyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
         const canUseLiveModal =
           typeof window !== 'undefined' &&
           window.Razorpay &&
