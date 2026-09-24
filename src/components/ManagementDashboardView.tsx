@@ -603,7 +603,7 @@ export default function ManagementDashboardView({
                       </td>
                       <td className="py-3 px-4 text-right">
                         <span className="text-sm font-extrabold text-emerald-400">
-                          {e.feeAmount === 0 ? 'FREE' : `₹${e.feeAmount}`}
+                          {e.feeAmount === 0 ? 'FREE' : `₹${(e.feeAmount / 100).toLocaleString('en-IN')}`}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center">
