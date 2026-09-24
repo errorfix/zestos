@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Banknote,
@@ -19,8 +19,13 @@ import {
   Check,
   Phone,
   GraduationCap,
+  Camera,
+  RefreshCw,
+  X,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { InitialEventData } from '@/lib/mockEvents';
+import { compressAndStripExif, captureVideoFrameAndCompress } from '@/lib/imageCompressor';
 
 interface OnSpotFormProps {
   events: InitialEventData[];
@@ -33,6 +38,13 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
   const [leadPhone, setLeadPhone] = useState<string>('');
   const [college, setCollege] = useState<string>("Lingaya's Vidyapeeth");
   const [leadRollNumber, setLeadRollNumber] = useState<string>('');
+  const [photoUrl, setPhotoUrl] = useState<string>('');
+  const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [razorpayPaymentId, setRazorpayPaymentId] = useState<string>('');
   const [payerName, setPayerName] = useState<string>('');
   const [dayOption, setDayOption] = useState<'SINGLE_DAY' | 'BOTH_DAYS'>('SINGLE_DAY');
@@ -50,10 +62,78 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
     leadName?: string;
     leadPhone?: string;
     college?: string;
+    photoUrl?: string;
     razorpayPaymentId?: string;
   } | null>(null);
 
   const [isSubmitting, startTransition] = useTransition();
+
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+      }
+    };
+  }, []);
+
+  const startCamera = async () => {
+    setCameraError(null);
+    setIsCameraActive(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+    } catch (err) {
+      console.error('Failed to open camera:', err);
+      setCameraError('Unable to open camera. Please check browser camera permissions or upload a file.');
+      setIsCameraActive(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const handleCapturePhoto = () => {
+    if (!videoRef.current) return;
+    try {
+      const compressed = captureVideoFrameAndCompress(videoRef.current, {
+        maxWidth: 480,
+        maxHeight: 600,
+        quality: 0.82,
+      });
+      setPhotoUrl(compressed);
+      stopCamera();
+    } catch (err) {
+      setCameraError((err as Error).message || 'Failed to capture frame');
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressAndStripExif(file, {
+        maxWidth: 480,
+        maxHeight: 600,
+        quality: 0.82,
+      });
+      setPhotoUrl(compressed);
+      setCameraError(null);
+    } catch (err) {
+      setCameraError((err as Error).message || 'Failed to compress photo');
+    }
+  };
 
   const currentEvent = events.find((e) => e.id === selectedEventId) || events[0];
   const isFreeEvent = currentEvent?.feeAmount === 0 && !currentEvent?.hasDayOptions;
@@ -62,7 +142,7 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
       ? 250
       : 150
     : currentEvent
-    ? currentEvent.feeAmount / 100
+    ? (currentEvent.onSpotFeeAmount != null ? currentEvent.onSpotFeeAmount : currentEvent.feeAmount) / 100
     : 0;
 
   const totalCount = 1 + teamMembers.length;
@@ -128,6 +208,7 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
             leadEmail: leadEmail.trim(),
             leadPhone: cleanPhone,
             college: college.trim(),
+            photoUrl: photoUrl.trim() || undefined,
             razorpayPaymentId: razorpayPaymentId.trim() || undefined,
             payerName: payerName.trim() || undefined,
             paymentMethod: effectivePaymentMethod,
@@ -148,6 +229,7 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
           leadName: leadName.trim(),
           leadPhone: cleanPhone,
           college: college.trim(),
+          photoUrl: photoUrl.trim() || undefined,
           razorpayPaymentId: razorpayPaymentId.trim() || undefined,
         });
       } catch (err) {
@@ -162,6 +244,8 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
     setLeadPhone('');
     setCollege("Lingaya's Vidyapeeth");
     setLeadRollNumber('');
+    setPhotoUrl('');
+    stopCamera();
     setRazorpayPaymentId('');
     setPayerName('');
     setTrackUploadUrl('');
@@ -184,7 +268,7 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
         </span>
 
         <h2 className="text-2xl font-bold text-slate-900 mt-2">
-          Passes Issued & Entry Confirmed
+          Passes Issued &amp; Entry Confirmed
         </h2>
 
         <p className="text-sm text-slate-600 mt-1">
@@ -200,22 +284,35 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
 
         {/* Attendee, Contact & Transaction Dossier */}
         <div className="my-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-3 text-xs">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-slate-200">
-            <div>
-              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Participant Details</span>
-              <strong className="text-slate-900 text-sm block mt-0.5">{completedRegistration.leadName}</strong>
-              {completedRegistration.leadPhone && (
-                <span className="text-slate-700 font-semibold flex items-center gap-1 mt-1">
-                  <Phone className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                  {completedRegistration.leadPhone}
-                </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-slate-200 items-start">
+            <div className="flex items-start gap-3">
+              {completedRegistration.photoUrl ? (
+                <img
+                  src={completedRegistration.photoUrl}
+                  alt={completedRegistration.leadName || 'Attendee'}
+                  className="w-12 h-14 object-cover rounded-lg border border-slate-300 shadow-xs shrink-0"
+                />
+              ) : (
+                <div className="w-12 h-14 rounded-lg bg-slate-200 flex items-center justify-center text-slate-400 shrink-0">
+                  <Camera className="w-5 h-5" />
+                </div>
               )}
-              {completedRegistration.college && (
-                <span className="text-slate-600 flex items-center gap-1 mt-0.5">
-                  <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  {completedRegistration.college}
-                </span>
-              )}
+              <div>
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Participant Details</span>
+                <strong className="text-slate-900 text-sm block mt-0.5">{completedRegistration.leadName}</strong>
+                {completedRegistration.leadPhone && (
+                  <span className="text-slate-700 font-semibold flex items-center gap-1 mt-1">
+                    <Phone className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    {completedRegistration.leadPhone}
+                  </span>
+                )}
+                {completedRegistration.college && (
+                  <span className="text-slate-600 flex items-center gap-1 mt-0.5">
+                    <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    {completedRegistration.college}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="text-left sm:text-right">
@@ -298,26 +395,44 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
                 onChange={(e) => setSelectedEventId(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 text-sm font-medium focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] bg-white"
               >
-                {events.map((evt) => (
-                  <option key={evt.id} value={evt.id}>
-                    {evt.title} — {evt.hasDayOptions ? '₹150/₹250' : evt.feeAmount === 0 ? 'FREE' : `₹${evt.feeAmount / 100}`}
-                  </option>
-                ))}
+                {events.map((evt) => {
+                  const onSpotPrice = evt.hasDayOptions
+                    ? '₹150/₹250'
+                    : evt.feeAmount === 0
+                    ? 'FREE'
+                    : `₹${(evt.onSpotFeeAmount != null ? evt.onSpotFeeAmount : evt.feeAmount) / 100}`;
+                  const isSurge =
+                    evt.onSpotFeeAmount != null &&
+                    evt.onSpotFeeAmount !== evt.feeAmount &&
+                    !evt.hasDayOptions;
+                  return (
+                    <option key={evt.id} value={evt.id}>
+                      {evt.title} — {onSpotPrice} {isSurge ? '(Walk-in Rate)' : ''}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
               <div>
-                <span className="text-xs text-slate-500 block">Entry Fee Required</span>
-                <span className="text-xl font-bold text-slate-900">
-                  {isFreeEvent ? (
-                    <span className="text-emerald-600">FREE (₹0)</span>
-                  ) : currentEvent?.hasDayOptions ? (
-                    <span>₹{calculatedFee}</span>
-                  ) : (
-                    <span>₹{currentEvent ? currentEvent.feeAmount / 100 : 0}</span>
-                  )}
-                </span>
+                <span className="text-xs text-slate-500 block">On-Spot Walk-in Desk Fee</span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xl font-extrabold text-slate-900">
+                    {isFreeEvent ? (
+                      <span className="text-emerald-600">FREE (₹0)</span>
+                    ) : (
+                      <span>₹{calculatedFee}</span>
+                    )}
+                  </span>
+                  {currentEvent?.onSpotFeeAmount != null &&
+                    currentEvent.onSpotFeeAmount !== currentEvent.feeAmount &&
+                    !currentEvent.hasDayOptions && (
+                      <span className="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
+                        Walk-in Rate (Online was ₹{currentEvent.feeAmount / 100})
+                      </span>
+                    )}
+                </div>
               </div>
               <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-200 text-slate-700">
                 {currentEvent?.category}
@@ -463,6 +578,166 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
                 placeholder="e.g. 22BTECHCS042"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm bg-white focus:border-[#1a73e8]"
               />
+            </div>
+
+            {/* Participant ID Badge Photo Capture & Upload */}
+            <div className="sm:col-span-2 pt-4 border-t border-slate-100">
+              <label className="block text-xs font-semibold text-slate-800 mb-2 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 font-bold">
+                  <Camera className="w-3.5 h-3.5 text-[#1a73e8]" />
+                  <span>Participant ID Badge Photo (Pass Verification)</span>
+                </span>
+                <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Auto EXIF-Stripped &amp; Compressed (~35KB)
+                </span>
+              </label>
+
+              {cameraError && (
+                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{cameraError}</span>
+                </div>
+              )}
+
+              {/* State A: Live Desk Camera is Active */}
+              {isCameraActive && (
+                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-white space-y-3 shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                      <span className="text-xs font-bold text-slate-200">Desk Webcam Live Viewfinder</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                      title="Close Camera"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="relative aspect-4/3 max-w-sm mx-auto bg-black rounded-xl overflow-hidden border border-slate-700 flex items-center justify-center">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Framing guide overlay */}
+                    <div className="absolute inset-4 border-2 border-dashed border-white/40 rounded-2xl pointer-events-none flex items-center justify-center">
+                      <span className="text-[10px] text-white/80 bg-black/50 px-2.5 py-1 rounded-full font-medium">
+                        Center Face Here
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleCapturePhoto}
+                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-extrabold bg-[#1a73e8] hover:bg-[#1557b0] text-white shadow-lg transition-all active:scale-95 cursor-pointer"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span>Capture &amp; Attach Photo</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* State B: Photo is Attached */}
+              {!isCameraActive && photoUrl && (
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <img
+                      src={photoUrl}
+                      alt="Attendee ID"
+                      className="w-16 h-20 object-cover rounded-xl border border-slate-300 shadow-sm shrink-0"
+                    />
+                    <div>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>Photo Attached to Digital Pass</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        EXIF &amp; GPS metadata stripped • Clean canvas JPEG (~35KB) for gate check-in pass.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={startCamera}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Retake Camera</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPhotoUrl('')}
+                      className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                      title="Remove Photo"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* State C: No Photo Attached Yet */}
+              {!isCameraActive && !photoUrl && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={startCamera}
+                    className="p-4 rounded-2xl border-2 border-dashed border-[#1a73e8]/40 hover:border-[#1a73e8] bg-[#e8f0fe]/40 hover:bg-[#e8f0fe] transition-all flex items-center gap-3 text-left group cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-[#1a73e8] text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                      <Camera className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 block">
+                        Click Live Photo (Desk Camera)
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        Direct webcam snapshot right at the desk
+                      </span>
+                    </div>
+                  </button>
+
+                  <label className="p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100/70 transition-all flex items-center gap-3 cursor-pointer group">
+                    <div className="w-10 h-10 rounded-xl bg-slate-200 group-hover:bg-slate-300 text-slate-700 flex items-center justify-center shrink-0 transition-colors">
+                      <UploadCloud className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 block">
+                        Upload Image File
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        Auto-strips EXIF &amp; metadata (~35KB)
+                      </span>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="user"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              )}
             </div>
           </div>
         </div>

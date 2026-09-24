@@ -87,3 +87,56 @@ export async function compressAndStripExif(
     reader.readAsDataURL(file);
   });
 }
+
+/**
+ * Captures a live frame from an HTMLVideoElement webcam feed, renders onto an
+ * off-screen canvas, strips all metadata, and returns a compressed JPEG data URL.
+ */
+export function captureVideoFrameAndCompress(
+  video: HTMLVideoElement,
+  options: CompressionOptions = {}
+): string {
+  const { maxWidth = 480, maxHeight = 600, quality = 0.82 } = options;
+
+  let width = video.videoWidth || 640;
+  let height = video.videoHeight || 480;
+
+  if (width === 0 || height === 0) {
+    throw new Error('Camera video stream is not ready yet.');
+  }
+
+  // Calculate aspect-ratio preserving dimensions
+  if (width > height) {
+    if (width > maxWidth) {
+      height = Math.round((height * maxWidth) / width);
+      width = maxWidth;
+    }
+  } else {
+    if (height > maxHeight) {
+      width = Math.round((width * maxHeight) / height);
+      height = maxHeight;
+    }
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('HTML5 Canvas 2D context not available.');
+  }
+
+  // Fill white background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  // Draw video frame onto canvas (no metadata copied)
+  ctx.drawImage(video, 0, 0, width, height);
+
+  // Return clean, compressed JPEG
+  return canvas.toDataURL('image/jpeg', quality);
+}

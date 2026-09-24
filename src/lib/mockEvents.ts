@@ -16,6 +16,7 @@ export interface InitialEventData {
   status: 'OPEN' | 'CLOSED';
   requiresTrackUpload: boolean;
   hasDayOptions: boolean; // For ₹150 / Day or ₹250 / Both Days
+  onSpotFeeAmount?: number; // Optional walk-in desk price in paise (if null/undefined, defaults to feeAmount)
 }
 
 export const STAGE_GOOGLE_DRIVE_FOLDER =

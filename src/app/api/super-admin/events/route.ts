@@ -22,6 +22,7 @@ const eventUpsertSchema = z.object({
   status: z.enum(['OPEN', 'CLOSED']).default('OPEN'),
   requiresTrackUpload: z.boolean().default(false),
   hasDayOptions: z.boolean().default(false),
+  onSpotFeeInr: z.number().min(0).optional().nullable(),
 });
 
 export async function GET() {
@@ -65,6 +66,7 @@ export async function POST(req: Request) {
       status,
       requiresTrackUpload,
       hasDayOptions,
+      onSpotFeeInr,
     } = parsed.data;
 
     if (minTeamSize > maxTeamSize) {
@@ -75,6 +77,8 @@ export async function POST(req: Request) {
     }
 
     const feeAmount = Math.round(feeInr * 100);
+    const onSpotFeeAmount =
+      onSpotFeeInr != null && !isNaN(onSpotFeeInr) ? Math.round(onSpotFeeInr * 100) : undefined;
 
     if (id) {
       const updated = await updateEvent(id, {
@@ -93,6 +97,7 @@ export async function POST(req: Request) {
         status,
         requiresTrackUpload,
         hasDayOptions,
+        onSpotFeeAmount,
       });
       return NextResponse.json({ success: true, event: updated, action: 'updated' });
     } else {
@@ -112,6 +117,7 @@ export async function POST(req: Request) {
         status,
         requiresTrackUpload,
         hasDayOptions,
+        onSpotFeeAmount,
       });
       return NextResponse.json({ success: true, event: created, action: 'created' });
     }

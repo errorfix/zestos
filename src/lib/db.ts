@@ -143,6 +143,7 @@ export async function getEvents(): Promise<InitialEventData[]> {
           status: (evt.status as 'OPEN' | 'CLOSED') || mem?.status || 'OPEN',
           requiresTrackUpload: evt.requiresTrackUpload ?? mem?.requiresTrackUpload ?? false,
           hasDayOptions: evt.hasDayOptions ?? mem?.hasDayOptions ?? false,
+          onSpotFeeAmount: evt.onSpotFeeAmount ?? mem?.onSpotFeeAmount,
           maxCapacity: mem?.maxCapacity,
         };
       });
@@ -174,6 +175,7 @@ export async function createEvent(data: {
   status?: 'OPEN' | 'CLOSED';
   requiresTrackUpload?: boolean;
   hasDayOptions?: boolean;
+  onSpotFeeAmount?: number;
 }): Promise<InitialEventData> {
   const id = `evt_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
   const newEvent: InitialEventData = {
@@ -193,6 +195,7 @@ export async function createEvent(data: {
     status: data.status || 'OPEN',
     requiresTrackUpload: data.requiresTrackUpload || false,
     hasDayOptions: data.hasDayOptions || false,
+    onSpotFeeAmount: data.onSpotFeeAmount,
   };
 
   try {
@@ -214,6 +217,7 @@ export async function createEvent(data: {
         status: newEvent.status,
         requiresTrackUpload: newEvent.requiresTrackUpload,
         hasDayOptions: newEvent.hasDayOptions,
+        onSpotFeeAmount: newEvent.onSpotFeeAmount,
       },
     });
   } catch {
@@ -258,6 +262,7 @@ export async function updateEvent(
         status: updated.status,
         requiresTrackUpload: updated.requiresTrackUpload,
         hasDayOptions: updated.hasDayOptions,
+        onSpotFeeAmount: updated.onSpotFeeAmount,
       },
     });
   } catch {
@@ -567,7 +572,7 @@ export async function createOnSpotRegistration({
       ? dayOption === 'BOTH_DAYS'
         ? 25000
         : 15000
-      : event.feeAmount;
+      : (event.onSpotFeeAmount != null ? event.onSpotFeeAmount : event.feeAmount);
 
   const ticketsToCreate = [
     {

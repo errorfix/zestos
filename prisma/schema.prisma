@@ -26,6 +26,7 @@ model Event {
   status              String         @default("OPEN") // OPEN, CLOSED
   requiresTrackUpload Boolean        @default(false)  // Audio / Video stage track needed
   hasDayOptions       Boolean        @default(false)  // Legacy flag
+  onSpotFeeAmount     Int?           // Optional on-spot walk-in counter fee in paise
   registrations       Registration[]
 }
 

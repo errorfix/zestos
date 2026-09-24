@@ -17,6 +17,8 @@ import {
   CheckCircle2,
   Mic2,
   Music,
+  Banknote,
+  QrCode,
 } from 'lucide-react';
 
 interface MetricsData {
@@ -53,7 +55,7 @@ export default function SuperAdminView({
   informalzMetrics,
   stageMetrics,
 }: SuperAdminViewProps) {
-  const [activeCommittee, setActiveCommittee] = useState<'RI' | 'INFORMALZ' | 'STAGE' | 'ALL'>('RI');
+  const [activeCommittee, setActiveCommittee] = useState<'RI' | 'INFORMALZ' | 'STAGE' | 'ONSPOT' | 'ALL'>('RI');
 
   const informalzCount = events.filter((e) => e.category.toLowerCase() === 'informalz').length;
   const riCount = events.filter((e) => e.category.toLowerCase() !== 'informalz').length;
@@ -79,7 +81,7 @@ export default function SuperAdminView({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
           {/* 1. R&I Committee Tab */}
           <button
             type="button"
@@ -227,7 +229,56 @@ export default function SuperAdminView({
             </div>
           </button>
 
-          {/* 4. Master View Tab */}
+          {/* 4. On-Spot Walk-In Counter Tab */}
+          <button
+            type="button"
+            onClick={() => setActiveCommittee('ONSPOT')}
+            className={`p-5 rounded-2xl border-2 text-left transition-all duration-200 flex flex-col justify-between ${
+              activeCommittee === 'ONSPOT'
+                ? 'bg-emerald-950/40 border-emerald-500 shadow-lg ring-2 ring-emerald-500/20'
+                : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    activeCommittee === 'ONSPOT'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      : 'bg-slate-800 text-slate-400'
+                  }`}
+                >
+                  Walk-in Pricing
+                </span>
+                <Banknote
+                  className={`w-4 h-4 ${
+                    activeCommittee === 'ONSPOT' ? 'text-emerald-400' : 'text-slate-500'
+                  }`}
+                />
+              </div>
+              <h3 className="text-lg font-bold text-white">
+                On-Spot Counter
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Walk-in counter prices, desk surges &amp; cash/UPI audit.
+              </p>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+              <span className="text-slate-400 font-medium">
+                {events.length} Events Configured
+              </span>
+              <span
+                className={`font-bold ${
+                  activeCommittee === 'ONSPOT' ? 'text-emerald-400' : 'text-slate-500'
+                }`}
+              >
+                {activeCommittee === 'ONSPOT' ? '● Active' : 'Switch →'}
+              </span>
+            </div>
+          </button>
+
+          {/* 5. Master View Tab */}
           <button
             type="button"
             onClick={() => setActiveCommittee('ALL')}
@@ -442,7 +493,31 @@ export default function SuperAdminView({
       )}
 
       {/* ========================================================================= */}
-      {/* 🌐 SECTION 4: MASTER OVERVIEW (ALL COMBINED) */}
+      {/* 💵 SECTION 4: ON-SPOT WALK-IN COUNTER WORKSPACE */}
+      {/* ========================================================================= */}
+      {activeCommittee === 'ONSPOT' && (
+        <div className="space-y-8 animate-in fade-in-50 duration-200">
+          <section className="bg-slate-900 rounded-3xl border border-emerald-900/40 shadow-sm p-6 sm:p-8">
+            <AdminEventsManager
+              initialEvents={events}
+              apiEndpoint="/api/super-admin/events"
+              title="On-Spot Walk-in Counter Event & Price Manager"
+              subtitle="Configure special on-spot door prices (e.g. ₹200 walk-in vs ₹150 online) and manage on-spot counter availability in real time."
+            />
+          </section>
+
+          <section>
+            <AdminRegistrationsTable
+              apiEndpoint="/api/admin/registrations"
+              title="Walk-in &amp; On-Spot Desk Registry"
+              subtitle="Audit desk walk-in attendees, cash receipts, and desk UPI payments with 1-click Razorpay ID verification."
+            />
+          </section>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 🌐 SECTION 5: MASTER OVERVIEW (ALL COMBINED) */}
       {/* ========================================================================= */}
       {activeCommittee === 'ALL' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
