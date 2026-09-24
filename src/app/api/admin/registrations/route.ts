@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       const cookieStore = await cookies();
       const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
       const session = await verifyAdminSessionToken(token);
-      if (session && session.roleId !== 'SUPER_ADMIN') {
+      if (session && session.roleId !== 'SUPER_ADMIN' && session.roleId !== 'MANAGEMENT') {
         effectiveCommitteeId = session.roleId;
       }
     }

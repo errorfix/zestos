@@ -3,7 +3,7 @@ import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getRoleById } from '@/lib/a
 import { updateSession } from '@/utils/supabase/middleware';
 
 // Routes requiring any authenticated committee/admin session
-const PROTECTED_PREFIXES = ['/admin', '/onspot', '/super-admin', '/informalz', '/stage', '/committee'];
+const PROTECTED_PREFIXES = ['/admin', '/onspot', '/super-admin', '/informalz', '/stage', '/committee', '/management'];
 const PROTECTED_API_PREFIXES = ['/api/admin', '/api/onspot', '/api/checkin', '/api/super-admin', '/api/informalz', '/api/stage', '/api/committee'];
 
 // Routes restricted to SUPER_ADMIN role only
@@ -93,7 +93,14 @@ export async function middleware(request: NextRequest) {
       const isCheckin = pathname === '/checkin' || pathname.startsWith('/checkin/');
 
       if (!isCheckin) {
-        if (pathname.startsWith('/committee/')) {
+        if (pathname === '/management' || pathname.startsWith('/management/')) {
+          if (session.roleId !== 'MANAGEMENT') {
+            return NextResponse.redirect(new URL(userDashboard, request.url));
+          }
+        } else if (session.roleId === 'MANAGEMENT') {
+          // Higher authority is locked to /management observatory
+          return NextResponse.redirect(new URL('/management', request.url));
+        } else if (pathname.startsWith('/committee/')) {
           if (!pathname.startsWith(userDashboard)) {
             return NextResponse.redirect(new URL(userDashboard, request.url));
           }

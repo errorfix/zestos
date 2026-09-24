@@ -120,6 +120,13 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    if (session.roleId === 'MANAGEMENT') {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: Management panel is strictly read-only. Editing is disabled.' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { registrationId, trackUploadUrl, trackNotes } = body;
 

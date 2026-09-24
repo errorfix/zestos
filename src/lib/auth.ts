@@ -155,6 +155,16 @@ export const ROLE_REGISTRY: RoleDefinition[] = [
     ],
     dashboard: '/checkin',
   },
+  {
+    id: 'MANAGEMENT',
+    label: 'Higher Authority & Management (Read-Only)',
+    password: process.env.MANAGEMENT_PASSWORD || 'apex@lv321',
+    permissions: [
+      'view_dashboard',
+      'view_registrations',
+    ],
+    dashboard: '/management',
+  },
 ];
 
 /** Roles visible in the login dropdown */
