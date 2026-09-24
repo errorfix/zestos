@@ -358,6 +358,30 @@ export default function RegistrationForm({
     setTeamMembers(updated);
   };
 
+  const [memberPhotoCompressing, setMemberPhotoCompressing] = useState<Record<number, boolean>>({});
+
+  const handleMemberPhotoUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setMemberPhotoCompressing((prev) => ({ ...prev, [index]: true }));
+    setErrorMessage(null);
+
+    try {
+      const compressedDataUrl = await compressAndStripExif(file, {
+        maxWidth: 480,
+        maxHeight: 600,
+        quality: 0.82,
+      });
+
+      handleMemberChange(index, 'photoUrl', compressedDataUrl);
+    } catch (err) {
+      setErrorMessage((err as Error).message || `Failed to process team member #${index + 2} photo.`);
+    } finally {
+      setMemberPhotoCompressing((prev) => ({ ...prev, [index]: false }));
+    }
+  };
+
   const displayError = (msg: string) => {
     setErrorMessage(msg);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -549,6 +573,17 @@ export default function RegistrationForm({
     for (let i = 0; i < requiredAdditional; i++) {
       if (!teamMembers[i]?.fullName.trim()) {
         displayError(`Team Member #${i + 2} name is strictly required for ${currentEvent.title}.`);
+        return;
+      }
+      if (!teamMembers[i]?.photoUrl) {
+        displayError(`Photo is required for Team Member #${i + 2} (${teamMembers[i].fullName}) to print on their pass.`);
+        return;
+      }
+    }
+
+    for (let i = requiredAdditional; i < teamMembers.length; i++) {
+      if (teamMembers[i]?.fullName.trim() && !teamMembers[i]?.photoUrl) {
+        displayError(`Please upload a photo for Team Member #${i + 2} (${teamMembers[i].fullName}) for their pass.`);
         return;
       }
     }
@@ -1220,7 +1255,7 @@ export default function RegistrationForm({
                         )}
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                           <label
                             htmlFor={`tm_name_${idx}`}
@@ -1257,6 +1292,102 @@ export default function RegistrationForm({
                             placeholder="Mobile number"
                             className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-xs bg-white focus:border-[#1a73e8]"
                           />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor={`tm_college_${idx}`}
+                            className="block text-xs font-semibold text-slate-700 mb-1"
+                          >
+                            College / Institute
+                          </label>
+                          <input
+                            id={`tm_college_${idx}`}
+                            type="text"
+                            value={member.college ?? college}
+                            onChange={(e) => handleMemberChange(idx, 'college', e.target.value)}
+                            placeholder="College name"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-xs bg-white focus:border-[#1a73e8]"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Team Member Photo Uploader */}
+                      <div className="pt-2 border-t border-slate-200/80">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200">
+                          <div className="flex items-center gap-3">
+                            <div className="relative w-12 h-12 rounded-xl border-2 border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center shrink-0">
+                              {member.photoUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={member.photoUrl}
+                                  alt={member.fullName || `Member #${memberNumber}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <Camera className="w-5 h-5 text-slate-400" />
+                              )}
+                              {memberPhotoCompressing[idx] && (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                </div>
+                              )}
+                            </div>
+
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-bold text-slate-800">
+                                  Member Photo
+                                </span>
+                                {isRequired && (
+                                  <span className="text-red-500 font-bold text-xs">*</span>
+                                )}
+                                {member.photoUrl && (
+                                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                    Attached
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-slate-400">
+                                {member.photoUrl
+                                  ? 'Photo verified & compressed for official pass'
+                                  : 'Required to print on their gate badge pass'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="file"
+                              id={`tm_photo_input_${idx}`}
+                              accept="image/jpeg,image/png,image/webp"
+                              onChange={(e) => handleMemberPhotoUpload(idx, e)}
+                              className="hidden"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const el = document.getElementById(`tm_photo_input_${idx}`);
+                                el?.click();
+                              }}
+                              disabled={memberPhotoCompressing[idx]}
+                              className="px-3 py-1.5 text-xs font-bold text-[#1a73e8] bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 inline-flex items-center gap-1.5"
+                            >
+                              <Camera className="w-3.5 h-3.5" />
+                              <span>{member.photoUrl ? 'Change Photo' : 'Upload Photo'}</span>
+                            </button>
+
+                            {member.photoUrl && (
+                              <button
+                                type="button"
+                                onClick={() => handleMemberChange(idx, 'photoUrl', '')}
+                                className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                                title="Remove photo"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

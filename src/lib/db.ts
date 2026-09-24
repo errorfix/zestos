@@ -381,14 +381,26 @@ export async function createFreeRegistration({
   eventId,
   leadName,
   leadEmail,
-  teamMembers,
+  leadPhone,
+  college,
+  photoUrl,
+  teamMembers = [],
   trackUploadUrl,
   trackNotes,
 }: {
   eventId: string;
   leadName: string;
   leadEmail: string;
-  teamMembers: Array<{ fullName: string; rollNumber?: string }>;
+  leadPhone?: string;
+  college?: string;
+  photoUrl?: string;
+  teamMembers?: Array<{
+    fullName: string;
+    rollNumber?: string;
+    phone?: string;
+    college?: string;
+    photoUrl?: string;
+  }>;
   trackUploadUrl?: string;
   trackNotes?: string;
 }): Promise<{ registrationId: string; tickets: Array<{ ticketCode: string; securityHash: string }> }> {
@@ -405,6 +417,8 @@ export async function createFreeRegistration({
       status: 'ISSUED' as const,
       securityHash: '',
       fullName: leadName,
+      college: college || "Lingaya's Vidyapeeth",
+      photoUrl: photoUrl || null,
     },
     ...teamMembers.map((tm, idx) => ({
       id: `tkt_tm_${idx}_${Date.now()}`,
@@ -412,6 +426,8 @@ export async function createFreeRegistration({
       status: 'ISSUED' as const,
       securityHash: '',
       fullName: tm.fullName,
+      college: tm.college || college || "Lingaya's Vidyapeeth",
+      photoUrl: tm.photoUrl || photoUrl || null,
     })),
   ];
 
@@ -426,6 +442,9 @@ export async function createFreeRegistration({
         eventId,
         leadName,
         leadEmail,
+        leadPhone: leadPhone || null,
+        college: college || null,
+        photoUrl: photoUrl || null,
         status: 'PAID',
         paymentMethod: 'FREE_REGISTRATION',
         dayOption: 'FREE_ACCESS',
@@ -436,6 +455,9 @@ export async function createFreeRegistration({
           create: teamMembers.map((m) => ({
             fullName: m.fullName,
             rollNumber: m.rollNumber || null,
+            phone: m.phone || null,
+            college: m.college || college || null,
+            photoUrl: m.photoUrl || null,
           })),
         },
         tickets: {
@@ -443,6 +465,9 @@ export async function createFreeRegistration({
             ticketCode: t.ticketCode,
             status: 'ISSUED',
             securityHash: t.securityHash,
+            fullName: t.fullName,
+            college: t.college,
+            photoUrl: t.photoUrl,
           })),
         },
       },
@@ -456,6 +481,9 @@ export async function createFreeRegistration({
     eventId,
     leadName,
     leadEmail,
+    leadPhone: leadPhone || null,
+    college: college || null,
+    photoUrl: photoUrl || null,
     status: 'PAID',
     paymentMethod: 'FREE_REGISTRATION',
     dayOption: 'FREE_ACCESS',
@@ -468,6 +496,9 @@ export async function createFreeRegistration({
       id: `tm_${idx}_${Date.now()}`,
       fullName: m.fullName,
       rollNumber: m.rollNumber || null,
+      phone: m.phone || null,
+      college: m.college || college || null,
+      photoUrl: m.photoUrl || null,
     })),
     tickets: ticketsToCreate,
     event,
@@ -491,6 +522,9 @@ export async function createOnSpotRegistration({
   eventId,
   leadName,
   leadEmail,
+  leadPhone,
+  college,
+  photoUrl,
   paymentMethod,
   dayOption,
   trackUploadUrl,
@@ -500,11 +534,20 @@ export async function createOnSpotRegistration({
   eventId: string;
   leadName: string;
   leadEmail: string;
+  leadPhone?: string;
+  college?: string;
+  photoUrl?: string;
   paymentMethod: string;
   dayOption?: string;
   trackUploadUrl?: string;
   trackNotes?: string;
-  teamMembers: Array<{ fullName: string; rollNumber?: string }>;
+  teamMembers?: Array<{
+    fullName: string;
+    rollNumber?: string;
+    phone?: string;
+    college?: string;
+    photoUrl?: string;
+  }>;
 }): Promise<{ registrationId: string; tickets: Array<{ ticketCode: string; securityHash: string }> }> {
   const event = await getEventById(eventId);
   if (!event) throw new Error('Event not found');
@@ -519,6 +562,8 @@ export async function createOnSpotRegistration({
       status: 'ISSUED' as const,
       securityHash: '',
       fullName: leadName,
+      college: college || "Lingaya's Vidyapeeth",
+      photoUrl: photoUrl || null,
     },
     ...teamMembers.map((tm, idx) => ({
       id: `tkt_tm_${idx}_${Date.now()}`,
@@ -526,6 +571,8 @@ export async function createOnSpotRegistration({
       status: 'ISSUED' as const,
       securityHash: '',
       fullName: tm.fullName,
+      college: tm.college || college || "Lingaya's Vidyapeeth",
+      photoUrl: tm.photoUrl || photoUrl || null,
     })),
   ];
 
@@ -540,6 +587,9 @@ export async function createOnSpotRegistration({
         eventId,
         leadName,
         leadEmail,
+        leadPhone: leadPhone || null,
+        college: college || null,
+        photoUrl: photoUrl || null,
         status: 'PAID',
         paymentMethod,
         dayOption: dayOption || null,
@@ -550,6 +600,9 @@ export async function createOnSpotRegistration({
           create: teamMembers.map((m) => ({
             fullName: m.fullName,
             rollNumber: m.rollNumber || null,
+            phone: m.phone || null,
+            college: m.college || college || null,
+            photoUrl: m.photoUrl || null,
           })),
         },
         tickets: {
@@ -557,6 +610,9 @@ export async function createOnSpotRegistration({
             ticketCode: t.ticketCode,
             status: 'ISSUED',
             securityHash: t.securityHash,
+            fullName: t.fullName,
+            college: t.college,
+            photoUrl: t.photoUrl,
           })),
         },
       },
@@ -570,6 +626,9 @@ export async function createOnSpotRegistration({
     eventId,
     leadName,
     leadEmail,
+    leadPhone: leadPhone || null,
+    college: college || null,
+    photoUrl: photoUrl || null,
     status: 'PAID',
     paymentMethod,
     dayOption: dayOption || null,
@@ -582,6 +641,9 @@ export async function createOnSpotRegistration({
       id: `tm_${idx}_${Date.now()}`,
       fullName: m.fullName,
       rollNumber: m.rollNumber || null,
+      phone: m.phone || null,
+      college: m.college || college || null,
+      photoUrl: m.photoUrl || null,
     })),
     tickets: ticketsToCreate,
     event,
@@ -726,16 +788,23 @@ export async function fulfillPaymentAndGenerateTickets({
 export async function checkInTicket({
   ticketCode,
   signature,
+  action = 'CHECK_IN',
 }: {
   ticketCode: string;
   signature?: string;
+  action?: 'LOOKUP' | 'CHECK_IN' | 'WAITLIST' | 'RESET';
 }): Promise<{
   success: boolean;
   ticketCode: string;
   attendeeName: string;
+  college?: string | null;
+  phone?: string | null;
+  photoUrl?: string | null;
   eventTitle: string;
-  status: 'CHECKED_IN' | 'ALREADY_CHECKED_IN' | 'INVALID';
-  checkedInAt: Date;
+  eventCategory?: string | null;
+  dayOption?: string | null;
+  status: 'ISSUED' | 'CHECKED_IN' | 'WAITLIST' | 'ALREADY_CHECKED_IN' | 'INVALID';
+  checkedInAt?: Date | string | null;
   message: string;
 }> {
   const normalizedCode = ticketCode.trim().toUpperCase();
@@ -751,18 +820,32 @@ export async function checkInTicket({
     });
 
     if (dbTicket) {
+      const reg = dbTicket.registration;
+      const attendeeName = dbTicket.fullName || reg.leadName;
+      const college = dbTicket.college || reg.college || null;
+      const photoUrl = dbTicket.photoUrl || reg.photoUrl || null;
+      const phone = reg.leadPhone || null;
+      const eventTitle = reg.event.title;
+      const eventCategory = reg.event.category;
+      const dayOption = reg.dayOption;
+
       if (signature) {
         const isValidSig = verifyTicketSecurityHash(
           dbTicket.ticketCode,
-          dbTicket.registration.leadEmail,
+          reg.leadEmail,
           signature
         );
         if (!isValidSig) {
           return {
             success: false,
             ticketCode: normalizedCode,
-            attendeeName: dbTicket.registration.leadName,
-            eventTitle: dbTicket.registration.event.title,
+            attendeeName,
+            college,
+            phone,
+            photoUrl,
+            eventTitle,
+            eventCategory,
+            dayOption,
             status: 'INVALID',
             checkedInAt: new Date(),
             message: 'HMAC signature verification failed. Forged or corrupted pass.',
@@ -770,12 +853,90 @@ export async function checkInTicket({
         }
       }
 
+      // Handle LOOKUP action (non-mutating inspect)
+      if (action === 'LOOKUP') {
+        const currentStatus = (dbTicket.status as 'ISSUED' | 'CHECKED_IN' | 'WAITLIST') || 'ISSUED';
+        const msg =
+          currentStatus === 'CHECKED_IN'
+            ? `Pass was already checked in on ${new Date(dbTicket.checkedInAt || Date.now()).toLocaleTimeString()}.`
+            : currentStatus === 'WAITLIST'
+            ? 'Attendee is currently on WAITLIST (On Hold).'
+            : 'Valid Pass Verified: Ready for Admission.';
+
+        return {
+          success: true,
+          ticketCode: normalizedCode,
+          attendeeName,
+          college,
+          phone,
+          photoUrl,
+          eventTitle,
+          eventCategory,
+          dayOption,
+          status: currentStatus,
+          checkedInAt: dbTicket.checkedInAt,
+          message: msg,
+        };
+      }
+
+      // Handle WAITLIST action
+      if (action === 'WAITLIST') {
+        await prisma.ticket.update({
+          where: { id: dbTicket.id },
+          data: { status: 'WAITLIST' },
+        });
+
+        return {
+          success: true,
+          ticketCode: normalizedCode,
+          attendeeName,
+          college,
+          phone,
+          photoUrl,
+          eventTitle,
+          eventCategory,
+          dayOption,
+          status: 'WAITLIST',
+          checkedInAt: dbTicket.checkedInAt,
+          message: 'Attendee placed on WAITLIST (On Hold).',
+        };
+      }
+
+      // Handle RESET action
+      if (action === 'RESET') {
+        await prisma.ticket.update({
+          where: { id: dbTicket.id },
+          data: { status: 'ISSUED', checkedInAt: null },
+        });
+
+        return {
+          success: true,
+          ticketCode: normalizedCode,
+          attendeeName,
+          college,
+          phone,
+          photoUrl,
+          eventTitle,
+          eventCategory,
+          dayOption,
+          status: 'ISSUED',
+          checkedInAt: null,
+          message: 'Ticket status reset to ISSUED.',
+        };
+      }
+
+      // Default: CHECK_IN action
       if (dbTicket.status === 'CHECKED_IN') {
         return {
           success: false,
           ticketCode: normalizedCode,
-          attendeeName: dbTicket.registration.leadName,
-          eventTitle: dbTicket.registration.event.title,
+          attendeeName,
+          college,
+          phone,
+          photoUrl,
+          eventTitle,
+          eventCategory,
+          dayOption,
           status: 'ALREADY_CHECKED_IN',
           checkedInAt: dbTicket.checkedInAt || new Date(),
           message: `Replay Warning: Pass already scanned on ${new Date(
@@ -796,28 +957,46 @@ export async function checkInTicket({
       return {
         success: true,
         ticketCode: normalizedCode,
-        attendeeName: dbTicket.registration.leadName,
-        eventTitle: dbTicket.registration.event.title,
+        attendeeName,
+        college,
+        phone,
+        photoUrl,
+        eventTitle,
+        eventCategory,
+        dayOption,
         status: 'CHECKED_IN',
         checkedInAt: now,
-        message: 'Access Granted: Ticket authentic and checked in.',
+        message: 'Access Granted: Attendee checked in & admitted.',
       };
     }
   } catch {
-    // Non-fatal
+    // Fallback to memory
   }
 
   for (const reg of memoryRegistrations.values()) {
     const ticket = reg.tickets.find((t) => t.ticketCode === normalizedCode);
     if (ticket) {
+      const attendeeName = ticket.fullName || reg.leadName;
+      const college = ticket.college || reg.college || null;
+      const photoUrl = ticket.photoUrl || reg.photoUrl || null;
+      const phone = reg.leadPhone || null;
+      const eventTitle = reg.event?.title || 'Campus Event';
+      const eventCategory = reg.event?.category || 'General';
+      const dayOption = reg.dayOption;
+
       if (signature) {
         const isValidSig = verifyTicketSecurityHash(ticket.ticketCode, reg.leadEmail, signature);
         if (!isValidSig) {
           return {
             success: false,
             ticketCode: normalizedCode,
-            attendeeName: ticket.fullName,
-            eventTitle: reg.event?.title || 'Campus Event',
+            attendeeName,
+            college,
+            phone,
+            photoUrl,
+            eventTitle,
+            eventCategory,
+            dayOption,
             status: 'INVALID',
             checkedInAt: new Date(),
             message: 'HMAC signature verification failed. Pass is forged or invalid.',
@@ -825,12 +1004,79 @@ export async function checkInTicket({
         }
       }
 
+      if (action === 'LOOKUP') {
+        const currentStatus = (ticket.status as 'ISSUED' | 'CHECKED_IN' | 'WAITLIST') || 'ISSUED';
+        return {
+          success: true,
+          ticketCode: normalizedCode,
+          attendeeName,
+          college,
+          phone,
+          photoUrl,
+          eventTitle,
+          eventCategory,
+          dayOption,
+          status: currentStatus,
+          checkedInAt: ticket.checkedInAt,
+          message:
+            currentStatus === 'CHECKED_IN'
+              ? `Pass was already checked in on ${new Date(ticket.checkedInAt || Date.now()).toLocaleTimeString()}.`
+              : currentStatus === 'WAITLIST'
+              ? 'Attendee is currently on WAITLIST (On Hold).'
+              : 'Valid Pass Verified: Ready for Admission.',
+        };
+      }
+
+      if (action === 'WAITLIST') {
+        ticket.status = 'WAITLIST' as any;
+        syncDisk();
+        return {
+          success: true,
+          ticketCode: normalizedCode,
+          attendeeName,
+          college,
+          phone,
+          photoUrl,
+          eventTitle,
+          eventCategory,
+          dayOption,
+          status: 'WAITLIST',
+          checkedInAt: ticket.checkedInAt,
+          message: 'Attendee placed on WAITLIST (On Hold).',
+        };
+      }
+
+      if (action === 'RESET') {
+        ticket.status = 'ISSUED';
+        ticket.checkedInAt = undefined;
+        syncDisk();
+        return {
+          success: true,
+          ticketCode: normalizedCode,
+          attendeeName,
+          college,
+          phone,
+          photoUrl,
+          eventTitle,
+          eventCategory,
+          dayOption,
+          status: 'ISSUED',
+          checkedInAt: null,
+          message: 'Ticket status reset to ISSUED.',
+        };
+      }
+
       if (ticket.status === 'CHECKED_IN') {
         return {
           success: false,
           ticketCode: normalizedCode,
-          attendeeName: ticket.fullName,
-          eventTitle: reg.event?.title || 'Campus Event',
+          attendeeName,
+          college,
+          phone,
+          photoUrl,
+          eventTitle,
+          eventCategory,
+          dayOption,
           status: 'ALREADY_CHECKED_IN',
           checkedInAt: ticket.checkedInAt || new Date(),
           message: `Replay Warning: Pass already scanned on ${new Date(
@@ -847,8 +1093,13 @@ export async function checkInTicket({
       return {
         success: true,
         ticketCode: normalizedCode,
-        attendeeName: ticket.fullName,
-        eventTitle: reg.event?.title || 'Campus Event',
+        attendeeName,
+        college,
+        phone,
+        photoUrl,
+        eventTitle,
+        eventCategory,
+        dayOption,
         status: 'CHECKED_IN',
         checkedInAt: now,
         message: 'Access Granted: Ticket successfully verified & stamped.',
@@ -863,7 +1114,7 @@ export async function checkInTicket({
     eventTitle: 'Unknown Event',
     status: 'INVALID',
     checkedInAt: new Date(),
-    message: `Ticket code "${normalizedCode}" not found in registration database.`,
+    message: 'Invalid Pass: Ticket code not recognized in system database.',
   };
 }
 

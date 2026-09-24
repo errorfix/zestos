@@ -5,6 +5,7 @@ import { checkInTicket } from '@/lib/db';
 const checkInSchema = z.object({
   ticketCode: z.string().min(1, 'Ticket code is required'),
   signature: z.string().optional(),
+  action: z.enum(['LOOKUP', 'CHECK_IN', 'WAITLIST', 'RESET']).default('CHECK_IN'),
 });
 
 export async function POST(req: Request) {
@@ -19,8 +20,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { ticketCode, signature } = parsed.data;
-    const result = await checkInTicket({ ticketCode, signature });
+    const { ticketCode, signature, action } = parsed.data;
+    const result = await checkInTicket({ ticketCode, signature, action });
 
     const httpStatus = result.success ? 200 : result.status === 'ALREADY_CHECKED_IN' ? 409 : 404;
 
