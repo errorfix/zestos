@@ -54,7 +54,6 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      domain: process.env.COOKIE_DOMAIN || 'lingayaszest.tech',  // ← Add this
       maxAge,
     });
 
