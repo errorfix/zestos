@@ -7,9 +7,12 @@ const checkoutSchema = z
   .object({
     eventId: z.string().optional(),
     eventIds: z.array(z.string()).min(1).optional(),
-    leadName: z.string().min(2, 'Lead Attendee Name must be at least 2 characters'),
+    leadName: z.string().min(2, 'Full Name is required'),
+    leadPhone: z.string().min(10, 'A valid 10-digit contact number is required'),
     leadEmail: z.string().email('A valid college email address is required'),
-    dayOption: z.enum(['SINGLE_DAY', 'BOTH_DAYS']).optional(),
+    college: z.string().min(2, 'College / Institute Name is required'),
+    photoUrl: z.string().min(10, 'Participant Photo is required'),
+    dayOption: z.string().optional(),
     trackUploadUrl: z.string().optional(),
     trackNotes: z.string().optional(),
     teamMembers: z
@@ -17,6 +20,9 @@ const checkoutSchema = z
         z.object({
           fullName: z.string().min(2, 'Team member full name is required'),
           rollNumber: z.string().optional(),
+          phone: z.string().optional(),
+          college: z.string().optional(),
+          photoUrl: z.string().optional(),
         })
       )
       .default([]),
@@ -43,145 +49,137 @@ export async function POST(req: Request) {
       eventId,
       eventIds,
       leadName,
+      leadPhone,
       leadEmail,
-      dayOption,
+      college,
+      photoUrl,
+      dayOption: incomingDayOption,
       trackUploadUrl,
       trackNotes,
       teamMembers,
     } = parsed.data;
 
-    // Handle Multi-Event Registration (e.g. Informalz with unlimited selection)
     const targetEventIds = eventIds || (eventId ? [eventId] : []);
+    const fetchedEvents = await Promise.all(targetEventIds.map((id) => getEventById(id)));
+    const validEvents = fetchedEvents.filter((e): e is NonNullable<typeof e> => e !== null);
 
-    if (targetEventIds.length > 1) {
-      const fetchedEvents = await Promise.all(targetEventIds.map((id) => getEventById(id)));
-      const validEvents = fetchedEvents.filter((e): e is NonNullable<typeof e> => e !== null);
+    if (validEvents.length !== targetEventIds.length) {
+      return NextResponse.json(
+        { error: 'One or more selected events were not found or are inactive' },
+        { status: 404 }
+      );
+    }
 
-      if (validEvents.length !== targetEventIds.length) {
-        return NextResponse.json(
-          { error: 'One or more selected events were not found or are inactive' },
-          { status: 404 }
-        );
+    const isInformalzFlow = validEvents.some((e) => e.category.toLowerCase() === 'informalz');
+
+    let calculatedFeePaise = 0;
+    let resolvedDayOption = incomingDayOption || 'DAY_1';
+    let combinedEventTitle = validEvents.map((e) => e.title).join(', ');
+
+    if (isInformalzFlow) {
+      // ─────────────────────────────────────────────────────────────────────────
+      // 🎯 INFORMALZ DAY PASS PRICING MODEL
+      // Selecting 1 or multiple events on Day 1 = ₹150
+      // Selecting 1 or multiple events on Day 2 = ₹150
+      // Selecting events spanning BOTH Day 1 and Day 2 = ₹250
+      // ─────────────────────────────────────────────────────────────────────────
+      let hasDay1 = false;
+      let hasDay2 = false;
+
+      for (const evt of validEvents) {
+        const dateStr = (evt.date || '').toLowerCase();
+        if (dateStr.includes('day 1') || dateStr.includes('1')) {
+          hasDay1 = true;
+        }
+        if (dateStr.includes('day 2') || dateStr.includes('2')) {
+          hasDay2 = true;
+        }
+        if (!dateStr.includes('day 1') && !dateStr.includes('day 2')) {
+          // Default flexible events to Day 1 unless explicitly Day 2
+          hasDay1 = true;
+        }
       }
 
-      // Check if all selected events are free (Informalz events)
-      const allFree = validEvents.every((e) => e.feeAmount === 0);
-      if (!allFree) {
+      if (hasDay1 && hasDay2) {
+        calculatedFeePaise = 25000; // ₹250 for Both Days Pass
+        resolvedDayOption = 'BOTH_DAYS';
+        combinedEventTitle = `Informalz All-Access Both Days Pass (${validEvents.length} Games)`;
+      } else if (hasDay2) {
+        calculatedFeePaise = 15000; // ₹150 for Day 2 Pass
+        resolvedDayOption = 'DAY_2';
+        combinedEventTitle = `Informalz Day 2 Pass (${validEvents.length} Games)`;
+      } else {
+        calculatedFeePaise = 15000; // ₹150 for Day 1 Pass
+        resolvedDayOption = 'DAY_1';
+        combinedEventTitle = `Informalz Day 1 Pass (${validEvents.length} Games)`;
+      }
+    } else {
+      // ─────────────────────────────────────────────────────────────────────────
+      // 🎭 COMPETITIVE EVENTS (Single Event Arena with direct designated fee)
+      // ─────────────────────────────────────────────────────────────────────────
+      const singleEvent = validEvents[0];
+      calculatedFeePaise = singleEvent.feeAmount;
+      resolvedDayOption = singleEvent.date?.includes('Both')
+        ? 'BOTH_DAYS'
+        : singleEvent.date?.includes('2')
+        ? 'DAY_2'
+        : 'DAY_1';
+      combinedEventTitle = singleEvent.title;
+
+      // Validate team constraints
+      const totalParticipants = 1 + teamMembers.length;
+      if (totalParticipants < singleEvent.minTeamSize) {
         return NextResponse.json(
-          { error: 'Multi-event registration is currently available for 100% Free events (Informalz).' },
+          {
+            error: `Event "${singleEvent.title}" requires a minimum of ${singleEvent.minTeamSize} participant(s). Currently provided: ${totalParticipants}.`,
+          },
           { status: 400 }
         );
       }
-
-      // Create free registrations for all selected events
-      const freeRegs = await Promise.all(
-        validEvents.map((evt) =>
-          createFreeRegistration({
-            eventId: evt.id,
-            leadName,
-            leadEmail,
-            teamMembers,
-            trackUploadUrl,
-            trackNotes,
-          })
-        )
-      );
-
-      const allRegIds = freeRegs.map((r) => r.registrationId);
-      const allTickets = freeRegs.flatMap((r) => r.tickets);
-
-      return NextResponse.json({
-        success: true,
-        registrationId: freeRegs[0].registrationId,
-        allRegistrationIds: allRegIds,
-        isFree: true,
-        amount: 0,
-        currency: 'INR',
-        eventTitle: validEvents.map((e) => e.title).join(', '),
-        tickets: allTickets,
-      });
-    }
-
-    const singleEventId = targetEventIds[0];
-
-    // 1. Fetch Event and Validate Constraints
-    const event = await getEventById(singleEventId);
-    if (!event) {
-      return NextResponse.json({ error: 'Event not found or inactive' }, { status: 404 });
-    }
-
-    const totalParticipants = 1 + teamMembers.length;
-    if (totalParticipants < event.minTeamSize) {
-      return NextResponse.json(
-        {
-          error: `Event "${event.title}" requires a minimum of ${event.minTeamSize} participant(s). Currently provided: ${totalParticipants}.`,
-        },
-        { status: 400 }
-      );
-    }
-
-    if (totalParticipants > event.maxTeamSize) {
-      return NextResponse.json(
-        {
-          error: `Event "${event.title}" allows a maximum of ${event.maxTeamSize} participant(s). Currently provided: ${totalParticipants}.`,
-        },
-        { status: 400 }
-      );
-    }
-
-    // 2. Calculate Effective Fee
-    let calculatedFeePaise = event.feeAmount;
-    if (event.hasDayOptions) {
-      if (dayOption === 'BOTH_DAYS') {
-        calculatedFeePaise = 25000; // ₹250
-      } else {
-        calculatedFeePaise = 15000; // ₹150
+      if (totalParticipants > singleEvent.maxTeamSize) {
+        return NextResponse.json(
+          {
+            error: `Event "${singleEvent.title}" allows a maximum of ${singleEvent.maxTeamSize} participant(s). Currently provided: ${totalParticipants}.`,
+          },
+          { status: 400 }
+        );
       }
     }
 
-    // 3. Handle 100% FREE Events (Informalz & Gaming / Esports)
-    if (calculatedFeePaise === 0) {
-      const freeReg = await createFreeRegistration({
-        eventId: event.id,
-        leadName,
-        leadEmail,
-        teamMembers,
-        trackUploadUrl,
-        trackNotes,
-      });
-
-      return NextResponse.json({
-        success: true,
-        registrationId: freeReg.registrationId,
-        isFree: true,
-        amount: 0,
-        currency: 'INR',
-        eventTitle: event.title,
-        tickets: freeReg.tickets,
-      });
-    }
-
-    // 4. Paid Events: Generate Razorpay Order
+    // ─────────────────────────────────────────────────────────────────────────
+    // 💳 RAZORPAY ORDER GENERATION & REGISTRATION RECORD
+    // ─────────────────────────────────────────────────────────────────────────
     const receipt = `rcpt_${Date.now().toString().slice(-8)}`;
+    const primaryEventId = validEvents[0].id;
+
+    // 1. Create Razorpay order (passing payerName, payerPhone, and college in notes)
     const razorpayOrder = await createRazorpayOrder({
       amount: calculatedFeePaise,
       receipt,
       notes: {
-        eventId: event.id,
-        eventTitle: event.title,
+        eventId: primaryEventId,
+        eventTitle: combinedEventTitle,
+        payerName: leadName,
+        payerPhone: leadPhone,
         leadEmail,
-        dayOption: dayOption || 'DEFAULT',
+        college,
+        dayOption: resolvedDayOption,
       },
     });
 
-    // 5. Create PENDING Registration Record in Database
+    // 2. Create PENDING registration record in database
     const regResult = await createPendingRegistration({
-      eventId: event.id,
+      eventId: primaryEventId,
       leadName,
       leadEmail,
+      leadPhone,
+      college,
+      photoUrl,
+      payerName: leadName,
+      amount: calculatedFeePaise,
       teamMembers,
       razorpayOrderId: razorpayOrder.id,
-      dayOption,
+      dayOption: resolvedDayOption,
       trackUploadUrl,
       trackNotes,
     });
@@ -192,7 +190,7 @@ export async function POST(req: Request) {
       orderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
-      eventTitle: event.title,
+      eventTitle: combinedEventTitle,
       isMock: razorpayOrder.isMock,
       isFree: false,
       keyId: process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',

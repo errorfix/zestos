@@ -22,10 +22,10 @@ model Event {
   description         String?
   rules               String?
   venue               String?
-  date                String?
+  date                String?        // Day 1, Day 2, or specific time
   status              String         @default("OPEN") // OPEN, CLOSED
   requiresTrackUpload Boolean        @default(false)  // Audio / Video stage track needed
-  hasDayOptions       Boolean        @default(false)  // ₹150 / Day or ₹250 / Both Days
+  hasDayOptions       Boolean        @default(false)  // Legacy flag
   registrations       Registration[]
 }
 
@@ -35,9 +35,14 @@ model Registration {
   event             Event        @relation(fields: [eventId], references: [id])
   leadName          String
   leadEmail         String
+  leadPhone         String?
+  college           String?
+  photoUrl          String?      // Compressed attendee photo data URL
+  payerName         String?      // Payer name recorded during payment
+  amount            Int?         // Amount paid in paise
   status            String       @default("PENDING") // PENDING, PAID, FAILED
   paymentMethod     String?      @default("ONLINE_RAZORPAY") // ONLINE_RAZORPAY, ONSPOT_CASH, ONSPOT_UPI, FREE_REGISTRATION
-  dayOption         String?      // SINGLE_DAY, BOTH_DAYS
+  dayOption         String?      // DAY_1, DAY_2, BOTH_DAYS
   trackUploadUrl    String?      // Link to Google Drive track / media asset
   trackNotes        String?      // Stage sound / lighting cues / song name
   razorpayOrderId   String?      @unique
@@ -52,6 +57,9 @@ model TeamMember {
   registrationId String
   registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   fullName       String
+  phone          String?
+  college        String?
+  photoUrl       String?
   rollNumber     String?
 }
 
@@ -60,6 +68,9 @@ model Ticket {
   ticketCode     String       @unique // e.g., LV-TKT-2026-X89K
   registrationId String
   registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  fullName       String?
+  college        String?
+  photoUrl       String?
   status         String       @default("ISSUED") // ISSUED, CHECKED_IN
   securityHash   String       // HMAC-SHA256 signature for offline validation
   checkedInAt    DateTime?

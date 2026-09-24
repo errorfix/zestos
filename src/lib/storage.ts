@@ -1,12 +1,18 @@
 export interface TeamMemberDraft {
   fullName: string;
-  rollNumber: string;
+  rollNumber?: string;
+  phone?: string;
+  college?: string;
+  photoUrl?: string;
 }
 
 export interface RegistrationDraft {
   eventId: string;
   leadName: string;
   leadEmail: string;
+  leadPhone?: string;
+  college?: string;
+  photoUrl?: string;
   teamMembers: TeamMemberDraft[];
   lastSavedAt: string;
 }

@@ -16,7 +16,7 @@ export default function EventCatalogSection({ initialEvents }: EventCatalogSecti
   const categories = [
     { id: 'ALL', label: 'All Arenas' },
     { id: 'CULTURAL', label: 'Cultural & Stage' },
-    { id: 'INFORMALZ', label: 'Informalz (100% Free)' },
+    { id: 'INFORMALZ', label: 'Informalz Day Pass' },
     { id: 'LITERARY', label: 'Literary & Quizzing' },
     { id: 'GAMING', label: 'E-Sports & Gaming' },
   ];

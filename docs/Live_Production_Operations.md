@@ -10,6 +10,7 @@ This document contains official operational procedures, live endpoint links, rol
 | :--- | :--- |
 | **Domain** | **[https://lingayaszest.tech](https://lingayaszest.tech)** |
 | **Server Host IP** | `187.126.114.119` (Hostinger Ubuntu 24.04 LTS VPS) |
+| **TTL** | 150 |
 | **Reverse Proxy** | Nginx 1.24 (Port 80/443 with Let's Encrypt SSL) |
 | **Application Runtime** | Next.js 16 (Standalone Node 20 inside Docker) |
 | **Database Engine** | PostgreSQL 16 Alpine (Internal Docker Network `db:5432`) |

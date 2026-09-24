@@ -49,13 +49,13 @@ export default async function InformalzAdminPage() {
                 <PartyPopper className="w-3 h-3 text-purple-600" />
                 Informalz Committee Console
               </span>
-              <span className="text-xs text-slate-500 font-medium">100% Free Campus Fun</span>
+              <span className="text-xs text-slate-500 font-medium">Day Passes (₹150 / ₹250)</span>
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
               Informalz & Fun Events Hub
             </h1>
             <p className="text-sm text-slate-600 mt-1">
-              Oversee informal activities, track free multi-event participants, and audit gate entries.
+              Oversee informal activities, track day-pass participants, and audit gate entries.
             </p>
           </div>
 
@@ -110,13 +110,13 @@ export default async function InformalzAdminPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Participation Fee
               </span>
-              <Sparkles className="w-4 h-4 text-emerald-600" />
+              <Sparkles className="w-4 h-4 text-purple-600" />
             </div>
-            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-600 block">
-              FREE (₹0)
+            <span className="text-2xl sm:text-3xl font-extrabold text-purple-700 block">
+              ₹150 / ₹250
             </span>
             <span className="text-[11px] text-slate-400 font-medium block mt-1">
-              Unlimited Participation
+              Single Day / Both Days Pass
             </span>
           </div>
 
@@ -156,9 +156,9 @@ export default async function InformalzAdminPage() {
           <div className="flex items-center gap-2 mb-6">
             <Flame className="w-5 h-5 text-purple-600" />
             <h2 className="text-xl font-bold text-slate-900">Informalz Events Catalog</h2>
-            <span className="ml-auto px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-              100% Free Entry
+            <span className="ml-auto px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3 text-purple-600" />
+              Day Passes (₹150 / ₹250)
             </span>
           </div>
 

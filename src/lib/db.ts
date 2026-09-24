@@ -9,6 +9,11 @@ export interface LocalRegistration {
   eventId: string;
   leadName: string;
   leadEmail: string;
+  leadPhone?: string | null;
+  college?: string | null;
+  photoUrl?: string | null;
+  payerName?: string | null;
+  amount?: number | null;
   status: 'PENDING' | 'PAID' | 'FAILED';
   paymentMethod: string;
   dayOption?: string | null;
@@ -17,13 +22,22 @@ export interface LocalRegistration {
   razorpayOrderId: string | null;
   razorpayPaymentId: string | null;
   createdAt: Date;
-  teamMembers: Array<{ id: string; fullName: string; rollNumber: string | null }>;
+  teamMembers: Array<{
+    id: string;
+    fullName: string;
+    rollNumber: string | null;
+    phone?: string | null;
+    college?: string | null;
+    photoUrl?: string | null;
+  }>;
   tickets: Array<{
     id: string;
     ticketCode: string;
     status: 'ISSUED' | 'CHECKED_IN';
     securityHash: string;
     fullName: string;
+    college?: string | null;
+    photoUrl?: string | null;
     checkedInAt?: Date | null;
   }>;
   event?: InitialEventData;
@@ -261,6 +275,11 @@ export async function createPendingRegistration({
   eventId,
   leadName,
   leadEmail,
+  leadPhone,
+  college,
+  photoUrl,
+  payerName,
+  amount,
   teamMembers,
   razorpayOrderId,
   dayOption,
@@ -270,7 +289,18 @@ export async function createPendingRegistration({
   eventId: string;
   leadName: string;
   leadEmail: string;
-  teamMembers: Array<{ fullName: string; rollNumber?: string }>;
+  leadPhone?: string;
+  college?: string;
+  photoUrl?: string;
+  payerName?: string;
+  amount?: number;
+  teamMembers: Array<{
+    fullName: string;
+    rollNumber?: string;
+    phone?: string;
+    college?: string;
+    photoUrl?: string;
+  }>;
   razorpayOrderId: string;
   dayOption?: string;
   trackUploadUrl?: string;
@@ -282,6 +312,11 @@ export async function createPendingRegistration({
         eventId,
         leadName,
         leadEmail,
+        leadPhone: leadPhone || null,
+        college: college || null,
+        photoUrl: photoUrl || null,
+        payerName: payerName || leadName,
+        amount: amount || null,
         status: 'PENDING',
         paymentMethod: 'ONLINE_RAZORPAY',
         dayOption: dayOption || null,
@@ -292,6 +327,9 @@ export async function createPendingRegistration({
           create: teamMembers.map((m) => ({
             fullName: m.fullName,
             rollNumber: m.rollNumber || null,
+            phone: m.phone || null,
+            college: m.college || college || null,
+            photoUrl: m.photoUrl || null,
           })),
         },
       },
@@ -306,6 +344,11 @@ export async function createPendingRegistration({
       eventId,
       leadName,
       leadEmail,
+      leadPhone: leadPhone || null,
+      college: college || null,
+      photoUrl: photoUrl || null,
+      payerName: payerName || leadName,
+      amount: amount || null,
       status: 'PENDING',
       paymentMethod: 'ONLINE_RAZORPAY',
       dayOption: dayOption || null,
@@ -318,6 +361,9 @@ export async function createPendingRegistration({
         id: `tm_${idx}_${Date.now()}`,
         fullName: m.fullName,
         rollNumber: m.rollNumber || null,
+        phone: m.phone || null,
+        college: m.college || college || null,
+        photoUrl: m.photoUrl || null,
       })),
       tickets: [],
       event: event || undefined,
@@ -555,9 +601,11 @@ export async function createOnSpotRegistration({
 export async function fulfillPaymentAndGenerateTickets({
   orderId,
   paymentId,
+  payerName,
 }: {
   orderId: string;
   paymentId: string;
+  payerName?: string;
 }): Promise<{ registrationId: string; tickets: Array<{ ticketCode: string; securityHash: string }> }> {
   try {
     const existing = await prisma.registration.findFirst({
@@ -581,6 +629,8 @@ export async function fulfillPaymentAndGenerateTickets({
           ticketCode: generateTicketCode(),
           securityHash: generateTicketSecurityHash(generateTicketCode(), existing.leadEmail),
           fullName: existing.leadName,
+          college: existing.college,
+          photoUrl: existing.photoUrl,
         },
         ...existing.teamMembers.map((tm) => {
           const code = generateTicketCode();
@@ -588,6 +638,8 @@ export async function fulfillPaymentAndGenerateTickets({
             ticketCode: code,
             securityHash: generateTicketSecurityHash(code, existing.leadEmail),
             fullName: tm.fullName,
+            college: tm.college || existing.college,
+            photoUrl: tm.photoUrl || existing.photoUrl,
           };
         }),
       ];
@@ -598,6 +650,7 @@ export async function fulfillPaymentAndGenerateTickets({
           data: {
             status: 'PAID',
             razorpayPaymentId: paymentId,
+            ...(payerName ? { payerName } : {}),
           },
         }),
         ...ticketsToCreate.map((t) =>
@@ -607,6 +660,9 @@ export async function fulfillPaymentAndGenerateTickets({
               registrationId: existing.id,
               status: 'ISSUED',
               securityHash: t.securityHash,
+              fullName: t.fullName,
+              college: t.college,
+              photoUrl: t.photoUrl,
             },
           })
         ),
@@ -625,6 +681,7 @@ export async function fulfillPaymentAndGenerateTickets({
     if (reg.razorpayOrderId === orderId || id === orderId) {
       reg.status = 'PAID';
       reg.razorpayPaymentId = paymentId;
+      if (payerName) reg.payerName = payerName;
 
       if (reg.tickets.length === 0) {
         const leadCode = generateTicketCode();
@@ -634,6 +691,8 @@ export async function fulfillPaymentAndGenerateTickets({
           status: 'ISSUED',
           securityHash: generateTicketSecurityHash(leadCode, reg.leadEmail),
           fullName: reg.leadName,
+          college: reg.college,
+          photoUrl: reg.photoUrl,
         });
 
         for (const tm of reg.teamMembers) {
@@ -644,6 +703,8 @@ export async function fulfillPaymentAndGenerateTickets({
             status: 'ISSUED',
             securityHash: generateTicketSecurityHash(tmCode, reg.leadEmail),
             fullName: tm.fullName,
+            college: tm.college || reg.college,
+            photoUrl: tm.photoUrl || reg.photoUrl,
           });
         }
       }
@@ -834,7 +895,9 @@ export async function getRegistrationDetails(registrationId: string) {
           : null,
         tickets: dbReg.tickets.map((t, idx) => ({
           ...t,
-          fullName: idx === 0 ? dbReg.leadName : dbReg.teamMembers[idx - 1]?.fullName || dbReg.leadName,
+          fullName: t.fullName || (idx === 0 ? dbReg.leadName : dbReg.teamMembers[idx - 1]?.fullName || dbReg.leadName),
+          college: t.college || (idx === 0 ? dbReg.college : dbReg.teamMembers[idx - 1]?.college || dbReg.college),
+          photoUrl: t.photoUrl || (idx === 0 ? dbReg.photoUrl : dbReg.teamMembers[idx - 1]?.photoUrl || dbReg.photoUrl),
         })),
       };
     }

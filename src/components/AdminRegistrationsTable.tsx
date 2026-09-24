@@ -11,6 +11,12 @@ import {
   Music,
   UploadCloud,
   FileText,
+  Copy,
+  Check,
+  User,
+  Phone,
+  GraduationCap,
+  CreditCard,
 } from 'lucide-react';
 
 interface RegistrationRow {
@@ -24,15 +30,24 @@ interface RegistrationRow {
   trackNotes?: string | null;
   leadName: string;
   leadEmail: string;
+  leadPhone?: string | null;
+  college?: string | null;
+  photoUrl?: string | null;
+  payerName?: string | null;
+  razorpayPaymentId?: string | null;
+  razorpayOrderId?: string | null;
+  amount?: number;
   status: string;
   paymentMethod: string;
   createdAt: string;
-  teamMembers: Array<{ fullName: string; rollNumber?: string }>;
+  teamMembers: Array<{ fullName: string; rollNumber?: string; phone?: string; college?: string }>;
   tickets: Array<{
     id: string;
     ticketCode: string;
     status: string;
     fullName: string;
+    college?: string | null;
+    photoUrl?: string | null;
     checkedInAt?: string | null;
   }>;
 }
@@ -52,6 +67,7 @@ export default function AdminRegistrationsTable({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRegistrations();
@@ -72,6 +88,12 @@ export default function AdminRegistrationsTable({
     }
   };
 
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedTxId(text);
+    setTimeout(() => setCopiedTxId(null), 2000);
+  };
+
   const filtered = registrations.filter((r) => {
     const matchesStatus = statusFilter === 'ALL' || r.status === statusFilter;
     const query = searchQuery.toLowerCase().trim();
@@ -80,6 +102,10 @@ export default function AdminRegistrationsTable({
       !query ||
       r.leadName.toLowerCase().includes(query) ||
       r.leadEmail.toLowerCase().includes(query) ||
+      (r.leadPhone && r.leadPhone.toLowerCase().includes(query)) ||
+      (r.college && r.college.toLowerCase().includes(query)) ||
+      (r.payerName && r.payerName.toLowerCase().includes(query)) ||
+      (r.razorpayPaymentId && r.razorpayPaymentId.toLowerCase().includes(query)) ||
       r.eventTitle.toLowerCase().includes(query) ||
       r.id.toLowerCase().includes(query) ||
       (r.trackNotes && r.trackNotes.toLowerCase().includes(query)) ||
@@ -96,12 +122,17 @@ export default function AdminRegistrationsTable({
     // Header row
     const headers = [
       'Registration ID',
+      'Transaction ID (Razorpay)',
+      'Razorpay Order ID',
+      'Payer Name',
+      'Lead Attendee Name',
+      'Contact No',
+      'College / Institute',
+      'Lead Email',
       'Event Title',
       'Event Category',
       'Fee (INR)',
       'Day Pass Option',
-      'Lead Attendee Name',
-      'Lead Email',
       'Payment Status',
       'Payment Method',
       'Team Members Count',
@@ -114,12 +145,17 @@ export default function AdminRegistrationsTable({
 
     const rows = registrations.map((r) => [
       `"${r.id}"`,
+      `"${r.razorpayPaymentId || 'N/A'}"`,
+      `"${r.razorpayOrderId || 'N/A'}"`,
+      `"${(r.payerName || r.leadName).replace(/"/g, '""')}"`,
+      `"${r.leadName.replace(/"/g, '""')}"`,
+      `"${r.leadPhone || 'N/A'}"`,
+      `"${(r.college || 'N/A').replace(/"/g, '""')}"`,
+      `"${r.leadEmail}"`,
       `"${r.eventTitle.replace(/"/g, '""')}"`,
       `"${r.eventCategory}"`,
-      (r.feeAmount / 100).toFixed(2),
+      ((r.amount || r.feeAmount) / 100).toFixed(2),
       `"${r.dayOption || 'Standard'}"`,
-      `"${r.leadName.replace(/"/g, '""')}"`,
-      `"${r.leadEmail}"`,
       r.status,
       r.paymentMethod,
       1 + r.teamMembers.length,
@@ -184,7 +220,7 @@ export default function AdminRegistrationsTable({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search attendee, event, track note, ticket code..."
+            placeholder="Search attendee, transaction ID (pay_...), phone, college, event, ticket code..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-xs bg-white focus:border-[#1a73e8]"
           />
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -217,10 +253,10 @@ export default function AdminRegistrationsTable({
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                <th className="py-3 px-3">Lead Attendee</th>
-                <th className="py-3 px-3">Event & Day</th>
+                <th className="py-3 px-3">Participant</th>
+                <th className="py-3 px-3">Event & Access</th>
+                <th className="py-3 px-3">Transaction ID & Payment</th>
                 <th className="py-3 px-3">Stage Track / Cues</th>
-                <th className="py-3 px-3">Payment</th>
                 <th className="py-3 px-3">Passes & Gate</th>
                 <th className="py-3 px-3 text-right">Actions</th>
               </tr>
@@ -228,30 +264,132 @@ export default function AdminRegistrationsTable({
             <tbody className="divide-y divide-slate-100">
               {filtered.map((reg) => (
                 <tr key={reg.id} className="hover:bg-slate-50/70 transition-colors">
+                  {/* Lead Attendee Column with Photo, Name, Phone, Email, College */}
                   <td className="py-3.5 px-3">
-                    <span className="font-bold text-slate-900 block">{reg.leadName}</span>
-                    <span className="text-[11px] text-slate-500 block">{reg.leadEmail}</span>
-                    {reg.teamMembers.length > 0 && (
-                      <span className="text-[10px] text-blue-600 block mt-0.5">
-                        +{reg.teamMembers.length} team member(s)
-                      </span>
-                    )}
+                    <div className="flex items-start gap-2.5">
+                      {reg.photoUrl ? (
+                        <a
+                          href={reg.photoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Click to view full photo"
+                          className="shrink-0 relative group"
+                        >
+                          <img
+                            src={reg.photoUrl}
+                            alt={reg.leadName}
+                            className="w-10 h-12 object-cover rounded-lg border border-slate-200 shadow-xs group-hover:ring-2 group-hover:ring-[#1a73e8] transition-all"
+                          />
+                        </a>
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-400">
+                          <User className="w-5 h-5" />
+                        </div>
+                      )}
+
+                      <div className="min-w-0">
+                        <span className="font-bold text-slate-900 block truncate max-w-[170px]">
+                          {reg.leadName}
+                        </span>
+                        {reg.leadPhone && (
+                          <span className="text-[11px] text-slate-600 flex items-center gap-1 mt-0.5 font-medium">
+                            <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+                            {reg.leadPhone}
+                          </span>
+                        )}
+                        <span className="text-[11px] text-slate-500 block truncate max-w-[170px]">
+                          {reg.leadEmail}
+                        </span>
+                        {reg.college && (
+                          <span className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5 truncate max-w-[170px]" title={reg.college}>
+                            <GraduationCap className="w-3 h-3 text-slate-400 shrink-0" />
+                            {reg.college}
+                          </span>
+                        )}
+                        {reg.teamMembers.length > 0 && (
+                          <span className="text-[10px] text-blue-600 block mt-1 font-semibold">
+                            +{reg.teamMembers.length} team member(s)
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </td>
 
+                  {/* Event & Day */}
                   <td className="py-3.5 px-3">
                     <span className="font-semibold text-slate-800 block">{reg.eventTitle}</span>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-[10px] text-slate-500">
-                        {reg.eventCategory} • ₹{reg.feeAmount / 100}
+                        {reg.eventCategory} • ₹{(reg.amount || reg.feeAmount) / 100}
                       </span>
                       {reg.dayOption && (
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
-                          {reg.dayOption === 'BOTH_DAYS' ? 'Both Days' : 'Single Day'}
+                          {reg.dayOption === 'BOTH_DAYS' ? 'Both Days' : reg.dayOption === 'DAY_2' ? 'Day 2' : 'Day 1'}
                         </span>
                       )}
                     </div>
                   </td>
 
+                  {/* Transaction ID & Payment Details */}
+                  <td className="py-3.5 px-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            reg.status === 'PAID'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}
+                        >
+                          {reg.status}
+                        </span>
+                        <span className="font-bold text-slate-800 text-xs">
+                          ₹{((reg.amount || reg.feeAmount) / 100).toFixed(0)}
+                        </span>
+                      </div>
+
+                      {/* Transaction ID Pill with 1-Click Copy */}
+                      {reg.razorpayPaymentId ? (
+                        <div className="flex items-center gap-1 mt-1">
+                          <code
+                            className="text-[10px] font-mono font-bold text-slate-800 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded max-w-[150px] truncate block"
+                            title={reg.razorpayPaymentId}
+                          >
+                            {reg.razorpayPaymentId}
+                          </code>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(reg.razorpayPaymentId!)}
+                            title="Copy Transaction ID"
+                            aria-label="Copy Transaction ID"
+                            className="p-1 text-slate-400 hover:text-slate-700 rounded transition-colors"
+                          >
+                            {copiedTxId === reg.razorpayPaymentId ? (
+                              <Check className="w-3 h-3 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 italic block">
+                          No TxID (Pending/Unpaid)
+                        </span>
+                      )}
+
+                      {reg.payerName && reg.payerName !== reg.leadName && (
+                        <span className="text-[10px] text-slate-500 block truncate max-w-[160px]">
+                          Payer: <strong className="text-slate-700">{reg.payerName}</strong>
+                        </span>
+                      )}
+
+                      <span className="text-[10px] text-slate-400 block">
+                        {reg.paymentMethod}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* Stage Track */}
                   <td className="py-3.5 px-3">
                     {reg.trackUploadUrl ? (
                       <div className="space-y-1">
@@ -262,11 +400,11 @@ export default function AdminRegistrationsTable({
                           className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1a73e8] hover:underline"
                         >
                           <Music className="w-3 h-3 text-amber-600 shrink-0" />
-                          <span className="truncate max-w-[140px]">View Track File</span>
+                          <span className="truncate max-w-[130px]">View Track File</span>
                           <ExternalLink className="w-2.5 h-2.5 shrink-0" />
                         </a>
                         {reg.trackNotes && (
-                          <span className="block text-[10px] text-slate-500 italic max-w-[180px] truncate" title={reg.trackNotes}>
+                          <span className="block text-[10px] text-slate-500 italic max-w-[150px] truncate" title={reg.trackNotes}>
                             &quot;{reg.trackNotes}&quot;
                           </span>
                         )}
@@ -276,23 +414,7 @@ export default function AdminRegistrationsTable({
                     )}
                   </td>
 
-                  <td className="py-3.5 px-3">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                          reg.status === 'PAID'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}
-                      >
-                        {reg.status}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-slate-400 block mt-0.5">
-                      {reg.paymentMethod}
-                    </span>
-                  </td>
-
+                  {/* Passes & Gate */}
                   <td className="py-3.5 px-3">
                     <div className="flex flex-wrap gap-1.5">
                       {reg.tickets.map((t) => (
@@ -312,6 +434,7 @@ export default function AdminRegistrationsTable({
                     </div>
                   </td>
 
+                  {/* Actions */}
                   <td className="py-3.5 px-3 text-right">
                     <Link
                       href={`/tickets/${reg.id}`}

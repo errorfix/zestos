@@ -17,12 +17,13 @@ export const revalidate = 0;
 
 interface TicketPageProps {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ all?: string }>;
+  searchParams?: Promise<{ all?: string; autoDownload?: string }>;
 }
 
 export default async function TicketPage({ params, searchParams }: TicketPageProps) {
   const { id } = await params;
   const sp = searchParams ? await searchParams : undefined;
+  const autoDownload = sp?.autoDownload === 'true';
   const allIds = sp?.all ? Array.from(new Set([id, ...sp.all.split(',').map((s) => s.trim()).filter(Boolean)])) : [id];
 
   const fetchedRegs = await Promise.all(allIds.map((regId) => getRegistrationDetails(regId)));
@@ -68,6 +69,9 @@ export default async function TicketPage({ params, searchParams }: TicketPagePro
       securityHash: t.securityHash,
       fullName: t.fullName || reg.leadName,
       leadEmail: reg.leadEmail,
+      leadPhone: reg.leadPhone || null,
+      college: ('college' in t && t.college) ? t.college : reg.college || null,
+      photoUrl: ('photoUrl' in t && t.photoUrl) ? t.photoUrl : reg.photoUrl || null,
       eventTitle,
       eventCategory,
       eventDate,
@@ -154,8 +158,8 @@ export default async function TicketPage({ params, searchParams }: TicketPagePro
 
         {/* List of Passes */}
         <div className="space-y-6">
-          {ticketPasses.map((pass) => (
-            <TicketPass key={pass.id} ticket={pass} />
+          {ticketPasses.map((pass, idx) => (
+            <TicketPass key={pass.id} ticket={pass} autoDownload={autoDownload && idx === 0} />
           ))}
         </div>
       </main>

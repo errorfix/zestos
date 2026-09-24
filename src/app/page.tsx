@@ -78,7 +78,7 @@ export default async function HomePage() {
               href="/register?category=informalz"
               className="inline-flex items-center gap-1.5 px-5 py-3 rounded-xl text-xs sm:text-sm font-semibold bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 transition-colors"
             >
-              <span>Free Informalz Pass</span>
+              <span>Informalz Day Pass (₹150)</span>
             </Link>
           </div>
 
@@ -98,8 +98,8 @@ export default async function HomePage() {
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Competitive Events</span>
             </div>
             <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl text-center">
-              <span className="block text-xl sm:text-2xl font-black text-emerald-600">16 Games</span>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">100% Free Informalz</span>
+              <span className="block text-xl sm:text-2xl font-black text-purple-600">16 Games</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Informalz Passes</span>
             </div>
             <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl text-center">
               <span className="block text-xl sm:text-2xl font-black text-rose-600">Star Night</span>
@@ -307,7 +307,7 @@ export default async function HomePage() {
                 Event Arenas &amp; Games
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                15 competitive stage arenas and 16 100% free informal games.
+                15 competitive stage arenas and 16 engaging informal campus activities.
               </p>
             </div>
 
@@ -315,7 +315,7 @@ export default async function HomePage() {
               href="/register?category=informalz"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition-colors self-start sm:self-auto"
             >
-              <span>16 Free Informalz Games</span>
+              <span>Informalz Passes (₹150 / ₹250)</span>
             </Link>
           </div>
 
@@ -334,7 +334,7 @@ export default async function HomePage() {
               Register for ZEST 2K26
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto mb-6">
-              Instant entry QR generation, secure Razorpay verification, and free all-access passes for all informalz games.
+              Instant entry QR generation, secure Razorpay verification, and all-access passes for all events and informal games.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -351,7 +351,7 @@ export default async function HomePage() {
                 href="/register?category=informalz"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs sm:text-sm font-semibold bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 transition-colors"
               >
-                <span>Free Informalz Pass</span>
+                <span>Informalz Day Pass</span>
               </Link>
             </div>
           </div>
@@ -382,9 +382,9 @@ export default async function HomePage() {
             </div>
 
             <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-1.5">
-              <h3 className="font-bold text-slate-900 text-sm">How does the 100% Free Informalz pass work?</h3>
+              <h3 className="font-bold text-slate-900 text-sm">How does the Informalz Day pass work?</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                All 16 informal games (Tug of War, Arm Wrestling, Minute to Win It, Open Mic, etc.) are completely free. You can choose any number of events with ₹0 entry.
+                Enjoy campus viewing, fun stalls, and informal games! Selecting games on Day 1 is ₹150, Day 2 is ₹150, or choose games spanning both days for ₹250 flat with full Star Night concert access.
               </p>
             </div>
 
@@ -584,7 +584,7 @@ export default async function HomePage() {
                 Registration
               </Link>
               <Link href="/register?category=informalz" className="hover:text-slate-900 transition-colors">
-                Free Informalz
+                Informalz Passes
               </Link>
               <a href="#venue" className="hover:text-slate-900 transition-colors">
                 Venue

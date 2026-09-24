@@ -7,6 +7,7 @@ const verifySchema = z.object({
   orderId: z.string().min(1, 'Order ID is required'),
   paymentId: z.string().min(1, 'Payment ID is required'),
   signature: z.string().optional().default(''),
+  payerName: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -21,9 +22,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const { orderId, paymentId, signature } = parsed.data;
+    const { orderId, paymentId, signature, payerName } = parsed.data;
 
-    // Validate signature
+    // Validate cryptographic signature
     const isValid = verifyPaymentSignature(orderId, paymentId, signature);
     if (!isValid) {
       return NextResponse.json(
@@ -32,10 +33,11 @@ export async function POST(req: Request) {
       );
     }
 
-    // Fulfill registration: update to PAID and generate cryptographic tickets
+    // Fulfill registration: update to PAID, record paymentId & payerName, and generate cryptographic tickets
     const result = await fulfillPaymentAndGenerateTickets({
       orderId,
       paymentId,
+      payerName,
     });
 
     return NextResponse.json({

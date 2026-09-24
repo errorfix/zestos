@@ -65,19 +65,19 @@ export default function EventCard({ event }: EventCardProps) {
           </div>
 
           <div className="text-right">
-            {isFree ? (
+            {event.category.toLowerCase() === 'informalz' ? (
+              <div>
+                <span className="text-base font-extrabold text-purple-700 block">
+                  ₹150 / ₹250
+                </span>
+                <span className="text-[10px] font-semibold text-slate-500 block">
+                  Single / Both Days Pass
+                </span>
+              </div>
+            ) : isFree ? (
               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
                 FREE
               </span>
-            ) : event.hasDayOptions ? (
-              <div>
-                <span className="text-base font-extrabold text-slate-900 block">
-                  ₹150 <span className="text-xs font-normal text-slate-500">/ Day</span>
-                </span>
-                <span className="text-[11px] font-semibold text-[#1a73e8] block">
-                  or ₹250 / Both Days
-                </span>
-              </div>
             ) : (
               <div>
                 <span className="text-lg font-bold text-slate-900">
@@ -160,10 +160,20 @@ export default function EventCard({ event }: EventCardProps) {
 
       <div className="p-4 bg-slate-50 border-t border-slate-100">
         <Link
-          href={`/register?event=${event.id}`}
+          href={
+            event.category.toLowerCase() === 'informalz'
+              ? `/register?category=informalz&event=${event.id}`
+              : `/register?event=${event.id}`
+          }
           className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold bg-white border border-slate-300 text-slate-800 hover:bg-[#1a73e8] hover:text-white hover:border-[#1a73e8] shadow-xs transition-all focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
         >
-          <span>{isFree ? 'Register Free' : 'Register for Event'}</span>
+          <span>
+            {event.category.toLowerCase() === 'informalz'
+              ? 'Get Informalz Pass'
+              : isFree
+              ? 'Register Free'
+              : 'Register for Event'}
+          </span>
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>

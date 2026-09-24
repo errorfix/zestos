@@ -90,7 +90,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     date: 'Day 1 & Day 2',
     status: 'OPEN',
     requiresTrackUpload: true,
-    hasDayOptions: true,
+    hasDayOptions: false,
   },
 
   // ================= 💃 CULTURAL — DANCE =================
@@ -109,7 +109,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     date: 'Day 1 & Day 2',
     status: 'OPEN',
     requiresTrackUpload: true,
-    hasDayOptions: true,
+    hasDayOptions: false,
   },
   {
     id: 'evt_duet_dance',
@@ -213,7 +213,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     date: 'Day 1 & Day 2',
     status: 'OPEN',
     requiresTrackUpload: true,
-    hasDayOptions: true,
+    hasDayOptions: false,
   },
 
   // ================= 👗 CULTURAL — FASHION =================
@@ -251,7 +251,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     date: 'Day 1 & Day 2',
     status: 'OPEN',
     requiresTrackUpload: false,
-    hasDayOptions: true,
+    hasDayOptions: false,
   },
   {
     id: 'evt_after_dark',
@@ -268,7 +268,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     date: 'Day 1 & Day 2',
     status: 'OPEN',
     requiresTrackUpload: false,
-    hasDayOptions: true,
+    hasDayOptions: false,
   },
 
   // ================= 🎯 INFORMALZ EVENTS — 100% FREE =================
