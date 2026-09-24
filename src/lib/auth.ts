@@ -80,6 +80,15 @@ export const ROLE_REGISTRY: RoleDefinition[] = [
     ],
     dashboard: '/stage',
   },
+  {
+    id: 'GATE_SECURITY',
+    label: 'Gate Security & Check-In Team',
+    password: process.env.CHECKIN_PASSWORD || process.env.GATE_SECURITY_PASSWORD || 'gate@lv321',
+    permissions: [
+      'access_checkin',
+    ],
+    dashboard: '/checkin',
+  },
 ];
 
 /** Roles visible in the login dropdown */

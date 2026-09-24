@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { checkInTicket } from '@/lib/db';
+import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, hasPermission } from '@/lib/auth';
 
 const checkInSchema = z.object({
   ticketCode: z.string().min(1, 'Ticket code is required'),
@@ -10,6 +12,17 @@ const checkInSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
+    const session = await verifyAdminSessionToken(sessionToken);
+
+    if (!session || !hasPermission(session, 'access_checkin')) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Gate check-in password authentication required.' },
+        { status: 401 }
+      );
+    }
+
     const json = await req.json();
     const parsed = checkInSchema.safeParse(json);
 

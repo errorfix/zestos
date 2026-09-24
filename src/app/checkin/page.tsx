@@ -1,13 +1,20 @@
 import Navbar from '@/components/Navbar';
-import CheckInScanner from '@/components/CheckInScanner';
+import CheckInTerminalWrapper from '@/components/CheckInTerminalWrapper';
 import { ShieldCheck, Lock } from 'lucide-react';
+import { cookies } from 'next/headers';
+import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, hasPermission } from '@/lib/auth';
 
 export const metadata = {
   title: 'Gate Camera Check-In Terminal • ZEST 2K26',
   description: "Attendee identity & pass verification terminal for Lingaya's Vidyapeeth ZEST 2K26.",
 };
 
-export default function CheckInPage() {
+export default async function CheckInPage() {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
+  const session = await verifyAdminSessionToken(sessionToken);
+  const isAuthorized = !!(session && hasPermission(session, 'access_checkin'));
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navbar />
@@ -22,7 +29,7 @@ export default function CheckInPage() {
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>HMAC-SHA256 Protected</span>
+                <span>Password Protected • HMAC-SHA256</span>
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -39,8 +46,11 @@ export default function CheckInPage() {
           </div>
         </div>
 
-        {/* Dedicated Scanner Console */}
-        <CheckInScanner />
+        {/* Password Protected Terminal Wrapper */}
+        <CheckInTerminalWrapper
+          initialAuthenticated={isAuthorized}
+          initialRoleLabel={session?.roleLabel}
+        />
       </main>
 
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">

@@ -3,7 +3,7 @@ import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getRoleById } from '@/lib/a
 import { updateSession } from '@/utils/supabase/middleware';
 
 // Routes requiring any authenticated committee/admin session
-const PROTECTED_PREFIXES = ['/admin', '/onspot', '/checkin', '/super-admin', '/informalz', '/stage'];
+const PROTECTED_PREFIXES = ['/admin', '/onspot', '/super-admin', '/informalz', '/stage'];
 const PROTECTED_API_PREFIXES = ['/api/admin', '/api/onspot', '/api/checkin', '/api/super-admin', '/api/informalz', '/api/stage'];
 
 // Routes restricted to SUPER_ADMIN role only
@@ -14,6 +14,7 @@ const SUPER_ADMIN_API_PREFIXES = ['/api/super-admin'];
 const INFORMALZ_PREFIXES = ['/informalz'];
 const RI_PREFIXES = ['/admin', '/onspot'];
 const STAGE_PREFIXES = ['/stage'];
+const CHECKIN_PREFIXES = ['/checkin'];
 
 function matchesAny(pathname: string, prefixes: string[]): boolean {
   return prefixes.some(
@@ -36,7 +37,7 @@ export async function middleware(request: NextRequest) {
     if (!session) {
       if (isProtectedApi) {
         return NextResponse.json(
-          { success: false, error: 'Unauthorized. Please sign in.' },
+          { success: false, error: 'Unauthorized: Gate check-in password authentication required.' },
           { status: 401 }
         );
       }
@@ -65,7 +66,34 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // 3. Committee isolation:
+    // 3. Gate Security isolation:
+    // Gate security cannot access R&I, Stage, Informalz, or Super Admin panels / APIs
+    if (session.roleId === 'GATE_SECURITY') {
+      const isForbiddenApi = matchesAny(pathname, [
+        '/api/admin',
+        '/api/onspot',
+        '/api/super-admin',
+        '/api/stage',
+        '/api/informalz',
+      ]);
+      if (isForbiddenApi) {
+        return NextResponse.json(
+          { success: false, error: 'Forbidden: Gate Security credentials cannot access administrative data.' },
+          { status: 403 }
+        );
+      }
+
+      if (
+        matchesAny(pathname, RI_PREFIXES) ||
+        matchesAny(pathname, STAGE_PREFIXES) ||
+        matchesAny(pathname, INFORMALZ_PREFIXES) ||
+        matchesAny(pathname, SUPER_ADMIN_PREFIXES)
+      ) {
+        return NextResponse.redirect(new URL('/checkin', request.url));
+      }
+    }
+
+    // 4. Committee isolation:
     // Informalz committee cannot access R&I or Stage panels
     if (session.roleId === 'INFORMALZ_COMMITTEE' && (matchesAny(pathname, RI_PREFIXES) || matchesAny(pathname, STAGE_PREFIXES))) {
       return NextResponse.redirect(new URL('/informalz', request.url));
