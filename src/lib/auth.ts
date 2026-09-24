@@ -34,8 +34,10 @@ export interface RoleDefinition {
 /**
  * Central role registry — the SINGLE source of truth for all roles.
  * To add a new committee, just push a new entry here.
+ * Must be a function to evaluate process.env dynamically at request-time.
  */
-export const ROLE_REGISTRY: RoleDefinition[] = [
+export function getRoleRegistry(): RoleDefinition[] {
+  return [
   {
     id: 'SUPER_ADMIN',
     label: 'Super Admin',
@@ -168,16 +170,17 @@ export const ROLE_REGISTRY: RoleDefinition[] = [
     ],
     dashboard: '/management',
   },
-];
+  ];
+}
 
 /** Roles visible in the login dropdown */
 export function getVisibleRoles(): Pick<RoleDefinition, 'id' | 'label'>[] {
-  return ROLE_REGISTRY.filter((r) => !r.hidden).map(({ id, label }) => ({ id, label }));
+  return getRoleRegistry().filter((r) => !r.hidden).map(({ id, label }) => ({ id, label }));
 }
 
 /** Lookup a role definition by id */
 export function getRoleById(roleId: string): RoleDefinition | undefined {
-  return ROLE_REGISTRY.find((r) => r.id === roleId);
+  return getRoleRegistry().find((r) => r.id === roleId);
 }
 
 // ─── Credential Validation ───────────────────────────────────────────────────
