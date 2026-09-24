@@ -31,6 +31,7 @@ import {
 
 export default function SuperAdminFlagsManager() {
   const [flags, setFlags] = useState<CommitteeFlagsStore>({});
+  const [editFlags, setEditFlags] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -53,6 +54,7 @@ export default function SuperAdminFlagsManager() {
       const data = await res.json();
       if (data.success && data.flags) {
         setFlags(data.flags);
+        if (data.editFlags) setEditFlags(data.editFlags);
       }
     } catch (err) {
       console.error('Failed to load committee flags:', err);
@@ -109,6 +111,42 @@ export default function SuperAdminFlagsManager() {
           [category]: currentVal,
         } as Record<EventCategoryKey, boolean>,
       }));
+      showToast(`Error: ${(err as Error).message}`);
+    }
+  };
+
+  const handleToggleEditPermission = async (committeeId: string) => {
+    if (committeeId === 'MANAGEMENT') {
+      showToast('Management panel is permanently read-only and cannot be granted edit access.');
+      return;
+    }
+    const currentVal = editFlags[committeeId] ?? false;
+    const newVal = !currentVal;
+
+    // Optimistic update
+    setEditFlags((prev) => ({ ...prev, [committeeId]: newVal }));
+
+    try {
+      const res = await fetch('/api/super-admin/flags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'TOGGLE_EDIT_FLAG',
+          committeeId,
+          enabled: newVal,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Toggle failed');
+
+      if (data.editFlags) setEditFlags(data.editFlags);
+      const meta = COMMITTEE_METAS.find((c) => c.id === committeeId);
+      showToast(
+        `${newVal ? '✅ Enabled' : '🔒 Disabled'} participant editing for ${meta?.name || committeeId}`
+      );
+    } catch (err) {
+      console.error('Failed to toggle edit permission:', err);
+      setEditFlags((prev) => ({ ...prev, [committeeId]: currentVal }));
       showToast(`Error: ${(err as Error).message}`);
     }
   };
@@ -370,6 +408,63 @@ export default function SuperAdminFlagsManager() {
                         </button>
                       );
                     })}
+                  </div>
+                </div>
+
+                {/* Participant Edit Permission Toggle */}
+                <div className="mt-4 pt-4 border-t border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-slate-200 block">
+                        Allow Participant Data Edits
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        {comm.id === 'MANAGEMENT'
+                          ? 'Permanently read-only — cannot be granted'
+                          : 'Grants this panel ability to edit participant records'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleEditPermission(comm.id)}
+                      disabled={comm.id === 'MANAGEMENT'}
+                      title={comm.id === 'MANAGEMENT' ? 'Management is always read-only' : undefined}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${
+                        editFlags[comm.id]
+                          ? 'bg-violet-500'
+                          : 'bg-slate-700'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                          editFlags[comm.id] ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  <div className="mt-2">
+                    <span
+                      className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                        comm.id === 'MANAGEMENT'
+                          ? 'bg-slate-800/40 border-slate-700 text-slate-500'
+                          : editFlags[comm.id]
+                          ? 'bg-violet-950/40 border-violet-500/40 text-violet-300'
+                          : 'bg-slate-800/40 border-slate-700 text-slate-500'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          editFlags[comm.id] && comm.id !== 'MANAGEMENT'
+                            ? 'bg-violet-400'
+                            : 'bg-slate-600'
+                        }`}
+                      />
+                      {comm.id === 'MANAGEMENT'
+                        ? 'Edit: Permanently Disabled'
+                        : editFlags[comm.id]
+                        ? 'Edit: Enabled'
+                        : 'Edit: Disabled'}
+                    </span>
                   </div>
                 </div>
               </div>

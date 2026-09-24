@@ -164,3 +164,31 @@ Official passes are delivered via the Resend API (`src/lib/email.ts`):
 - **API Key**: Managed in environment variable `RESEND_API_KEY`.
 - **Sender Address**: `passes@lingayaszest.tech` (or verified domain address).
 - **Trigger**: Automatic upon payment confirmation (Razorpay online or desk on-spot issuance).
+
+---
+
+## 8. Participant Data Edit Permission Flag System
+
+### Overview
+Only **Super Admin** (`/super-admin`) and **R&I Committee** (`/admin`) can edit participant records by default. All other committee panels are locked to read-only. The Super Admin can grant or revoke edit access per-panel in real-time through the **Committee Flags Manager** in the Super Admin dashboard.
+
+### How Editing Works
+1. **Super Admin toggles** the *"Allow Participant Data Edits"* switch in the Committee Flags Manager for a given panel.
+2. The flag is persisted to disk (`.festos_committee_edit_flags.json`) and memory-cached.
+3. When a committee panel loads `/api/admin/registrations`, the response includes `canEditParticipants: true/false`.
+4. If `canEditParticipants` is `true`, an **"Edit"** button appears in each row of the Attendee Registry table.
+5. Clicking "Edit" opens the `EditParticipantModal` — a full-form editor for: Lead Name, Email, Phone, College, Payment Status, Day Pass Option, Stage Track URL, AV Notes, and all Team Members.
+6. On save, a `PATCH /api/admin/registrations` request is dispatched. The API verifies the session's edit permission, updates PostgreSQL via Prisma (`updateRegistrationParticipantData`), and syncs to in-memory cache.
+7. An **immutable Audit Log entry** is created in the `AuditLog` table with: `action: UPDATE_PARTICIPANT_DATA`, `targetId: <registrationId>`, the operator's name, roll number, committee role, and timestamp — viewable only in the Super Admin real-time audit log viewer.
+
+### Management Panel Restriction
+- The **Management panel** (`/management`) is permanently set to read-only at the API layer (`MANAGEMENT` role is blocked in the PATCH handler regardless of any flag state).
+- The Flags Manager UI also disables the toggle for `MANAGEMENT` with a tooltip explaining the permanent restriction.
+
+### Flag Storage
+| File | Purpose |
+| :--- | :--- |
+| `.festos_committee_flags.json` | Event category visibility flags per committee |
+| `.festos_committee_edit_flags.json` | Participant data edit permission flags per committee |
+
+Both files are git-ignored and persist across container restarts via the NVMe volume at `/opt/festos`.

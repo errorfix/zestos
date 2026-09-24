@@ -1324,6 +1324,122 @@ export async function updateRegistrationTrack(
   return null;
 }
 
+export async function updateRegistrationParticipantData(
+  registrationId: string,
+  input: {
+    leadName?: string;
+    leadEmail?: string;
+    leadPhone?: string | null;
+    college?: string | null;
+    status?: string;
+    dayOption?: string | null;
+    trackUploadUrl?: string | null;
+    trackNotes?: string | null;
+    teamMembers?: Array<{
+      id?: string;
+      fullName: string;
+      phone?: string;
+      college?: string;
+      rollNumber?: string;
+    }>;
+  }
+): Promise<LocalRegistration | null> {
+  const dataToUpdate: Record<string, unknown> = {};
+  if (input.leadName !== undefined) dataToUpdate.leadName = input.leadName.trim();
+  if (input.leadEmail !== undefined) dataToUpdate.leadEmail = input.leadEmail.trim().toLowerCase();
+  if (input.leadPhone !== undefined) dataToUpdate.leadPhone = input.leadPhone ? input.leadPhone.trim() : null;
+  if (input.college !== undefined) dataToUpdate.college = input.college ? input.college.trim() : null;
+  if (input.status !== undefined) dataToUpdate.status = input.status.trim().toUpperCase();
+  if (input.dayOption !== undefined) dataToUpdate.dayOption = input.dayOption ? input.dayOption.trim().toUpperCase() : null;
+  if (input.trackUploadUrl !== undefined) dataToUpdate.trackUploadUrl = input.trackUploadUrl ? input.trackUploadUrl.trim() : null;
+  if (input.trackNotes !== undefined) dataToUpdate.trackNotes = input.trackNotes ? input.trackNotes.trim() : null;
+
+  try {
+    // If teamMembers provided, update existing members
+    if (input.teamMembers && Array.isArray(input.teamMembers)) {
+      for (const m of input.teamMembers) {
+        if (m.id) {
+          await prisma.teamMember.update({
+            where: { id: m.id },
+            data: {
+              fullName: m.fullName.trim(),
+              phone: m.phone ? m.phone.trim() : null,
+              college: m.college ? m.college.trim() : null,
+              rollNumber: m.rollNumber ? m.rollNumber.trim().toUpperCase() : null,
+            },
+          }).catch(() => null);
+        }
+      }
+    }
+
+    const updated = await prisma.registration.update({
+      where: { id: registrationId },
+      data: dataToUpdate,
+      include: {
+        event: true,
+        teamMembers: true,
+        tickets: true,
+      },
+    });
+
+    if (updated) {
+      if (input.leadName && updated.tickets && updated.tickets[0]) {
+        await prisma.ticket.update({
+          where: { id: updated.tickets[0].id },
+          data: { fullName: input.leadName.trim() },
+        }).catch(() => null);
+      }
+
+      const mem = memoryRegistrations.get(registrationId);
+      if (mem) {
+        Object.assign(mem, dataToUpdate);
+        if (input.teamMembers) {
+          mem.teamMembers = updated.teamMembers.map((m) => ({
+            id: m.id,
+            registrationId,
+            fullName: m.fullName,
+            phone: m.phone ?? null,
+            college: m.college ?? null,
+            rollNumber: m.rollNumber ?? null,
+          }));
+        }
+        syncDisk();
+      }
+
+      return {
+        ...updated,
+        teamMembers: updated.teamMembers || [],
+        tickets: updated.tickets.map((t, idx) => ({
+          ...t,
+          fullName: idx === 0 ? updated.leadName : updated.teamMembers[idx - 1]?.fullName || updated.leadName,
+        })),
+      } as unknown as LocalRegistration;
+    }
+  } catch (err) {
+    console.warn('[DB] Failed to update registration in Prisma, fallback to memory:', err);
+  }
+
+  const mem = memoryRegistrations.get(registrationId);
+  if (mem) {
+    Object.assign(mem, dataToUpdate);
+    if (input.teamMembers) {
+      mem.teamMembers = input.teamMembers.map((m, idx) => ({
+        id: m.id || `tm_${Date.now()}_${idx}`,
+        registrationId,
+        fullName: m.fullName.trim(),
+        phone: m.phone ?? null,
+        college: m.college ?? null,
+        rollNumber: m.rollNumber ?? null,
+      }));
+    }
+    syncDisk();
+    return mem;
+  }
+
+  return null;
+}
+
+
 export async function getStageMetrics() {
   const allRegistrations = await getAllRegistrations();
   const allEvents = await getEvents();

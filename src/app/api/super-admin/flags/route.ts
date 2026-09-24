@@ -7,6 +7,8 @@ import {
   setCommitteeFlag,
   setAllCommitteeFlags,
   resetCommitteeFlagsToDefault,
+  getCommitteeEditFlags,
+  setCommitteeEditFlag,
   COMMITTEE_METAS,
   ALL_EVENT_CATEGORIES,
   EventCategoryKey,
@@ -28,10 +30,12 @@ export async function GET() {
     }
 
     const flags = getCommitteeFlags();
+    const editFlags = getCommitteeEditFlags();
 
     return NextResponse.json({
       success: true,
       flags,
+      editFlags,
       committees: COMMITTEE_METAS,
       categories: ALL_EVENT_CATEGORIES,
     });
@@ -98,6 +102,36 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Committee flags updated successfully',
         flags: updated,
+      });
+    }
+
+    // Toggle participant edit permission flag
+    if (body.action === 'TOGGLE_EDIT_FLAG') {
+      const { committeeId, enabled } = body;
+      if (!committeeId || typeof enabled !== 'boolean') {
+        return NextResponse.json(
+          { success: false, error: 'committeeId and enabled boolean are required.' },
+          { status: 400 }
+        );
+      }
+      const updatedEdits = setCommitteeEditFlag(committeeId, enabled);
+      await createAuditLog({
+        targetId: `${committeeId}_EDIT_PERMISSION`,
+        action: 'TOGGLE_PARTICIPANT_EDIT_FLAG',
+        targetType: 'COMMITTEE_FLAG',
+        operatorName: operator?.operatorName || 'Super Admin Desk',
+        operatorRollNo: operator?.operatorRollNo || 'SUPER_ADMIN',
+        operatorType: operator?.operatorType || 'STUDENT',
+        committeeRoleId: 'SUPER_ADMIN',
+        changes: {
+          committeeId,
+          canEditParticipants: enabled,
+        },
+      });
+      return NextResponse.json({
+        success: true,
+        message: `Participant edit permission for ${committeeId} set to ${enabled ? 'ENABLED' : 'DISABLED'}`,
+        editFlags: updatedEdits,
       });
     }
 

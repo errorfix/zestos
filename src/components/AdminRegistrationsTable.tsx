@@ -26,6 +26,9 @@ import {
   ShieldCheck,
   AlertCircle,
   Share2,
+  Pencil,
+  Save,
+  Loader2,
 } from 'lucide-react';
 
 interface RegistrationRow {
@@ -79,6 +82,8 @@ export default function AdminRegistrationsTable({
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
   const [selectedReg, setSelectedReg] = useState<RegistrationRow | null>(null);
   const [copiedSummary, setCopiedSummary] = useState<boolean>(false);
+  const [canEdit, setCanEdit] = useState<boolean>(false);
+  const [editingReg, setEditingReg] = useState<RegistrationRow | null>(null);
 
   useEffect(() => {
     fetchRegistrations();
@@ -98,6 +103,9 @@ export default function AdminRegistrationsTable({
       const data = await res.json();
       if (data.registrations) {
         setRegistrations(data.registrations);
+      }
+      if (typeof data.canEditParticipants === 'boolean') {
+        setCanEdit(data.canEditParticipants);
       }
     } catch (e) {
       console.error('Failed to load registrations:', e);
@@ -455,6 +463,17 @@ export default function AdminRegistrationsTable({
                   {/* Actions */}
                   <td className="py-3.5 px-3 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      {canEdit && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingReg(reg)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors shadow-2xs"
+                          title="Edit Participant Record"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          <span>Edit</span>
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => setSelectedReg(reg)}
@@ -888,6 +907,352 @@ Pass Codes: ${selectedReg.tickets.map((t) => t.ticketCode).join(', ')}`;
           </div>
         </div>
       )}
+
+      {/* ── Edit Participant Modal ─────────────────────────────────── */}
+      {editingReg && (
+        <EditParticipantModal
+          reg={editingReg}
+          apiEndpoint={apiEndpoint}
+          onClose={() => setEditingReg(null)}
+          onSaved={(updated) => {
+            setRegistrations((prev) =>
+              prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r))
+            );
+            // Also update the dossier modal if open on same record
+            if (selectedReg?.id === updated.id) {
+              setSelectedReg((prev) => prev ? { ...prev, ...updated } : prev);
+            }
+            setEditingReg(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EditParticipantModal Component
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface EditParticipantModalProps {
+  reg: RegistrationRow;
+  apiEndpoint: string;
+  onClose: () => void;
+  onSaved: (updated: Partial<RegistrationRow> & { id: string }) => void;
+}
+
+function EditParticipantModal({ reg, apiEndpoint, onClose, onSaved }: EditParticipantModalProps) {
+  const [leadName, setLeadName] = useState(reg.leadName);
+  const [leadEmail, setLeadEmail] = useState(reg.leadEmail);
+  const [leadPhone, setLeadPhone] = useState(reg.leadPhone || '');
+  const [college, setCollege] = useState(reg.college || '');
+  const [status, setStatus] = useState(reg.status);
+  const [dayOption, setDayOption] = useState(reg.dayOption || '');
+  const [trackUploadUrl, setTrackUploadUrl] = useState(reg.trackUploadUrl || '');
+  const [trackNotes, setTrackNotes] = useState(reg.trackNotes || '');
+  const [teamMembers, setTeamMembers] = useState(
+    reg.teamMembers.map((m) => ({ ...m }))
+  );
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    try {
+      // Determine correct PATCH endpoint (same base as apiEndpoint)
+      const patchUrl = apiEndpoint.includes('?')
+        ? apiEndpoint.split('?')[0]
+        : apiEndpoint;
+
+      const res = await fetch(patchUrl, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          registrationId: reg.id,
+          leadName: leadName.trim(),
+          leadEmail: leadEmail.trim(),
+          leadPhone: leadPhone.trim() || null,
+          college: college.trim() || null,
+          status,
+          dayOption: dayOption || null,
+          trackUploadUrl: trackUploadUrl.trim() || null,
+          trackNotes: trackNotes.trim() || null,
+          teamMembers: teamMembers.map((m) => ({
+            fullName: m.fullName,
+            phone: m.phone || null,
+            college: m.college || null,
+            rollNumber: m.rollNumber || null,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Save failed');
+      }
+      setSuccessMsg('Participant record updated successfully.');
+      setTimeout(() => {
+        onSaved({
+          id: reg.id,
+          leadName: leadName.trim(),
+          leadEmail: leadEmail.trim(),
+          leadPhone: leadPhone.trim() || null,
+          college: college.trim() || null,
+          status,
+          dayOption: dayOption || null,
+          trackUploadUrl: trackUploadUrl.trim() || null,
+          trackNotes: trackNotes.trim() || null,
+          teamMembers,
+        });
+      }, 900);
+    } catch (err) {
+      setErrorMsg((err as Error).message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const updateTeamMember = (
+    idx: number,
+    field: keyof (typeof teamMembers)[0],
+    value: string
+  ) => {
+    setTeamMembers((prev) =>
+      prev.map((m, i) => (i === idx ? { ...m, [field]: value } : m))
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in duration-150">
+        {/* Header */}
+        <div className="p-5 bg-violet-700 text-white flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Pencil className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider opacity-80">
+                Edit Participant Record
+              </span>
+            </div>
+            <h3 className="text-lg font-extrabold">{reg.leadName}</h3>
+            <p className="text-xs opacity-70 mt-0.5">
+              {reg.eventTitle} • ID: {reg.id.slice(0, 8)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-violet-800 hover:bg-violet-900 flex items-center justify-center transition-colors shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto text-xs">
+          {errorMsg && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {errorMsg}
+            </div>
+          )}
+          {successMsg && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              {successMsg}
+            </div>
+          )}
+
+          {/* Core Info */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Lead Participant</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] text-slate-500 block mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  value={leadName}
+                  onChange={(e) => setLeadName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:border-violet-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 block mb-1">Email Address *</label>
+                <input
+                  type="email"
+                  value={leadEmail}
+                  onChange={(e) => setLeadEmail(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:border-violet-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 block mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  value={leadPhone}
+                  onChange={(e) => setLeadPhone(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:border-violet-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 block mb-1">College / Institute</label>
+                <input
+                  type="text"
+                  value={college}
+                  onChange={(e) => setCollege(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:border-violet-500 focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Registration Fields */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Registration Details</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] text-slate-500 block mb-1">Payment Status</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-medium focus:border-violet-500 focus:outline-none"
+                >
+                  <option value="PAID">PAID</option>
+                  <option value="PENDING">PENDING</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 block mb-1">Day Pass Option</label>
+                <select
+                  value={dayOption}
+                  onChange={(e) => setDayOption(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-medium focus:border-violet-500 focus:outline-none"
+                >
+                  <option value="">— Not Applicable —</option>
+                  <option value="DAY_1">Day 1 Only</option>
+                  <option value="DAY_2">Day 2 Only</option>
+                  <option value="BOTH_DAYS">Both Days</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Stage Track */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Stage Track & AV Cues</p>
+            <div className="space-y-2">
+              <div>
+                <label className="text-[10px] text-slate-500 block mb-1">Audio/Video Upload URL</label>
+                <input
+                  type="url"
+                  value={trackUploadUrl}
+                  onChange={(e) => setTrackUploadUrl(e.target.value)}
+                  placeholder="https://drive.google.com/..."
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:border-violet-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 block mb-1">Stage Notes / AV Cues</label>
+                <textarea
+                  value={trackNotes}
+                  onChange={(e) => setTrackNotes(e.target.value)}
+                  rows={2}
+                  placeholder="e.g. Start at 0:30, fade out at 2:45, requires mic stand..."
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:border-violet-500 focus:outline-none resize-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Team Members */}
+          {teamMembers.length > 0 && (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                Team Members ({teamMembers.length})
+              </p>
+              <div className="space-y-3">
+                {teamMembers.map((m, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2"
+                  >
+                    <p className="text-[10px] font-bold text-slate-500 uppercase">Member {idx + 1}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-slate-500 block mb-1">Full Name</label>
+                        <input
+                          type="text"
+                          value={m.fullName}
+                          onChange={(e) => updateTeamMember(idx, 'fullName', e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs bg-white focus:border-violet-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-slate-500 block mb-1">Roll Number</label>
+                        <input
+                          type="text"
+                          value={m.rollNumber || ''}
+                          onChange={(e) => updateTeamMember(idx, 'rollNumber', e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs bg-white focus:border-violet-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-slate-500 block mb-1">Phone</label>
+                        <input
+                          type="tel"
+                          value={m.phone || ''}
+                          onChange={(e) => updateTeamMember(idx, 'phone', e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs bg-white focus:border-violet-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-slate-500 block mb-1">College</label>
+                        <input
+                          type="text"
+                          value={m.college || ''}
+                          onChange={(e) => updateTeamMember(idx, 'college', e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs bg-white focus:border-violet-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+          <p className="text-[10px] text-slate-400">
+            All edits are immutably audit-logged with your identity &amp; timestamp.
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-800 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving || !!successMsg}
+              className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white transition-colors disabled:opacity-60"
+            >
+              {isSaving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
