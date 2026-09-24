@@ -875,9 +875,27 @@ export async function getAllRegistrations() {
   );
 }
 
-export async function getAdminMetrics() {
-  const registrations = await getAllRegistrations();
-  const events = await getEvents();
+export async function getAdminMetrics(options?: {
+  category?: string;
+  excludeCategory?: string;
+}) {
+  const allRegistrations = await getAllRegistrations();
+  let events = await getEvents();
+
+  if (options?.category) {
+    const cat = options.category.toLowerCase();
+    events = events.filter((e) => e.category.toLowerCase() === cat);
+  }
+
+  if (options?.excludeCategory) {
+    const excl = options.excludeCategory.toLowerCase();
+    events = events.filter((e) => e.category.toLowerCase() !== excl);
+  }
+
+  const validEventIds = new Set(events.map((e) => e.id));
+  const registrations = (options?.category || options?.excludeCategory)
+    ? allRegistrations.filter((r) => validEventIds.has(r.eventId))
+    : allRegistrations;
 
   let totalRevenuePaise = 0;
   let totalIssuedTickets = 0;

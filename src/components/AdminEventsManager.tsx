@@ -16,19 +16,47 @@ import { InitialEventData } from '@/lib/mockEvents';
 
 interface AdminEventsManagerProps {
   initialEvents: InitialEventData[];
+  apiEndpoint?: string;
+  categoryFilter?: string;
+  excludeCategory?: string;
+  defaultCategory?: string;
+  title?: string;
+  subtitle?: string;
 }
 
-export default function AdminEventsManager({ initialEvents }: AdminEventsManagerProps) {
+export default function AdminEventsManager({
+  initialEvents,
+  apiEndpoint = '/api/admin/events',
+  categoryFilter,
+  excludeCategory,
+  defaultCategory,
+  title,
+  subtitle,
+}: AdminEventsManagerProps) {
   const [events, setEvents] = useState<InitialEventData[]>(initialEvents);
   const [editingEvent, setEditingEvent] = useState<InitialEventData | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
 
+  React.useEffect(() => {
+    setEvents(initialEvents);
+  }, [initialEvents]);
+
+  const displayedEvents = events.filter((evt) => {
+    if (categoryFilter) {
+      return evt.category.toLowerCase() === categoryFilter.toLowerCase();
+    }
+    if (excludeCategory) {
+      return evt.category.toLowerCase() !== excludeCategory.toLowerCase();
+    }
+    return true;
+  });
+
   // Form states for Modal
   const [formData, setFormData] = useState({
     title: '',
-    category: 'Technical',
+    category: 'Cultural - Music',
     feeInr: 100,
     minTeamSize: 1,
     maxTeamSize: 1,
@@ -55,10 +83,11 @@ export default function AdminEventsManager({ initialEvents }: AdminEventsManager
   const openCreateModal = () => {
     setEditingEvent(null);
     setIsCreatingNew(true);
+    const initialCat = defaultCategory || (categoryFilter ? 'Informalz' : 'Cultural - Music');
     setFormData({
       title: '',
-      category: 'Technical',
-      feeInr: 150,
+      category: initialCat,
+      feeInr: initialCat === 'Informalz' ? 0 : 150,
       minTeamSize: 1,
       maxTeamSize: 1,
       venue: "Lingaya's Campus",
@@ -89,7 +118,7 @@ export default function AdminEventsManager({ initialEvents }: AdminEventsManager
           description: formData.description,
         };
 
-        const res = await fetch('/api/admin/events', {
+        const res = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -125,9 +154,11 @@ export default function AdminEventsManager({ initialEvents }: AdminEventsManager
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Active Campus Events</h2>
+          <h2 className="text-xl font-bold text-slate-900">
+            {title || 'Active Campus Events'} ({displayedEvents.length})
+          </h2>
           <p className="text-xs text-slate-500">
-            Edit fees, team size rules, and venue details in real time.
+            {subtitle || 'Edit fees, team size rules, and venue details in real time.'}
           </p>
         </div>
 
@@ -149,7 +180,7 @@ export default function AdminEventsManager({ initialEvents }: AdminEventsManager
 
       {/* Events Table / Card Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {events.map((evt) => (
+        {displayedEvents.map((evt) => (
           <div
             key={evt.id}
             className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all"
