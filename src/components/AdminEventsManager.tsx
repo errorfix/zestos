@@ -96,7 +96,7 @@ export default function AdminEventsManager({
     setEditingEvent(null);
     setIsCreatingNew(true);
     const initialCat = defaultCategory || (categoryFilter ? 'Informalz' : 'Cultural - Music');
-    const initialFee = initialCat === 'Informalz' ? 0 : 150;
+    const initialFee = 150;
     setFormData({
       title: '',
       category: initialCat,

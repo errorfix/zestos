@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { verifyPaymentSignature } from '@/lib/razorpay';
-import { fulfillPaymentAndGenerateTickets } from '@/lib/db';
+import { fulfillPaymentAndGenerateTickets, getRegistrationDetails } from '@/lib/db';
+import { sendPassEmail } from '@/lib/email';
 
 const verifySchema = z.object({
   orderId: z.string().min(1, 'Order ID is required'),
@@ -39,6 +40,26 @@ export async function POST(req: Request) {
       paymentId,
       payerName,
     });
+
+    // Asynchronously dispatch official passes to attendee email (non-blocking)
+    getRegistrationDetails(result.registrationId)
+      .then((reg) => {
+        if (reg && reg.leadEmail) {
+          sendPassEmail({
+            to: reg.leadEmail,
+            leadName: reg.leadName,
+            eventTitle: reg.event?.title || 'Festival Event',
+            eventCategory: reg.event?.category,
+            dayOption: reg.dayOption,
+            amount: reg.amount,
+            razorpayPaymentId: paymentId,
+            ticketCodes: result.tickets.map((t) => t.ticketCode),
+            registrationId: result.registrationId,
+            teamMembers: reg.teamMembers,
+          }).catch((err) => console.error('[Email] Failed to dispatch pass email:', err));
+        }
+      })
+      .catch((err) => console.error('[Email] Failed to fetch registration details for email:', err));
 
     return NextResponse.json({
       success: true,

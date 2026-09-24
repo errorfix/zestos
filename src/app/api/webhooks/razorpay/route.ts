@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyRazorpayWebhookSignature } from '@/lib/razorpay';
-import { fulfillPaymentAndGenerateTickets } from '@/lib/db';
+import { fulfillPaymentAndGenerateTickets, getRegistrationDetails } from '@/lib/db';
+import { sendPassEmail } from '@/lib/email';
 
 export async function POST(req: Request) {
   try {
@@ -28,10 +29,30 @@ export async function POST(req: Request) {
 
       if (orderId && paymentId) {
         console.log(`[Webhook] Fulfilling order ${orderId} with payment ${paymentId}`);
-        await fulfillPaymentAndGenerateTickets({
+        const result = await fulfillPaymentAndGenerateTickets({
           orderId,
           paymentId,
         });
+
+        // 📧 Asynchronous Pass Email Dispatch
+        getRegistrationDetails(result.registrationId)
+          .then((reg) => {
+            if (reg && reg.leadEmail) {
+              sendPassEmail({
+                to: reg.leadEmail,
+                leadName: reg.leadName,
+                eventTitle: reg.event?.title || 'Festival Event',
+                eventCategory: reg.event?.category,
+                dayOption: reg.dayOption,
+                amount: reg.amount,
+                razorpayPaymentId: paymentId,
+                ticketCodes: result.tickets.map((t) => t.ticketCode),
+                registrationId: result.registrationId,
+                teamMembers: reg.teamMembers,
+              }).catch((err) => console.error('[Webhook] Failed to dispatch pass email:', err));
+            }
+          })
+          .catch((err) => console.error('[Webhook] Failed to fetch registration details for email:', err));
       }
     }
 

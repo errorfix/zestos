@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getEventById, createPendingRegistration, createFreeRegistration } from '@/lib/db';
 import { createRazorpayOrder } from '@/lib/razorpay';
+import { sendPassEmail } from '@/lib/email';
 
 const checkoutSchema = z
   .object({
@@ -100,11 +101,11 @@ export async function POST(req: Request) {
         }
       }
 
-      if (hasDay1 && hasDay2) {
+      if (incomingDayOption === 'BOTH_DAYS' || (hasDay1 && hasDay2)) {
         calculatedFeePaise = 25000; // ₹250 for Both Days Pass
         resolvedDayOption = 'BOTH_DAYS';
         combinedEventTitle = `Informalz All-Access Both Days Pass (${validEvents.length} Games)`;
-      } else if (hasDay2) {
+      } else if (incomingDayOption === 'DAY_2' || hasDay2) {
         calculatedFeePaise = 15000; // ₹150 for Day 2 Pass
         resolvedDayOption = 'DAY_2';
         combinedEventTitle = `Informalz Day 2 Pass (${validEvents.length} Games)`;
@@ -151,6 +152,44 @@ export async function POST(req: Request) {
     // ─────────────────────────────────────────────────────────────────────────
     const receipt = `rcpt_${Date.now().toString().slice(-8)}`;
     const primaryEventId = validEvents[0].id;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 🎁 ZERO-FEE REGISTRATION FALLBACK (Non-Informalz, genuine free events)
+    // ─────────────────────────────────────────────────────────────────────────
+    if (!isInformalzFlow && calculatedFeePaise === 0) {
+      const freeResult = await createFreeRegistration({
+        eventId: primaryEventId,
+        leadName,
+        leadEmail,
+        leadPhone,
+        college,
+        photoUrl,
+        teamMembers,
+        trackUploadUrl,
+        trackNotes,
+      });
+
+      // Dispatch Pass Confirmation Email
+      sendPassEmail({
+        to: leadEmail,
+        leadName,
+        eventTitle: combinedEventTitle,
+        eventCategory: validEvents[0].category,
+        dayOption: resolvedDayOption,
+        amount: 0,
+        razorpayPaymentId: 'FREE_ENTRY',
+        ticketCodes: freeResult.tickets.map((t) => t.ticketCode),
+        registrationId: freeResult.registrationId,
+        teamMembers: teamMembers.map((m) => ({ fullName: m.fullName })),
+      }).catch((err) => console.error('[Email] Failed to dispatch free pass email:', err));
+
+      return NextResponse.json({
+        success: true,
+        registrationId: freeResult.registrationId,
+        isFree: true,
+        eventTitle: combinedEventTitle,
+      });
+    }
 
     // 1. Create Razorpay order (passing payerName, payerPhone, and college in notes)
     const razorpayOrder = await createRazorpayOrder({

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createOnSpotRegistration, getEventById } from '@/lib/db';
+import { sendPassEmail } from '@/lib/email';
 
 const onSpotSchema = z.object({
   eventId: z.string().min(1, 'Event ID is required'),
@@ -105,6 +106,22 @@ export async function POST(req: Request) {
       trackNotes,
       teamMembers,
     });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 📧 DISPATCH OFFICIAL PASS CONFIRMATION EMAIL (Asynchronous / Non-blocking)
+    // ─────────────────────────────────────────────────────────────────────────
+    sendPassEmail({
+      to: leadEmail,
+      leadName,
+      eventTitle: event.title,
+      eventCategory: event.category,
+      dayOption: dayOption || null,
+      amount: calculatedFeePaise,
+      razorpayPaymentId: razorpayPaymentId || `DESK-${paymentMethod}`,
+      ticketCodes: result.tickets.map((t) => t.ticketCode),
+      registrationId: result.registrationId,
+      teamMembers: teamMembers.map((m) => ({ fullName: m.fullName })),
+    }).catch((err) => console.error('[Email] Failed to dispatch on-spot pass email:', err));
 
     return NextResponse.json({
       success: true,
