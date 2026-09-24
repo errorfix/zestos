@@ -17,6 +17,15 @@ import {
   Phone,
   GraduationCap,
   CreditCard,
+  Eye,
+  X,
+  Mail,
+  MessageCircle,
+  Calendar,
+  Clock,
+  ShieldCheck,
+  AlertCircle,
+  Share2,
 } from 'lucide-react';
 
 interface RegistrationRow {
@@ -68,6 +77,8 @@ export default function AdminRegistrationsTable({
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
+  const [selectedReg, setSelectedReg] = useState<RegistrationRow | null>(null);
+  const [copiedSummary, setCopiedSummary] = useState<boolean>(false);
 
   useEffect(() => {
     fetchRegistrations();
@@ -436,18 +447,438 @@ export default function AdminRegistrationsTable({
 
                   {/* Actions */}
                   <td className="py-3.5 px-3 text-right">
-                    <Link
-                      href={`/tickets/${reg.id}`}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#1a73e8] hover:underline"
-                    >
-                      <span>Passes</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedReg(reg)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[#e8f0fe] text-[#1a73e8] hover:bg-[#d2e3fc] transition-colors shadow-2xs"
+                        title="View Full Attendee Dossier"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Details</span>
+                      </button>
+
+                      <Link
+                        href={`/tickets/${reg.id}`}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                        title="View Official Digital Passes (PNG)"
+                      >
+                        <Ticket className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Passes</span>
+                        <ExternalLink className="w-3 h-3 text-slate-400" />
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Comprehensive Attendee Details Modal */}
+      {selectedReg && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in duration-150">
+            {/* Modal Header */}
+            <div className="p-6 bg-slate-900 text-white flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                    Registration Record #{selectedReg.id.slice(0, 8)}
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      selectedReg.status === 'PAID'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                    }`}
+                  >
+                    {selectedReg.status}
+                  </span>
+                </div>
+                <h3 className="text-xl font-extrabold text-white">
+                  {selectedReg.leadName}
+                </h3>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  {selectedReg.eventTitle} • {selectedReg.eventCategory}
+                  {selectedReg.dayOption && ` (${selectedReg.dayOption.replace('_', ' ')})`}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedReg(null)}
+                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 flex items-center justify-center transition-colors shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto text-xs">
+              {/* Attendee Profile Section */}
+              <div className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                {selectedReg.photoUrl ? (
+                  <a
+                    href={selectedReg.photoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Click to view full photo"
+                    className="shrink-0 group"
+                  >
+                    <img
+                      src={selectedReg.photoUrl}
+                      alt={selectedReg.leadName}
+                      className="w-20 h-24 object-cover rounded-xl border border-slate-300 shadow-sm group-hover:ring-2 group-hover:ring-[#1a73e8] transition-all"
+                    />
+                  </a>
+                ) : (
+                  <div className="w-20 h-24 rounded-xl bg-slate-200 flex items-center justify-center text-slate-400 shrink-0">
+                    <User className="w-8 h-8" />
+                  </div>
+                )}
+
+                <div className="space-y-2 flex-1 min-w-0">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Lead Participant
+                    </span>
+                    <span className="text-base font-extrabold text-slate-900 block truncate">
+                      {selectedReg.leadName}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {/* Contact Number & Actions */}
+                    <div>
+                      <span className="text-[10px] text-slate-500 block">Contact Phone:</span>
+                      {selectedReg.leadPhone ? (
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="font-bold text-slate-900 font-mono">
+                            {selectedReg.leadPhone}
+                          </span>
+                          <a
+                            href={`tel:${selectedReg.leadPhone}`}
+                            className="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100"
+                            title="Call Phone"
+                          >
+                            <Phone className="w-3 h-3" />
+                          </a>
+                          <a
+                            href={`https://wa.me/91${selectedReg.leadPhone.replace(/\D/g, '').slice(-10)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                            title="WhatsApp Chat"
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                          </a>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 italic">Not provided</span>
+                      )}
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                      <span className="text-[10px] text-slate-500 block">Email Address:</span>
+                      <a
+                        href={`mailto:${selectedReg.leadEmail}`}
+                        className="font-medium text-[#1a73e8] hover:underline block truncate mt-0.5"
+                      >
+                        {selectedReg.leadEmail}
+                      </a>
+                    </div>
+
+                    {/* College */}
+                    <div className="sm:col-span-2">
+                      <span className="text-[10px] text-slate-500 block">College / Institution:</span>
+                      <span className="font-semibold text-slate-800 flex items-center gap-1 mt-0.5">
+                        <GraduationCap className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        {selectedReg.college || "Lingaya's Vidyapeeth (Host)"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment & Transaction Audit */}
+              <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-[#1a73e8]" />
+                    <span className="font-bold text-slate-900 text-xs">
+                      Payment Verification & Transaction Audit
+                    </span>
+                  </div>
+                  <span className="font-mono font-extrabold text-sm text-slate-900">
+                    ₹{((selectedReg.amount || selectedReg.feeAmount) / 100).toFixed(2)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-blue-100">
+                  {/* Razorpay Payment ID */}
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">Razorpay Payment ID / TxID:</span>
+                    {selectedReg.razorpayPaymentId ? (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <code className="text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 px-2 py-0.5 rounded">
+                          {selectedReg.razorpayPaymentId}
+                        </code>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(selectedReg.razorpayPaymentId!)}
+                          className="p-1 rounded bg-white hover:bg-slate-100 text-slate-600 border border-slate-200"
+                          title="Copy ID"
+                        >
+                          {copiedTxId === selectedReg.razorpayPaymentId ? (
+                            <Check className="w-3 h-3 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-slate-400 italic">No online TxID recorded</span>
+                    )}
+                  </div>
+
+                  {/* Razorpay Order ID */}
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">Razorpay Order ID:</span>
+                    {selectedReg.razorpayOrderId ? (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <code className="text-xs font-mono text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded truncate max-w-[170px]">
+                          {selectedReg.razorpayOrderId}
+                        </code>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(selectedReg.razorpayOrderId!)}
+                          className="p-1 rounded bg-white hover:bg-slate-100 text-slate-600 border border-slate-200"
+                          title="Copy Order ID"
+                        >
+                          {copiedTxId === selectedReg.razorpayOrderId ? (
+                            <Check className="w-3 h-3 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-slate-400 italic">N/A (Desk Entry)</span>
+                    )}
+                  </div>
+
+                  {/* Payer Name */}
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">Payer / Account Holder:</span>
+                    <span className="font-semibold text-slate-800">
+                      {selectedReg.payerName || selectedReg.leadName}
+                    </span>
+                  </div>
+
+                  {/* Payment Method & Date */}
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">Method & Timestamp:</span>
+                    <span className="font-medium text-slate-700">
+                      {selectedReg.paymentMethod} • {new Date(selectedReg.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Team Members Roster */}
+              {selectedReg.teamMembers && selectedReg.teamMembers.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                    <span>Registered Team Members ({selectedReg.teamMembers.length})</span>
+                    <span className="text-[10px] text-slate-400 font-normal">Included under this booking</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {selectedReg.teamMembers.map((m, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-900">{m.fullName}</span>
+                          {m.rollNumber && (
+                            <span className="text-[10px] font-mono bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded">
+                              {m.rollNumber}
+                            </span>
+                          )}
+                        </div>
+                        {m.phone && (
+                          <div className="flex items-center gap-1 text-[11px] text-slate-600">
+                            <Phone className="w-3 h-3 text-slate-400" />
+                            <span>{m.phone}</span>
+                            <a
+                              href={`tel:${m.phone}`}
+                              className="text-blue-600 hover:underline text-[10px] ml-1"
+                            >
+                              Call
+                            </a>
+                          </div>
+                        )}
+                        {m.college && (
+                          <span className="text-[10px] text-slate-500 block truncate">
+                            {m.college}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Backstage Audio / Video Tracks */}
+              {(selectedReg.trackUploadUrl || selectedReg.trackNotes) && (
+                <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-amber-900 font-bold">
+                      <Music className="w-4 h-4 text-amber-700" />
+                      <span>Backstage Stage Track & Performance Cues</span>
+                    </div>
+                    {selectedReg.trackUploadUrl && (
+                      <a
+                        href={
+                          selectedReg.trackUploadUrl.startsWith('http')
+                            ? selectedReg.trackUploadUrl
+                            : `https://${selectedReg.trackUploadUrl}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 hover:underline"
+                      >
+                        <span>Open Audio/Video File</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+                  {selectedReg.trackNotes && (
+                    <p className="text-xs text-amber-950 bg-amber-100/50 p-2.5 rounded-xl border border-amber-200">
+                      &quot;{selectedReg.trackNotes}&quot;
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Passes & Gate Check-in Status */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-800">
+                    Gate Passes & Verification ({selectedReg.tickets.length})
+                  </h4>
+                  <Link
+                    href={`/tickets/${selectedReg.id}`}
+                    target="_blank"
+                    className="text-[11px] font-bold text-[#1a73e8] hover:underline inline-flex items-center gap-1"
+                  >
+                    <span>Open Official Passes (PNG Only)</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </div>
+
+                <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-white">
+                  {selectedReg.tickets.map((t) => (
+                    <div key={t.ticketCode} className="p-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0">
+                          <Ticket className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-slate-900 text-xs">
+                              {t.ticketCode}
+                            </span>
+                            <span
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                                t.status === 'CHECKED_IN'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : t.status === 'WAITLIST'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-slate-100 text-slate-700'
+                              }`}
+                            >
+                              {t.status}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-slate-500 block">
+                            {t.fullName} {t.college ? `• ${t.college}` : ''}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        {t.checkedInAt ? (
+                          <span className="text-[10px] text-emerald-700 block font-medium">
+                            Checked in: {new Date(t.checkedInAt).toLocaleTimeString()}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 block">Not checked in</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const summaryText = `[Zest 2026 Registration Details]
+Event: ${selectedReg.eventTitle} (${selectedReg.eventCategory})
+Attendee: ${selectedReg.leadName}
+Contact: ${selectedReg.leadPhone || 'N/A'}
+College: ${selectedReg.college || "Lingaya's Vidyapeeth"}
+Amount: ₹${((selectedReg.amount || selectedReg.feeAmount) / 100).toFixed(0)} (${selectedReg.status})
+TxID: ${selectedReg.razorpayPaymentId || 'N/A'}
+Payer: ${selectedReg.payerName || selectedReg.leadName}
+Pass Codes: ${selectedReg.tickets.map((t) => t.ticketCode).join(', ')}`;
+                  navigator.clipboard.writeText(summaryText);
+                  setCopiedSummary(true);
+                  setTimeout(() => setCopiedSummary(false), 2000);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                {copiedSummary ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="text-emerald-700">Copied to Clipboard!</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Copy Summary (WhatsApp)</span>
+                  </>
+                )}
+              </button>
+
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/tickets/${selectedReg.id}`}
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#1a73e8] hover:bg-[#1557b0] text-white transition-colors shadow-xs"
+                >
+                  <Ticket className="w-3.5 h-3.5" />
+                  <span>View Passes (PNG)</span>
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedReg(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-800 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

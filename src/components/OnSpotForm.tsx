@@ -17,6 +17,8 @@ import {
   Gift,
   Calendar,
   Check,
+  Phone,
+  GraduationCap,
 } from 'lucide-react';
 import { InitialEventData } from '@/lib/mockEvents';
 
@@ -28,7 +30,11 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
   const [selectedEventId, setSelectedEventId] = useState<string>(events[0]?.id || '');
   const [leadName, setLeadName] = useState<string>('');
   const [leadEmail, setLeadEmail] = useState<string>('');
+  const [leadPhone, setLeadPhone] = useState<string>('');
+  const [college, setCollege] = useState<string>("Lingaya's Vidyapeeth");
   const [leadRollNumber, setLeadRollNumber] = useState<string>('');
+  const [razorpayPaymentId, setRazorpayPaymentId] = useState<string>('');
+  const [payerName, setPayerName] = useState<string>('');
   const [dayOption, setDayOption] = useState<'SINGLE_DAY' | 'BOTH_DAYS'>('SINGLE_DAY');
   const [trackUploadUrl, setTrackUploadUrl] = useState<string>('');
   const [trackNotes, setTrackNotes] = useState<string>('');
@@ -41,6 +47,10 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
     tickets: Array<{ ticketCode: string; securityHash: string }>;
     eventTitle: string;
     feeCollected: number;
+    leadName?: string;
+    leadPhone?: string;
+    college?: string;
+    razorpayPaymentId?: string;
   } | null>(null);
 
   const [isSubmitting, startTransition] = useTransition();
@@ -87,6 +97,12 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
       return;
     }
 
+    const cleanPhone = leadPhone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) {
+      setErrorMessage('A valid 10-digit mobile contact number is required.');
+      return;
+    }
+
     if (!leadEmail.trim() || !leadEmail.includes('@')) {
       setErrorMessage('A valid email address is required for issuing digital passes.');
       return;
@@ -108,8 +124,12 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             eventId: currentEvent.id,
-            leadName,
-            leadEmail,
+            leadName: leadName.trim(),
+            leadEmail: leadEmail.trim(),
+            leadPhone: cleanPhone,
+            college: college.trim(),
+            razorpayPaymentId: razorpayPaymentId.trim() || undefined,
+            payerName: payerName.trim() || undefined,
             paymentMethod: effectivePaymentMethod,
             dayOption: currentEvent.hasDayOptions ? dayOption : undefined,
             trackUploadUrl: currentEvent.requiresTrackUpload && trackUploadUrl.trim() ? trackUploadUrl.trim() : undefined,
@@ -123,7 +143,13 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
           throw new Error(data.error || 'On-spot registration failed');
         }
 
-        setCompletedRegistration(data);
+        setCompletedRegistration({
+          ...data,
+          leadName: leadName.trim(),
+          leadPhone: cleanPhone,
+          college: college.trim(),
+          razorpayPaymentId: razorpayPaymentId.trim() || undefined,
+        });
       } catch (err) {
         setErrorMessage((err as Error).message || 'Registration failed');
       }
@@ -133,7 +159,11 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
   const handleResetForNext = () => {
     setLeadName('');
     setLeadEmail('');
+    setLeadPhone('');
+    setCollege("Lingaya's Vidyapeeth");
     setLeadRollNumber('');
+    setRazorpayPaymentId('');
+    setPayerName('');
     setTrackUploadUrl('');
     setTrackNotes('');
     setTeamMembers([]);
@@ -168,20 +198,55 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
           .
         </p>
 
-        {/* Issued Passes Chips */}
-        <div className="my-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-            Generated Ticket Codes ({completedRegistration.tickets.length})
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            {completedRegistration.tickets.map((t) => (
-              <span
-                key={t.ticketCode}
-                className="px-3 py-1.5 rounded-lg text-sm font-mono font-bold bg-[#e8f0fe] text-[#1a73e8] border border-[#d2e3fc]"
-              >
-                {t.ticketCode}
+        {/* Attendee, Contact & Transaction Dossier */}
+        <div className="my-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-slate-200">
+            <div>
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Participant Details</span>
+              <strong className="text-slate-900 text-sm block mt-0.5">{completedRegistration.leadName}</strong>
+              {completedRegistration.leadPhone && (
+                <span className="text-slate-700 font-semibold flex items-center gap-1 mt-1">
+                  <Phone className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  {completedRegistration.leadPhone}
+                </span>
+              )}
+              {completedRegistration.college && (
+                <span className="text-slate-600 flex items-center gap-1 mt-0.5">
+                  <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  {completedRegistration.college}
+                </span>
+              )}
+            </div>
+
+            <div className="text-left sm:text-right">
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Transaction / Razorpay ID</span>
+              {completedRegistration.razorpayPaymentId ? (
+                <code className="text-xs font-mono font-bold text-slate-900 bg-white px-2 py-1 rounded border border-slate-300 inline-block mt-1">
+                  {completedRegistration.razorpayPaymentId}
+                </code>
+              ) : (
+                <span className="text-xs text-slate-500 italic block mt-1">On-Spot Desk Cash</span>
+              )}
+              <span className="text-[11px] text-slate-500 block mt-1">
+                Amount: <strong className="text-emerald-700">₹{completedRegistration.feeCollected}</strong>
               </span>
-            ))}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+              Generated Gate Passes ({completedRegistration.tickets.length})
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {completedRegistration.tickets.map((t) => (
+                <span
+                  key={t.ticketCode}
+                  className="px-3 py-1.5 rounded-lg text-sm font-mono font-bold bg-[#e8f0fe] text-[#1a73e8] border border-[#d2e3fc]"
+                >
+                  {t.ticketCode}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -191,7 +256,7 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-[#1a73e8] hover:bg-[#1557b0] text-white shadow-sm transition-all"
           >
             <Ticket className="w-4 h-4" />
-            <span>View & Print Passes</span>
+            <span>View Official Passes (PNG)</span>
           </Link>
 
           <button
@@ -338,6 +403,25 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
             </div>
 
             <div>
+              <label htmlFor="leadPhone" className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
+                <Phone className="w-3.5 h-3.5 text-slate-400" />
+                <span>
+                  Contact No (10-Digit Mobile) <span className="text-red-500">*</span>
+                </span>
+              </label>
+              <input
+                id="leadPhone"
+                type="tel"
+                required
+                maxLength={10}
+                value={leadPhone}
+                onChange={(e) => setLeadPhone(e.target.value.replace(/\D/g, ''))}
+                placeholder="e.g. 9876543210"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm bg-white focus:border-[#1a73e8]"
+              />
+            </div>
+
+            <div>
               <label htmlFor="leadEmail" className="block text-xs font-semibold text-slate-700 mb-1">
                 Email Address <span className="text-red-500">*</span>
               </label>
@@ -348,6 +432,21 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
                 value={leadEmail}
                 onChange={(e) => setLeadEmail(e.target.value)}
                 placeholder="attendee@example.com"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm bg-white focus:border-[#1a73e8]"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="college" className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
+                <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
+                <span>College / Institute Name</span>
+              </label>
+              <input
+                id="college"
+                type="text"
+                value={college}
+                onChange={(e) => setCollege(e.target.value)}
+                placeholder="e.g. Lingaya's Vidyapeeth"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm bg-white focus:border-[#1a73e8]"
               />
             </div>
@@ -509,38 +608,75 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
-              <div
-                onClick={() => setPaymentMethod('ONSPOT_CASH')}
-                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${
-                  paymentMethod === 'ONSPOT_CASH'
-                    ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-600/20'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                  <Banknote className="w-5 h-5" />
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div
+                  onClick={() => setPaymentMethod('ONSPOT_CASH')}
+                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${
+                    paymentMethod === 'ONSPOT_CASH'
+                      ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-600/20'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <Banknote className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">Cash Received</h4>
+                    <p className="text-xs text-slate-500">Collected physical cash at table</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900">Cash Received</h4>
-                  <p className="text-xs text-slate-500">Collected physical cash at table</p>
+
+                <div
+                  onClick={() => setPaymentMethod('ONSPOT_UPI')}
+                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${
+                    paymentMethod === 'ONSPOT_UPI'
+                      ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                    <QrCode className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">Desk UPI / Razorpay</h4>
+                    <p className="text-xs text-slate-500">Scanned desk QR or online pay</p>
+                  </div>
                 </div>
               </div>
 
-              <div
-                onClick={() => setPaymentMethod('ONSPOT_UPI')}
-                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${
-                  paymentMethod === 'ONSPOT_UPI'
-                    ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-                  <QrCode className="w-5 h-5" />
-                </div>
+              {/* Razorpay ID / Transaction Reference & Payer Name */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900">Desk UPI QR</h4>
-                  <p className="text-xs text-slate-500">Scanned desk merchant QR</p>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Razorpay Payment ID / UPI Ref No {paymentMethod === 'ONSPOT_UPI' && <span className="text-red-500">*</span>}
+                  </label>
+                  <input
+                    type="text"
+                    value={razorpayPaymentId}
+                    onChange={(e) => setRazorpayPaymentId(e.target.value)}
+                    placeholder="e.g. pay_XXXXX or UPI Ref / UTR"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm bg-white focus:border-[#1a73e8]"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Recorded in backend & R&I verification audit logs
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Payer / Account Holder Name
+                  </label>
+                  <input
+                    type="text"
+                    value={payerName}
+                    onChange={(e) => setPayerName(e.target.value)}
+                    placeholder="Name on UPI / bank account"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm bg-white focus:border-[#1a73e8]"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Defaults to lead participant if left blank
+                  </p>
                 </div>
               </div>
             </div>

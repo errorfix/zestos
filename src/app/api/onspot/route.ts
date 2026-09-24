@@ -6,7 +6,14 @@ const onSpotSchema = z.object({
   eventId: z.string().min(1, 'Event ID is required'),
   leadName: z.string().min(2, 'Lead Attendee Name is required'),
   leadEmail: z.string().email('Valid email is required'),
-  paymentMethod: z.enum(['ONSPOT_CASH', 'ONSPOT_UPI', 'FREE_REGISTRATION']).default('ONSPOT_CASH'),
+  leadPhone: z.string().min(10, 'A valid 10-digit contact number is required'),
+  college: z.string().optional(),
+  photoUrl: z.string().optional(),
+  paymentMethod: z
+    .enum(['ONSPOT_CASH', 'ONSPOT_UPI', 'ONLINE_RAZORPAY', 'FREE_REGISTRATION'])
+    .default('ONSPOT_CASH'),
+  razorpayPaymentId: z.string().optional(),
+  payerName: z.string().optional(),
   dayOption: z.enum(['SINGLE_DAY', 'BOTH_DAYS']).optional(),
   trackUploadUrl: z.string().optional(),
   trackNotes: z.string().optional(),
@@ -14,6 +21,9 @@ const onSpotSchema = z.object({
     .array(
       z.object({
         fullName: z.string().min(2, 'Team member name required'),
+        phone: z.string().optional(),
+        college: z.string().optional(),
+        photoUrl: z.string().optional(),
         rollNumber: z.string().optional(),
       })
     )
@@ -36,7 +46,12 @@ export async function POST(req: Request) {
       eventId,
       leadName,
       leadEmail,
+      leadPhone,
+      college,
+      photoUrl,
       paymentMethod,
+      razorpayPaymentId,
+      payerName,
       dayOption,
       trackUploadUrl,
       trackNotes,
@@ -78,7 +93,13 @@ export async function POST(req: Request) {
       eventId,
       leadName,
       leadEmail,
+      leadPhone,
+      college,
+      photoUrl,
       paymentMethod,
+      razorpayPaymentId,
+      payerName,
+      amount: calculatedFeePaise,
       dayOption,
       trackUploadUrl,
       trackNotes,

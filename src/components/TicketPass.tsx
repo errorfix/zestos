@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import {
   ShieldCheck,
-  Printer,
   CheckCircle,
   Copy,
   ExternalLink,
@@ -518,13 +517,13 @@ export default function TicketPass({ ticket, autoDownload }: TicketPassProps) {
         </div>
       )}
 
-      {/* Action Buttons: Auto-download & Manual Download & Print */}
+      {/* Action Buttons: High-Resolution PNG Pass Download */}
       <div className="w-full max-w-sm mt-4 flex flex-col gap-2.5 no-print">
         <button
           type="button"
           onClick={handleDownloadPass}
           disabled={isDownloading}
-          className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-sm font-bold bg-[#1a73e8] hover:bg-[#1557b0] text-white shadow-md transition-all active:scale-[0.98]"
+          className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-sm font-bold bg-[#1a73e8] hover:bg-[#1557b0] text-white shadow-md transition-all active:scale-[0.98]"
         >
           {isDownloading ? (
             <>
@@ -534,7 +533,7 @@ export default function TicketPass({ ticket, autoDownload }: TicketPassProps) {
           ) : downloadSuccess ? (
             <>
               <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-              <span>Pass Downloaded Successfully!</span>
+              <span>Official Pass (PNG) Downloaded!</span>
             </>
           ) : (
             <>
@@ -544,26 +543,15 @@ export default function TicketPass({ ticket, autoDownload }: TicketPassProps) {
           )}
         </button>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-xs"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print Badge</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleTestVerification}
-            disabled={isVerifying}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold text-[#1a73e8] bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors"
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>{isVerifying ? 'Checking...' : 'Verify Cryptography'}</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleTestVerification}
+          disabled={isVerifying}
+          className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold text-[#1a73e8] bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors"
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>{isVerifying ? 'Checking Cryptography...' : 'Verify Cryptographic Signature'}</span>
+        </button>
       </div>
     </div>
   );

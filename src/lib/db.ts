@@ -527,6 +527,9 @@ export async function createOnSpotRegistration({
   photoUrl,
   paymentMethod,
   dayOption,
+  razorpayPaymentId,
+  payerName,
+  amount,
   trackUploadUrl,
   trackNotes,
   teamMembers = [],
@@ -539,6 +542,9 @@ export async function createOnSpotRegistration({
   photoUrl?: string;
   paymentMethod: string;
   dayOption?: string;
+  razorpayPaymentId?: string;
+  payerName?: string;
+  amount?: number;
   trackUploadUrl?: string;
   trackNotes?: string;
   teamMembers?: Array<{
@@ -553,7 +559,15 @@ export async function createOnSpotRegistration({
   if (!event) throw new Error('Event not found');
 
   const regId = `reg_spot_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-  const receipt = `spot_rcpt_${Date.now()}`;
+  const receipt = razorpayPaymentId || `spot_rcpt_${Date.now()}`;
+  const effectiveAmount =
+    amount !== undefined
+      ? amount
+      : event.hasDayOptions
+      ? dayOption === 'BOTH_DAYS'
+        ? 25000
+        : 15000
+      : event.feeAmount;
 
   const ticketsToCreate = [
     {
@@ -590,6 +604,8 @@ export async function createOnSpotRegistration({
         leadPhone: leadPhone || null,
         college: college || null,
         photoUrl: photoUrl || null,
+        payerName: payerName || leadName,
+        amount: effectiveAmount,
         status: 'PAID',
         paymentMethod,
         dayOption: dayOption || null,
@@ -629,6 +645,8 @@ export async function createOnSpotRegistration({
     leadPhone: leadPhone || null,
     college: college || null,
     photoUrl: photoUrl || null,
+    payerName: payerName || leadName,
+    amount: effectiveAmount,
     status: 'PAID',
     paymentMethod,
     dayOption: dayOption || null,
