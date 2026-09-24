@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useTransition, Suspense } from 'react';
+import React, { useState, useTransition, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Lock,
-  Mail,
   KeyRound,
   ShieldCheck,
   AlertCircle,
@@ -13,23 +12,56 @@ import {
   Sparkles,
   Eye,
   EyeOff,
+  ChevronDown,
 } from 'lucide-react';
+
+// Client-safe role list — fetched from API or hardcoded visible roles
+// (hidden roles like SUPER_ADMIN are NOT listed here by default)
+interface RoleOption {
+  id: string;
+  label: string;
+}
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextUrl = searchParams.get('next') || '/admin';
+  const nextUrl = searchParams.get('next');
 
-  const [email, setEmail] = useState<string>('admin@zest.lingayas.edu.in');
-  const [password, setPassword] = useState<string>('Zest@2026');
+  const [roles, setRoles] = useState<RoleOption[]>([]);
+  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, startTransition] = useTransition();
 
+  // Fetch visible roles from API
+  useEffect(() => {
+    fetch('/api/auth/roles')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.roles) {
+          setRoles(data.roles);
+          if (data.roles.length === 1) {
+            setSelectedRole(data.roles[0].id);
+          }
+        }
+      })
+      .catch(() => {
+        setRoles([
+          { id: 'REGISTRATION_COMMITTEE', label: 'Registration & Invitation Committee' },
+        ]);
+      });
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+
+    if (!selectedRole) {
+      setErrorMessage('Please select your committee.');
+      return;
+    }
 
     startTransition(async () => {
       try {
@@ -37,7 +69,7 @@ function LoginForm() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email,
+            roleId: selectedRole,
             password,
             rememberMe,
           }),
@@ -48,11 +80,12 @@ function LoginForm() {
           throw new Error(data.error || 'Authentication failed. Please verify credentials.');
         }
 
-        // Redirect to intended protected page
-        router.push(nextUrl);
+        // Redirect to intended page or role's dashboard
+        const redirectTo = nextUrl || data.user?.dashboard || '/admin';
+        router.push(redirectTo);
         router.refresh();
       } catch (err) {
-        setErrorMessage((err as Error).message || 'Invalid email or password.');
+        setErrorMessage((err as Error).message || 'Invalid credentials.');
       }
     });
   };
@@ -75,10 +108,10 @@ function LoginForm() {
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Restricted Access Portal
+            Committee Access Portal
           </h2>
           <p className="mt-1.5 text-xs sm:text-sm text-slate-400">
-            Lingaya&apos;s Vidyapeeth Fest Operations & Gate Security
+            Lingaya&apos;s Vidyapeeth Fest Operations &amp; Gate Security
           </p>
         </div>
 
@@ -91,30 +124,38 @@ function LoginForm() {
             </div>
           )}
 
+
           <form onSubmit={handleLogin} className="space-y-5">
-            {/* Email Field */}
+            {/* Committee Selector (Dropdown) */}
             <div>
-              <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-                Committee Email ID
+              <label htmlFor="role" className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+                Select Committee
               </label>
               <div className="relative">
-                <input
-                  id="email"
-                  type="email"
+                <select
+                  id="role"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@zest.lingayas.edu.in"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] transition-colors"
-                />
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full pl-4 pr-10 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white text-sm appearance-none focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] transition-colors cursor-pointer"
+                >
+                  <option value="" disabled>
+                    — Choose your committee —
+                  </option>
+                  {roles.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
             {/* Password Field */}
             <div>
               <label htmlFor="pass" className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-                Password
+                Committee Password
               </label>
               <div className="relative">
                 <input
@@ -154,7 +195,7 @@ function LoginForm() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !selectedRole}
               className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold bg-[#1a73e8] hover:bg-[#1557b0] text-white shadow-md shadow-blue-500/25 transition-all disabled:opacity-50"
             >
               <span>{isSubmitting ? 'Authenticating...' : 'Enter Committee Portal'}</span>
@@ -162,15 +203,14 @@ function LoginForm() {
             </button>
           </form>
 
-          {/* Quick Credential Helper Callout */}
+          {/* Credential Hint */}
           <div className="mt-6 pt-5 border-t border-slate-700/60">
             <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/40 text-[11px] text-slate-400">
               <div className="flex items-center gap-1.5 font-bold text-slate-300 mb-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-                <span>Authorized Master Credentials</span>
+                <span>Committee Access</span>
               </div>
-              <p>Email: <code className="text-blue-300 font-mono">admin@zest.lingayas.edu.in</code></p>
-              <p>Pass: <code className="text-blue-300 font-mono">Zest@2026</code></p>
+              <p>Contact your committee head for login credentials.</p>
             </div>
           </div>
         </div>

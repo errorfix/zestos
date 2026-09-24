@@ -37,7 +37,17 @@ interface RegistrationRow {
   }>;
 }
 
-export default function AdminRegistrationsTable() {
+interface AdminRegistrationsTableProps {
+  apiEndpoint?: string;
+  title?: string;
+  subtitle?: string;
+}
+
+export default function AdminRegistrationsTable({
+  apiEndpoint = '/api/admin/registrations',
+  title = 'Master Attendee Registry',
+  subtitle = 'Search across attendee names, college emails, track notes, and unique HMAC security hashes.',
+}: AdminRegistrationsTableProps = {}) {
   const [registrations, setRegistrations] = useState<RegistrationRow[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -45,12 +55,12 @@ export default function AdminRegistrationsTable() {
 
   useEffect(() => {
     fetchRegistrations();
-  }, []);
+  }, [apiEndpoint]);
 
   const fetchRegistrations = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/admin/registrations');
+      const res = await fetch(apiEndpoint);
       const data = await res.json();
       if (data.registrations) {
         setRegistrations(data.registrations);
@@ -137,10 +147,10 @@ export default function AdminRegistrationsTable() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900">
-            Master Attendee Registry ({filtered.length})
+            {title} ({filtered.length})
           </h2>
           <p className="text-xs text-slate-500">
-            Real-time participant rosters, stage track assets, payment records, and gate audit.
+            {subtitle}
           </p>
         </div>
 

@@ -41,13 +41,19 @@ export default async function HomePage() {
               cryptographic passes, aggressive draft persistence, and instant entry verification.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-4">
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
                 href="/register"
                 className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl text-base font-semibold bg-[#1a73e8] hover:bg-[#1557b0] text-white shadow-md transition-all focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
               >
                 <span>Register for Events</span>
                 <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/register?category=informalz"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl text-base font-semibold bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 transition-colors"
+              >
+                <span>Informalz Hub (Free Pass)</span>
               </Link>
               <a
                 href="#events-catalog"

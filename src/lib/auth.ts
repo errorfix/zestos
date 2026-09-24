@@ -1,48 +1,135 @@
+// ─── Role-Based Authentication System ────────────────────────────────────────
+// Extensible credential registry: each role maps to a password + permissions.
+// Adding a new committee = add one entry to ROLE_REGISTRY.
+
 export const ADMIN_COOKIE_NAME = 'festos_admin_session';
 
-const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@zest.lingayas.edu.in';
-const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Zest@2026';
 const AUTH_SECRET =
   process.env.ADMIN_AUTH_SECRET ||
   process.env.RAZORPAY_KEY_SECRET ||
   'festos-zest2k26-lingayas-master-auth-secret-key-32chars';
 
+// ─── Role Definitions ────────────────────────────────────────────────────────
+
+export type Permission =
+  | 'view_dashboard'
+  | 'view_registrations'
+  | 'manage_events'      // create / edit / delete events
+  | 'access_onspot'
+  | 'access_checkin'
+  | 'manage_roles';       // future: manage other committee accounts
+
+export interface RoleDefinition {
+  id: string;
+  label: string;
+  password: string;
+  permissions: Permission[];
+  dashboard: string;       // redirect target after login
+  hidden?: boolean;        // if true, not shown in the login dropdown
+}
+
+/**
+ * Central role registry — the SINGLE source of truth for all roles.
+ * To add a new committee, just push a new entry here.
+ */
+export const ROLE_REGISTRY: RoleDefinition[] = [
+  {
+    id: 'SUPER_ADMIN',
+    label: 'Super Admin',
+    password: process.env.SUPER_ADMIN_PASSWORD || 'phoenix@lv321',
+    permissions: [
+      'view_dashboard',
+      'view_registrations',
+      'manage_events',
+      'access_onspot',
+      'access_checkin',
+      'manage_roles',
+    ],
+    dashboard: '/super-admin',
+  },
+  {
+    id: 'REGISTRATION_COMMITTEE',
+    label: 'Registration & Invitation Committee',
+    password: process.env.RI_COMMITTEE_PASSWORD || 'falcon@lv321',
+    permissions: [
+      'view_dashboard',
+      'view_registrations',
+      'access_onspot',
+      'access_checkin',
+    ],
+    dashboard: '/admin',
+  },
+  {
+    id: 'INFORMALZ_COMMITTEE',
+    label: 'Informalz Committee',
+    password: process.env.INFORMALZ_COMMITTEE_PASSWORD || 'tiger@lv321',
+    permissions: [
+      'view_dashboard',
+      'view_registrations',
+      'access_checkin',
+    ],
+    dashboard: '/informalz',
+  },
+];
+
+/** Roles visible in the login dropdown */
+export function getVisibleRoles(): Pick<RoleDefinition, 'id' | 'label'>[] {
+  return ROLE_REGISTRY.filter((r) => !r.hidden).map(({ id, label }) => ({ id, label }));
+}
+
+/** Lookup a role definition by id */
+export function getRoleById(roleId: string): RoleDefinition | undefined {
+  return ROLE_REGISTRY.find((r) => r.id === roleId);
+}
+
+// ─── Credential Validation ───────────────────────────────────────────────────
+
+export interface CredentialResult {
+  valid: boolean;
+  role: RoleDefinition | null;
+}
+
+/**
+ * Validate credentials against the role registry.
+ * Accepts a roleId (from dropdown) + password.
+ */
+export function validateCredentials(roleId: string, password: string): CredentialResult {
+  const role = getRoleById(roleId);
+  if (!role) return { valid: false, role: null };
+
+  const cleanPass = password.trim();
+  if (cleanPass === role.password) {
+    return { valid: true, role };
+  }
+
+  return { valid: false, role: null };
+}
+
+// ─── Permission Checking ─────────────────────────────────────────────────────
+
+export function hasPermission(session: AdminSession | null, permission: Permission): boolean {
+  if (!session) return false;
+  const role = getRoleById(session.roleId);
+  if (!role) return false;
+  return role.permissions.includes(permission);
+}
+
+export function requireRole(session: AdminSession | null, roleId: string): boolean {
+  if (!session) return false;
+  return session.roleId === roleId;
+}
+
+// ─── Session Token Types ─────────────────────────────────────────────────────
+
 export interface AdminSession {
-  email: string;
-  role: 'ADMIN' | 'COMMITTEE_LEAD';
+  roleId: string;
+  roleLabel: string;
   iat: number;
   exp: number;
 }
 
-/**
- * Validate committee administrator credentials
- */
-export function validateAdminCredentials(email: string, pass: string): boolean {
-  const cleanEmail = email.trim().toLowerCase();
-  const cleanPass = pass.trim();
+// ─── Crypto Helpers (Web Crypto — works in Node, Edge, Browser) ──────────────
 
-  // Primary administrator check
-  if (
-    cleanEmail === DEFAULT_ADMIN_EMAIL.toLowerCase() &&
-    cleanPass === DEFAULT_ADMIN_PASSWORD
-  ) {
-    return true;
-  }
-
-  // Support for general Lingaya's committee credentials
-  if (
-    (cleanEmail === 'admin@lingayas.edu.in' || cleanEmail === 'committee@zest.lingayas.edu.in') &&
-    (cleanPass === 'Zest@2026' || cleanPass === 'Lingayas@2026')
-  ) {
-    return true;
-  }
-
-  return false;
-}
-
-/**
- * Compute HMAC-SHA256 signature using universal Web Crypto API (supported in Node.js, Edge Runtime, Browser)
- */
 async function computeHmacSignature(data: string, secret: string): Promise<string> {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -76,17 +163,20 @@ function base64UrlDecode(str: string): string {
   return atob(base64);
 }
 
-/**
- * Create an HMAC-SHA256 signed session token (Async Web Crypto)
- */
-export async function createAdminSessionToken(email: string, rememberMe = false): Promise<string> {
+// ─── Session Token Creation & Verification ───────────────────────────────────
+
+export async function createAdminSessionToken(
+  roleId: string,
+  rememberMe = false
+): Promise<string> {
+  const role = getRoleById(roleId);
   const iat = Math.floor(Date.now() / 1000);
-  const duration = rememberMe ? 7 * 24 * 3600 : 24 * 3600; // 7 days or 24 hours
+  const duration = rememberMe ? 7 * 24 * 3600 : 24 * 3600;
   const exp = iat + duration;
 
   const session: AdminSession = {
-    email: email.trim().toLowerCase(),
-    role: 'ADMIN',
+    roleId,
+    roleLabel: role?.label || roleId,
     iat,
     exp,
   };
@@ -97,10 +187,9 @@ export async function createAdminSessionToken(email: string, rememberMe = false)
   return `${payload}.${signature}`;
 }
 
-/**
- * Verify HMAC-SHA256 signed session token (Async Web Crypto)
- */
-export async function verifyAdminSessionToken(token: string | undefined | null): Promise<AdminSession | null> {
+export async function verifyAdminSessionToken(
+  token: string | undefined | null
+): Promise<AdminSession | null> {
   if (!token || typeof token !== 'string') return null;
 
   const parts = token.split('.');
@@ -108,9 +197,7 @@ export async function verifyAdminSessionToken(token: string | undefined | null):
 
   const [payloadBase64, signature] = parts;
 
-  // Re-compute signature to prevent tampering
   const expectedSig = await computeHmacSignature(payloadBase64, AUTH_SECRET);
-
   if (signature !== expectedSig) {
     return null;
   }
@@ -121,7 +208,7 @@ export async function verifyAdminSessionToken(token: string | undefined | null):
 
     const now = Math.floor(Date.now() / 1000);
     if (session.exp < now) {
-      return null; // Expired
+      return null;
     }
 
     return session;

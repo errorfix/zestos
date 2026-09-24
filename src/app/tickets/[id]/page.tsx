@@ -17,13 +17,18 @@ export const revalidate = 0;
 
 interface TicketPageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ all?: string }>;
 }
 
-export default async function TicketPage({ params }: TicketPageProps) {
+export default async function TicketPage({ params, searchParams }: TicketPageProps) {
   const { id } = await params;
-  const registration = await getRegistrationDetails(id);
+  const sp = searchParams ? await searchParams : undefined;
+  const allIds = sp?.all ? Array.from(new Set([id, ...sp.all.split(',').map((s) => s.trim()).filter(Boolean)])) : [id];
 
-  if (!registration) {
+  const fetchedRegs = await Promise.all(allIds.map((regId) => getRegistrationDetails(regId)));
+  const registrations = fetchedRegs.filter((r): r is NonNullable<typeof r> => r !== null);
+
+  if (registrations.length === 0) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col">
         <Navbar />
@@ -47,27 +52,32 @@ export default async function TicketPage({ params }: TicketPageProps) {
     );
   }
 
-  const eventTitle = registration.event?.title || 'Campus Event';
-  const eventCategory = registration.event?.category || 'General';
-  const eventVenue = registration.event?.venue || "Lingaya's Vidyapeeth Campus";
-  const eventDate = registration.event?.date || 'March 2026';
+  const primaryRegistration = registrations[0];
+  const isMultiEvent = registrations.length > 1;
 
-  const ticketPasses: TicketPassData[] = registration.tickets.map((t) => ({
-    id: t.id,
-    ticketCode: t.ticketCode,
-    status: t.status,
-    securityHash: t.securityHash,
-    fullName: t.fullName || registration.leadName,
-    leadEmail: registration.leadEmail,
-    eventTitle,
-    eventCategory,
-    eventDate,
-    eventVenue,
-    dayOption: registration.dayOption,
-    trackUploadUrl: registration.trackUploadUrl,
-    trackNotes: registration.trackNotes,
-    requiresTrackUpload: registration.event?.requiresTrackUpload,
-  }));
+  const ticketPasses: TicketPassData[] = registrations.flatMap((reg) => {
+    const eventTitle = reg.event?.title || 'Campus Event';
+    const eventCategory = reg.event?.category || 'General';
+    const eventVenue = reg.event?.venue || "Lingaya's Vidyapeeth Campus";
+    const eventDate = reg.event?.date || 'March 2026';
+
+    return reg.tickets.map((t) => ({
+      id: t.id,
+      ticketCode: t.ticketCode,
+      status: t.status,
+      securityHash: t.securityHash,
+      fullName: t.fullName || reg.leadName,
+      leadEmail: reg.leadEmail,
+      eventTitle,
+      eventCategory,
+      eventDate,
+      eventVenue,
+      dayOption: reg.dayOption,
+      trackUploadUrl: reg.trackUploadUrl,
+      trackNotes: reg.trackNotes,
+      requiresTrackUpload: reg.event?.requiresTrackUpload,
+    }));
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -94,7 +104,8 @@ export default async function TicketPage({ params }: TicketPageProps) {
             <div className="text-left sm:text-right">
               <span className="text-xs text-slate-500 block">Registration Reference</span>
               <code className="text-xs font-mono font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded">
-                {registration.id}
+                {primaryRegistration.id}
+                {isMultiEvent && ` (+${registrations.length - 1} more)`}
               </code>
             </div>
           </div>
@@ -103,16 +114,20 @@ export default async function TicketPage({ params }: TicketPageProps) {
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#1a73e8]" />
               <span>
-                Event: <strong className="text-slate-900">{eventTitle}</strong>
+                {isMultiEvent ? (
+                  <span>Events: <strong className="text-slate-900">{registrations.length} Informal Activities</strong></span>
+                ) : (
+                  <span>Event: <strong className="text-slate-900">{primaryRegistration.event?.title || 'Campus Event'}</strong></span>
+                )}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-slate-400" />
-              <span>{eventVenue}</span>
+              <span>{primaryRegistration.event?.venue || "Lingaya's Vidyapeeth Campus"}</span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-slate-400" />
-              <span>{eventDate}</span>
+              <span>{primaryRegistration.event?.date || 'March 2026'}</span>
             </div>
           </div>
         </div>

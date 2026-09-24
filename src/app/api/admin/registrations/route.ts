@@ -1,14 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getAllRegistrations, getEvents } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const categoryFilter = searchParams.get('category')?.toLowerCase();
+    const excludeCategoryFilter = searchParams.get('excludeCategory')?.toLowerCase();
+
     const rawRegs = await getAllRegistrations();
     const events = await getEvents();
 
-    const registrations = rawRegs.map((r) => {
+    let registrations = rawRegs.map((r) => {
       const matchedEvent = events.find((e) => e.id === r.eventId) || r.event;
       return {
         id: r.id,
@@ -36,6 +40,18 @@ export async function GET() {
         })),
       };
     });
+
+    if (categoryFilter) {
+      registrations = registrations.filter(
+        (r) => r.eventCategory.toLowerCase() === categoryFilter
+      );
+    }
+
+    if (excludeCategoryFilter) {
+      registrations = registrations.filter(
+        (r) => r.eventCategory.toLowerCase() !== excludeCategoryFilter
+      );
+    }
 
     return NextResponse.json({ success: true, registrations });
   } catch (error) {

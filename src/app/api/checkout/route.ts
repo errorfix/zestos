@@ -3,22 +3,28 @@ import { z } from 'zod';
 import { getEventById, createPendingRegistration, createFreeRegistration } from '@/lib/db';
 import { createRazorpayOrder } from '@/lib/razorpay';
 
-const checkoutSchema = z.object({
-  eventId: z.string().min(1, 'Event ID is required'),
-  leadName: z.string().min(2, 'Lead Attendee Name must be at least 2 characters'),
-  leadEmail: z.string().email('A valid college email address is required'),
-  dayOption: z.enum(['SINGLE_DAY', 'BOTH_DAYS']).optional(),
-  trackUploadUrl: z.string().optional(),
-  trackNotes: z.string().optional(),
-  teamMembers: z
-    .array(
-      z.object({
-        fullName: z.string().min(2, 'Team member full name is required'),
-        rollNumber: z.string().optional(),
-      })
-    )
-    .default([]),
-});
+const checkoutSchema = z
+  .object({
+    eventId: z.string().optional(),
+    eventIds: z.array(z.string()).min(1).optional(),
+    leadName: z.string().min(2, 'Lead Attendee Name must be at least 2 characters'),
+    leadEmail: z.string().email('A valid college email address is required'),
+    dayOption: z.enum(['SINGLE_DAY', 'BOTH_DAYS']).optional(),
+    trackUploadUrl: z.string().optional(),
+    trackNotes: z.string().optional(),
+    teamMembers: z
+      .array(
+        z.object({
+          fullName: z.string().min(2, 'Team member full name is required'),
+          rollNumber: z.string().optional(),
+        })
+      )
+      .default([]),
+  })
+  .refine((data) => data.eventId || (data.eventIds && data.eventIds.length > 0), {
+    message: 'Either eventId or eventIds must be provided',
+    path: ['eventId'],
+  });
 
 export async function POST(req: Request) {
   try {
@@ -34,6 +40,7 @@ export async function POST(req: Request) {
 
     const {
       eventId,
+      eventIds,
       leadName,
       leadEmail,
       dayOption,
@@ -42,8 +49,62 @@ export async function POST(req: Request) {
       teamMembers,
     } = parsed.data;
 
+    // Handle Multi-Event Registration (e.g. Informalz with unlimited selection)
+    const targetEventIds = eventIds || (eventId ? [eventId] : []);
+
+    if (targetEventIds.length > 1) {
+      const fetchedEvents = await Promise.all(targetEventIds.map((id) => getEventById(id)));
+      const validEvents = fetchedEvents.filter((e): e is NonNullable<typeof e> => e !== null);
+
+      if (validEvents.length !== targetEventIds.length) {
+        return NextResponse.json(
+          { error: 'One or more selected events were not found or are inactive' },
+          { status: 404 }
+        );
+      }
+
+      // Check if all selected events are free (Informalz events)
+      const allFree = validEvents.every((e) => e.feeAmount === 0);
+      if (!allFree) {
+        return NextResponse.json(
+          { error: 'Multi-event registration is currently available for 100% Free events (Informalz).' },
+          { status: 400 }
+        );
+      }
+
+      // Create free registrations for all selected events
+      const freeRegs = await Promise.all(
+        validEvents.map((evt) =>
+          createFreeRegistration({
+            eventId: evt.id,
+            leadName,
+            leadEmail,
+            teamMembers,
+            trackUploadUrl,
+            trackNotes,
+          })
+        )
+      );
+
+      const allRegIds = freeRegs.map((r) => r.registrationId);
+      const allTickets = freeRegs.flatMap((r) => r.tickets);
+
+      return NextResponse.json({
+        success: true,
+        registrationId: freeRegs[0].registrationId,
+        allRegistrationIds: allRegIds,
+        isFree: true,
+        amount: 0,
+        currency: 'INR',
+        eventTitle: validEvents.map((e) => e.title).join(', '),
+        tickets: allTickets,
+      });
+    }
+
+    const singleEventId = targetEventIds[0];
+
     // 1. Fetch Event and Validate Constraints
-    const event = await getEventById(eventId);
+    const event = await getEventById(singleEventId);
     if (!event) {
       return NextResponse.json({ error: 'Event not found or inactive' }, { status: 404 });
     }
