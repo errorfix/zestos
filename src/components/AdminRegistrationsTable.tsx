@@ -957,7 +957,33 @@ function EditParticipantModal({ reg, apiEndpoint, onClose, onSaved }: EditPartic
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  // Read operator identity from localStorage (set by OperatorIdentityModal)
+  const getOperatorHeaders = (): Record<string, string> => {
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('festos_operator_profile') : null;
+      if (!raw) return {};
+      const op = JSON.parse(raw);
+      if (op?.operatorName && op?.operatorRollNo) {
+        return {
+          'x-operator-name': op.operatorName,
+          'x-operator-roll': op.operatorRollNo,
+          'x-operator-type': op.operatorType || 'STUDENT',
+        };
+      }
+    } catch {
+      // ignore
+    }
+    return {};
+  };
+
+  const operatorHeaders = getOperatorHeaders();
+  const hasOperatorIdentity = !!(operatorHeaders['x-operator-name']);
+
   const handleSave = async () => {
+    if (!hasOperatorIdentity) {
+      setErrorMsg('You must register your identity first. Please complete the "Desk Operator Verification" step from the dashboard header.');
+      return;
+    }
     setIsSaving(true);
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -969,7 +995,11 @@ function EditParticipantModal({ reg, apiEndpoint, onClose, onSaved }: EditPartic
 
       const res = await fetch(patchUrl, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          // Always forward operator identity so audit log captures real name + roll no
+          ...operatorHeaders,
+        },
         body: JSON.stringify({
           registrationId: reg.id,
           leadName: leadName.trim(),
@@ -1052,6 +1082,26 @@ function EditParticipantModal({ reg, apiEndpoint, onClose, onSaved }: EditPartic
 
         {/* Body */}
         <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto text-xs">
+          {/* Operator Identity Banner */}
+          {hasOperatorIdentity ? (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium">
+              <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-600" />
+              <span>
+                Editing as{' '}
+                <strong>{operatorHeaders['x-operator-name']}</strong>{' '}
+                <span className="font-mono text-emerald-700">({operatorHeaders['x-operator-roll']})</span>
+                {' '}— all changes will be audit-logged with this identity.
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-xs font-semibold">
+              <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+              <span>
+                ⚠️ No desk operator identity registered. Please click <strong>"Identify Desk Operator"</strong> in the dashboard header before saving — edits without identity cannot be saved.
+              </span>
+            </div>
+          )}
+
           {errorMsg && (
             <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
               <AlertCircle className="w-4 h-4 shrink-0" />

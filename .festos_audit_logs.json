@@ -1,0 +1,14 @@
+[
+  {
+    "id": "audit_1790278787843_7oha3",
+    "targetId": "reg_spot_1790229314937_knda",
+    "action": "UPDATE_PARTICIPANT_DATA",
+    "targetType": "REGISTRATION",
+    "operatorName": "Desk Operator",
+    "operatorRollNo": "COMMITTEE_DESK",
+    "operatorType": "STUDENT",
+    "committeeRoleId": "REGISTRATION_COMMITTEE",
+    "changes": "{\"leadName\":\"hello\",\"leadEmail\":\"walkin_1790229313988@lingayas.edu.in\",\"leadPhone\":null,\"college\":null,\"status\":\"PAID\",\"dayOption\":\"DAY_1\",\"trackUploadUrl\":null,\"trackNotes\":null,\"teamMembersCount\":0}",
+    "createdAt": "2026-09-24T19:39:47.844Z"
+  }
+]
