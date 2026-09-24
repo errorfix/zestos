@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition, useEffect, Suspense } from 'react';
+import React, { useState, useTransition, useEffect, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -15,8 +15,6 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
-// Client-safe role list — fetched from API or hardcoded visible roles
-// (hidden roles like SUPER_ADMIN are NOT listed here by default)
 interface RoleOption {
   id: string;
   label: string;
@@ -34,6 +32,7 @@ function LoginForm() {
   const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, startTransition] = useTransition();
+  const submitRef = useRef(false);
 
   // Fetch visible roles from API
   useEffect(() => {
@@ -63,17 +62,27 @@ function LoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🔵 handleLogin called');  // ← ADD THIS
+
+    // Prevent double submission
+    if (submitRef.current) {
+      console.log('⚠️ Submit already in progress, ignoring duplicate');
+      return;
+    }
+    submitRef.current = true;
+
+    console.log('🔵 handleLogin called');
     setErrorMessage(null);
 
     if (!selectedRole) {
       setErrorMessage('Please select your committee.');
+      submitRef.current = false;
       return;
     }
 
     startTransition(async () => {
-      console.log('🟢 startTransition started');  // ← ADD THIS
+      console.log('🟢 startTransition started');
       try {
+        console.log('📤 Sending login request...');
         const res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -90,19 +99,21 @@ function LoginForm() {
         }
 
         const data = await res.json();
-        console.log('🟡 Login response:', data);  // ← ADD THIS
+        console.log('🟡 Login response:', { status: res.status, success: data.success, role: data.user?.roleId });
 
         if (!res.ok || !data.success) {
           throw new Error(data.error || 'Authentication failed. Please verify credentials.');
         }
 
+        // Redirect to intended page or role's dashboard
         const redirectTo = nextUrl || data.user?.dashboard || '/admin';
-        console.log('🔴 Redirecting to:', redirectTo);  // ← ADD THIS
+        console.log('🔴 Redirecting to:', redirectTo);
         router.push(redirectTo);
         router.refresh();
       } catch (err) {
-        console.error('❌ Login error:', err);  // ← ADD THIS
+        console.error('❌ Login error:', err);
         setErrorMessage((err as Error).message || 'Invalid credentials.');
+        submitRef.current = false;
       }
     });
   };
@@ -140,7 +151,6 @@ function LoginForm() {
               <span>{errorMessage}</span>
             </div>
           )}
-
 
           <form onSubmit={handleLogin} className="space-y-5">
             {/* Committee Selector (Dropdown) */}
@@ -213,14 +223,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isSubmitting || !selectedRole}
-              onClick={(e) => {
-                // Prevent double-click within 1 second
-                e.currentTarget.disabled = true;
-                setTimeout(() => {
-                  if (!isSubmitting) e.currentTarget.disabled = false;
-                }, 1000);
-              }}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold bg-[#1a73e8] hover:bg-[#1557b0] text-white shadow-md shadow-blue-500/25 transition-all disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold bg-[#1a73e8] hover:bg-[#1557b0] text-white shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>{isSubmitting ? 'Authenticating...' : 'Enter Committee Portal'}</span>
               <ArrowRight className="w-4 h-4" />
