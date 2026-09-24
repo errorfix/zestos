@@ -3,8 +3,8 @@ import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getRoleById } from '@/lib/a
 import { updateSession } from '@/utils/supabase/middleware';
 
 // Routes requiring any authenticated committee/admin session
-const PROTECTED_PREFIXES = ['/admin', '/onspot', '/checkin', '/super-admin', '/informalz'];
-const PROTECTED_API_PREFIXES = ['/api/admin', '/api/onspot', '/api/checkin', '/api/super-admin', '/api/informalz'];
+const PROTECTED_PREFIXES = ['/admin', '/onspot', '/checkin', '/super-admin', '/informalz', '/stage'];
+const PROTECTED_API_PREFIXES = ['/api/admin', '/api/onspot', '/api/checkin', '/api/super-admin', '/api/informalz', '/api/stage'];
 
 // Routes restricted to SUPER_ADMIN role only
 const SUPER_ADMIN_PREFIXES = ['/super-admin'];
@@ -13,6 +13,7 @@ const SUPER_ADMIN_API_PREFIXES = ['/api/super-admin'];
 // Committee-specific route boundaries
 const INFORMALZ_PREFIXES = ['/informalz'];
 const RI_PREFIXES = ['/admin', '/onspot'];
+const STAGE_PREFIXES = ['/stage'];
 
 function matchesAny(pathname: string, prefixes: string[]): boolean {
   return prefixes.some(
@@ -65,14 +66,19 @@ export async function middleware(request: NextRequest) {
     }
 
     // 3. Committee isolation:
-    // Informalz committee cannot access R&I specific panels (/admin, /onspot)
-    if (session.roleId === 'INFORMALZ_COMMITTEE' && matchesAny(pathname, RI_PREFIXES)) {
+    // Informalz committee cannot access R&I or Stage panels
+    if (session.roleId === 'INFORMALZ_COMMITTEE' && (matchesAny(pathname, RI_PREFIXES) || matchesAny(pathname, STAGE_PREFIXES))) {
       return NextResponse.redirect(new URL('/informalz', request.url));
     }
 
-    // R&I committee cannot access Informalz panel (/informalz)
-    if (session.roleId === 'REGISTRATION_COMMITTEE' && matchesAny(pathname, INFORMALZ_PREFIXES)) {
+    // R&I committee cannot access Informalz or Stage panels
+    if (session.roleId === 'REGISTRATION_COMMITTEE' && (matchesAny(pathname, INFORMALZ_PREFIXES) || matchesAny(pathname, STAGE_PREFIXES))) {
       return NextResponse.redirect(new URL('/admin', request.url));
+    }
+
+    // Stage committee cannot access R&I or Informalz panels
+    if (session.roleId === 'STAGE_COMMITTEE' && (matchesAny(pathname, RI_PREFIXES) || matchesAny(pathname, INFORMALZ_PREFIXES))) {
+      return NextResponse.redirect(new URL('/stage', request.url));
     }
   }
 

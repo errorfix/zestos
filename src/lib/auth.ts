@@ -70,6 +70,16 @@ export const ROLE_REGISTRY: RoleDefinition[] = [
     ],
     dashboard: '/informalz',
   },
+  {
+    id: 'STAGE_COMMITTEE',
+    label: 'Stage Committee',
+    password: process.env.STAGE_COMMITTEE_PASSWORD || 'lion@lv321',
+    permissions: [
+      'view_dashboard',
+      'view_registrations',
+    ],
+    dashboard: '/stage',
+  },
 ];
 
 /** Roles visible in the login dropdown */

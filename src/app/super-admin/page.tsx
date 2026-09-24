@@ -1,6 +1,6 @@
 import Navbar from '@/components/Navbar';
 import SuperAdminView from '@/components/SuperAdminView';
-import { getAdminMetrics, getEvents } from '@/lib/db';
+import { getAdminMetrics, getEvents, getStageMetrics } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';
 import Link from 'next/link';
@@ -26,6 +26,7 @@ export default async function SuperAdminPage() {
   const masterMetrics = await getAdminMetrics();
   const riMetrics = await getAdminMetrics({ excludeCategory: 'Informalz' });
   const informalzMetrics = await getAdminMetrics({ category: 'Informalz' });
+  const stageMetrics = await getStageMetrics();
   const events = await getEvents();
 
   return (
@@ -93,6 +94,7 @@ export default async function SuperAdminPage() {
           masterMetrics={masterMetrics}
           riMetrics={riMetrics}
           informalzMetrics={informalzMetrics}
+          stageMetrics={stageMetrics}
         />
       </main>
 

@@ -6,6 +6,7 @@ import { Calendar, Sparkles, Shield, LogOut } from 'lucide-react';
 
 export default function Navbar() {
   const [isAdminAuth, setIsAdminAuth] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if current user is logged in as committee admin
@@ -14,10 +15,20 @@ export default function Navbar() {
       .then((data) => {
         if (data.authenticated) {
           setIsAdminAuth(true);
+          setUserRole(data.user?.roleId || null);
         }
       })
       .catch(() => {});
   }, []);
+
+  const committeeHref =
+    userRole === 'INFORMALZ_COMMITTEE'
+      ? '/informalz'
+      : userRole === 'STAGE_COMMITTEE'
+      ? '/stage'
+      : userRole === 'SUPER_ADMIN'
+      ? '/super-admin'
+      : '/admin';
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
@@ -56,9 +67,9 @@ export default function Navbar() {
 
           <div className="h-5 w-px bg-slate-200 mx-1" />
 
-          {/* Unified Committee Portal Link directly to /admin */}
+          {/* Unified Committee Portal Link */}
           <Link
-            href="/admin"
+            href={committeeHref}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200"
             title="Restricted to Committee Members & Gatekeepers"
           >

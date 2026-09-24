@@ -932,3 +932,96 @@ export async function getAdminMetrics(options?: {
     registrationsByEvent,
   };
 }
+
+// ----------------- STAGE COMMITTEE OPERATIONS -----------------
+
+export async function updateRegistrationTrack(
+  registrationId: string,
+  data: { trackUploadUrl?: string | null; trackNotes?: string | null }
+): Promise<LocalRegistration | null> {
+  const cleanUrl = data.trackUploadUrl ? data.trackUploadUrl.trim() : null;
+  const cleanNotes = data.trackNotes ? data.trackNotes.trim() : null;
+
+  try {
+    const updated = await prisma.registration.update({
+      where: { id: registrationId },
+      data: {
+        trackUploadUrl: cleanUrl,
+        trackNotes: cleanNotes,
+      },
+      include: {
+        event: true,
+        teamMembers: true,
+        tickets: true,
+      },
+    });
+
+    if (updated) {
+      const mem = memoryRegistrations.get(registrationId);
+      if (mem) {
+        mem.trackUploadUrl = cleanUrl;
+        mem.trackNotes = cleanNotes;
+        syncDisk();
+      }
+      return {
+        ...updated,
+        teamMembers: updated.teamMembers || [],
+        tickets: updated.tickets.map((t, idx) => ({
+          ...t,
+          fullName: idx === 0 ? updated.leadName : updated.teamMembers[idx - 1]?.fullName || updated.leadName,
+        })),
+      } as unknown as LocalRegistration;
+    }
+  } catch {
+    // Fall back to memory
+  }
+
+  const mem = memoryRegistrations.get(registrationId);
+  if (mem) {
+    mem.trackUploadUrl = cleanUrl;
+    mem.trackNotes = cleanNotes;
+    syncDisk();
+    return mem;
+  }
+
+  return null;
+}
+
+export async function getStageMetrics() {
+  const allRegistrations = await getAllRegistrations();
+  const allEvents = await getEvents();
+
+  const trackEvents = allEvents.filter((e) => e.requiresTrackUpload === true);
+  const trackEventIds = new Set(trackEvents.map((e) => e.id));
+
+  const trackRegistrations = allRegistrations.filter((r) => trackEventIds.has(r.eventId));
+
+  let tracksAttached = 0;
+  let tracksMissing = 0;
+  let checkedInPerformers = 0;
+  let totalPerformers = 0;
+
+  for (const reg of trackRegistrations) {
+    if (reg.trackUploadUrl && reg.trackUploadUrl.trim() !== '') {
+      tracksAttached++;
+    } else {
+      tracksMissing++;
+    }
+
+    for (const t of reg.tickets) {
+      totalPerformers++;
+      if (t.status === 'CHECKED_IN') {
+        checkedInPerformers++;
+      }
+    }
+  }
+
+  return {
+    totalTrackRegistrations: trackRegistrations.length,
+    tracksAttached,
+    tracksMissing,
+    totalTrackEvents: trackEvents.length,
+    totalPerformers,
+    checkedInPerformers,
+  };
+}

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import AdminEventsManager from '@/components/AdminEventsManager';
 import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
+import StageRegistrationsManager from '@/components/StageRegistrationsManager';
 import { InitialEventData } from '@/lib/mockEvents';
 import {
   Users,
@@ -14,6 +15,8 @@ import {
   PartyPopper,
   Layers,
   CheckCircle2,
+  Mic2,
+  Music,
 } from 'lucide-react';
 
 interface MetricsData {
@@ -26,11 +29,21 @@ interface MetricsData {
   totalEvents: number;
 }
 
+interface StageMetricsData {
+  totalTrackRegistrations: number;
+  tracksAttached: number;
+  tracksMissing: number;
+  totalTrackEvents: number;
+  totalPerformers: number;
+  checkedInPerformers: number;
+}
+
 interface SuperAdminViewProps {
   events: InitialEventData[];
   masterMetrics: MetricsData;
   riMetrics: MetricsData;
   informalzMetrics: MetricsData;
+  stageMetrics?: StageMetricsData;
 }
 
 export default function SuperAdminView({
@@ -38,11 +51,13 @@ export default function SuperAdminView({
   masterMetrics,
   riMetrics,
   informalzMetrics,
+  stageMetrics,
 }: SuperAdminViewProps) {
-  const [activeCommittee, setActiveCommittee] = useState<'RI' | 'INFORMALZ' | 'ALL'>('RI');
+  const [activeCommittee, setActiveCommittee] = useState<'RI' | 'INFORMALZ' | 'STAGE' | 'ALL'>('RI');
 
   const informalzCount = events.filter((e) => e.category.toLowerCase() === 'informalz').length;
   const riCount = events.filter((e) => e.category.toLowerCase() !== 'informalz').length;
+  const trackCount = events.filter((e) => e.requiresTrackUpload === true).length;
 
   const currentMetrics =
     activeCommittee === 'INFORMALZ'
@@ -64,7 +79,7 @@ export default function SuperAdminView({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* 1. R&I Committee Tab */}
           <button
             type="button"
@@ -96,20 +111,20 @@ export default function SuperAdminView({
                 R&I Committee
               </h3>
               <p className="text-xs text-slate-400 mt-1">
-                Registration & Invitation. Competitive stage, cultural, and gaming events.
+                Competitive stage, cultural, and gaming events.
               </p>
             </div>
 
             <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
               <span className="text-slate-400 font-medium">
-                {riCount} Events Configured
+                {riCount} Events
               </span>
               <span
                 className={`font-bold ${
                   activeCommittee === 'RI' ? 'text-blue-400' : 'text-slate-500'
                 }`}
               >
-                {activeCommittee === 'RI' ? '● Active View' : 'Switch →'}
+                {activeCommittee === 'RI' ? '● Active' : 'Switch →'}
               </span>
             </div>
           </button>
@@ -145,30 +160,30 @@ export default function SuperAdminView({
                 Informalz Committee
               </h3>
               <p className="text-xs text-slate-400 mt-1">
-                Social fun, sports challenges, and open talent events with zero entry fee.
+                Zero-fee campus fun, social and gaming activities.
               </p>
             </div>
 
             <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
               <span className="text-slate-400 font-medium">
-                {informalzCount} Informal Activities
+                {informalzCount} Activities
               </span>
               <span
                 className={`font-bold ${
                   activeCommittee === 'INFORMALZ' ? 'text-purple-400' : 'text-slate-500'
                 }`}
               >
-                {activeCommittee === 'INFORMALZ' ? '● Active View' : 'Switch →'}
+                {activeCommittee === 'INFORMALZ' ? '● Active' : 'Switch →'}
               </span>
             </div>
           </button>
 
-          {/* 3. Master View Tab */}
+          {/* 3. Stage Committee Tab */}
           <button
             type="button"
-            onClick={() => setActiveCommittee('ALL')}
+            onClick={() => setActiveCommittee('STAGE')}
             className={`p-5 rounded-2xl border-2 text-left transition-all duration-200 flex flex-col justify-between ${
-              activeCommittee === 'ALL'
+              activeCommittee === 'STAGE'
                 ? 'bg-amber-950/40 border-amber-500 shadow-lg ring-2 ring-amber-500/20'
                 : 'bg-slate-900 border-slate-800 hover:border-slate-700'
             }`}
@@ -177,16 +192,65 @@ export default function SuperAdminView({
               <div className="flex items-center justify-between gap-2 mb-2">
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                    activeCommittee === 'ALL'
+                    activeCommittee === 'STAGE'
                       ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                       : 'bg-slate-800 text-slate-400'
                   }`}
                 >
-                  Master Overview
+                  Audio &amp; Tracks
+                </span>
+                <Mic2
+                  className={`w-4 h-4 ${
+                    activeCommittee === 'STAGE' ? 'text-amber-400' : 'text-slate-500'
+                  }`}
+                />
+              </div>
+              <h3 className="text-lg font-bold text-white">
+                Stage Committee
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Audio tracks, AV cues, and manual sound desk uploads.
+              </p>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+              <span className="text-slate-400 font-medium">
+                {trackCount} Track Events
+              </span>
+              <span
+                className={`font-bold ${
+                  activeCommittee === 'STAGE' ? 'text-amber-400' : 'text-slate-500'
+                }`}
+              >
+                {activeCommittee === 'STAGE' ? '● Active' : 'Switch →'}
+              </span>
+            </div>
+          </button>
+
+          {/* 4. Master View Tab */}
+          <button
+            type="button"
+            onClick={() => setActiveCommittee('ALL')}
+            className={`p-5 rounded-2xl border-2 text-left transition-all duration-200 flex flex-col justify-between ${
+              activeCommittee === 'ALL'
+                ? 'bg-slate-800 border-slate-500 shadow-lg ring-2 ring-slate-500/20'
+                : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    activeCommittee === 'ALL'
+                      ? 'bg-slate-700 text-slate-200 border border-slate-600'
+                      : 'bg-slate-800 text-slate-400'
+                  }`}
+                >
+                  Master View
                 </span>
                 <Layers
                   className={`w-4 h-4 ${
-                    activeCommittee === 'ALL' ? 'text-amber-400' : 'text-slate-500'
+                    activeCommittee === 'ALL' ? 'text-slate-300' : 'text-slate-500'
                   }`}
                 />
               </div>
@@ -194,7 +258,7 @@ export default function SuperAdminView({
                 All Combined
               </h3>
               <p className="text-xs text-slate-400 mt-1">
-                Festival-wide aggregate of all committees, total revenue, and passes.
+                Festival-wide aggregate of all operations &amp; revenue.
               </p>
             </div>
 
@@ -204,10 +268,10 @@ export default function SuperAdminView({
               </span>
               <span
                 className={`font-bold ${
-                  activeCommittee === 'ALL' ? 'text-amber-400' : 'text-slate-500'
+                  activeCommittee === 'ALL' ? 'text-slate-200' : 'text-slate-500'
                 }`}
               >
-                {activeCommittee === 'ALL' ? '● Active View' : 'Switch →'}
+                {activeCommittee === 'ALL' ? '● Active' : 'Switch →'}
               </span>
             </div>
           </button>
@@ -219,25 +283,35 @@ export default function SuperAdminView({
         <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Registrations
+              {activeCommittee === 'STAGE' ? 'Track Performers' : 'Registrations'}
             </span>
             <Users className="w-4 h-4 text-blue-400" />
           </div>
           <span className="text-2xl sm:text-3xl font-extrabold text-white block">
-            {currentMetrics.totalRegistrations}
+            {activeCommittee === 'STAGE'
+              ? stageMetrics?.totalTrackRegistrations || 0
+              : currentMetrics.totalRegistrations}
           </span>
           <span className="text-[11px] text-emerald-400 font-medium block mt-1">
-            {currentMetrics.paidRegistrations} Confirmed Passes
+            {activeCommittee === 'STAGE'
+              ? `${stageMetrics?.totalPerformers || 0} Registered Performers`
+              : `${currentMetrics.paidRegistrations} Confirmed Passes`}
           </span>
         </div>
 
         <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {activeCommittee === 'INFORMALZ' ? 'Event Pricing' : 'Revenue Collected'}
+              {activeCommittee === 'INFORMALZ'
+                ? 'Event Pricing'
+                : activeCommittee === 'STAGE'
+                ? 'Tracks Ready'
+                : 'Revenue Collected'}
             </span>
             {activeCommittee === 'INFORMALZ' ? (
               <Sparkles className="w-4 h-4 text-emerald-400" />
+            ) : activeCommittee === 'STAGE' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             ) : (
               <IndianRupee className="w-4 h-4 text-emerald-400" />
             )}
@@ -245,11 +319,15 @@ export default function SuperAdminView({
           <span className="text-2xl sm:text-3xl font-extrabold text-white block">
             {activeCommittee === 'INFORMALZ'
               ? 'FREE (₹0)'
+              : activeCommittee === 'STAGE'
+              ? stageMetrics?.tracksAttached || 0
               : `₹${currentMetrics.totalRevenueInr.toLocaleString('en-IN')}`}
           </span>
           <span className="text-[11px] text-slate-500 font-medium block mt-1">
             {activeCommittee === 'INFORMALZ'
               ? '100% Free Activities'
+              : activeCommittee === 'STAGE'
+              ? 'Audio links attached'
               : 'Razorpay + Desk Cash'}
           </span>
         </div>
@@ -257,22 +335,26 @@ export default function SuperAdminView({
         <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Gate Checked In
+              {activeCommittee === 'STAGE' ? 'Action Required' : 'Gate Checked In'}
             </span>
             <Scan className="w-4 h-4 text-amber-400" />
           </div>
           <span className="text-2xl sm:text-3xl font-extrabold text-white block">
-            {currentMetrics.totalCheckedInTickets}
+            {activeCommittee === 'STAGE'
+              ? stageMetrics?.tracksMissing || 0
+              : currentMetrics.totalCheckedInTickets}
           </span>
           <span className="text-[11px] text-slate-500 font-medium block mt-1">
-            of {currentMetrics.totalIssuedTickets} passes ({currentMetrics.checkInPercentage}%)
+            {activeCommittee === 'STAGE'
+              ? 'Missing tracks to collect'
+              : `of ${currentMetrics.totalIssuedTickets} passes (${currentMetrics.checkInPercentage}%)`}
           </span>
         </div>
 
         <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Active Events
+              {activeCommittee === 'STAGE' ? 'Track Events' : 'Active Events'}
             </span>
             <Calendar className="w-4 h-4 text-purple-400" />
           </div>
@@ -281,6 +363,8 @@ export default function SuperAdminView({
               ? informalzCount
               : activeCommittee === 'RI'
               ? riCount
+              : activeCommittee === 'STAGE'
+              ? trackCount
               : events.length}
           </span>
           <span className="text-[11px] text-amber-400 font-medium block mt-1">
@@ -342,7 +426,23 @@ export default function SuperAdminView({
       )}
 
       {/* ========================================================================= */}
-      {/* 🌐 SECTION 3: MASTER OVERVIEW (ALL COMBINED) */}
+      {/* 🎵 SECTION 3: STAGE COMMITTEE WORKSPACE */}
+      {/* ========================================================================= */}
+      {activeCommittee === 'STAGE' && (
+        <div className="space-y-8 animate-in fade-in-50 duration-200">
+          <section>
+            <StageRegistrationsManager
+              apiEndpoint="/api/stage/tracks"
+              title="Stage & AV Sound Console (Super Admin Elevated)"
+              subtitle="Direct sound cues, audio links, and manual track attachment for all performance events."
+              allowEdit={true}
+            />
+          </section>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 🌐 SECTION 4: MASTER OVERVIEW (ALL COMBINED) */}
       {/* ========================================================================= */}
       {activeCommittee === 'ALL' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
