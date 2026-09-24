@@ -96,12 +96,14 @@ The following system endpoints automatically capture the operator identity and t
 5. **Gate Check-In Admission** (`POST /api/checkin`):
    - Logs `TICKET_CHECKIN` with `targetId = ticketCode` and attendee name.
 
-### 3.4 Audit Trail Viewer Component
-Both the **Super Admin** (`/super-admin`) and **Management Dashboard** (`/management`) feature a dedicated **Audit Trail** tab powered by `<AuditLogsViewer />`:
-- Real-time search by operator name, roll number, action, or target ID.
-- Action filter dropdown (`UPDATE_STAGE_TRACK`, `ONSPOT_REGISTRATION`, `TOGGLE_COMMITTEE_FLAG`, etc.).
-- Expandable JSON diff viewer to inspect exact modifications.
-- One-click **Export to CSV** for offline administrative review.
+### 3.4 Real-Time Audit Trail Viewer (Super Admin Exclusive)
+The live audit feed powered by `<AuditLogsViewer />` is **strictly exclusive to the Super Admin Panel** (`/super-admin`) and is blocked for all other panels (including Management and other committees):
+- **Real-Time Live Stream (3.5s Polling)**: Automatically polls the PostgreSQL database every 3.5 seconds with an active radar beacon (`● REAL-TIME STREAM ACTIVE`) and a **Pause / Resume** toggle.
+- **Instant Event Flash Ticker**: When any desk operator anywhere modifies a record (e.g. tracks, passes, events, check-ins), an animated real-time notification banner flashes at the top of the Super Admin console.
+- **Backend API Isolation**: Endpoint `/api/admin/audit-logs` strictly enforces `session.roleId === 'SUPER_ADMIN'`, returning HTTP 403 Forbidden to any other session.
+- **Filtering & Search**: Instant client-side search by operator name, roll number, action, or target ID with action-type dropdown filters.
+- **Expandable Diffs**: Collapsible JSON diff viewer revealing the exact modified parameters and previous state.
+- **One-Click CSV Export**: Allows downloading complete chronological records with timestamps, roll numbers, and action names for offline auditing.
 
 ---
 

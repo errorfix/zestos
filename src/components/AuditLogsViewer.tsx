@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   ShieldCheck,
   Search,
@@ -17,6 +17,11 @@ import {
   CheckCircle2,
   Tag,
   Layers,
+  Activity,
+  Play,
+  Pause,
+  Radio,
+  Zap,
 } from 'lucide-react';
 import { LocalAuditLog } from '@/lib/db';
 
@@ -32,33 +37,88 @@ export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
   const [selectedAction, setSelectedAction] = useState<string>('ALL');
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
 
-  const fetchLogs = async () => {
-    setLoading(true);
+  // Real-time streaming state
+  const [isLiveStreamActive, setIsLiveStreamActive] = useState<boolean>(true);
+  const [lastSyncedTime, setLastSyncedTime] = useState<string>(
+    new Date().toLocaleTimeString('en-IN')
+  );
+  const [hasNewAlert, setHasNewAlert] = useState<boolean>(false);
+  const [latestLogAlert, setLatestLogAlert] = useState<LocalAuditLog | null>(null);
+  const previousTopIdRef = useRef<string | null>(null);
+
+  const fetchLogs = async (isBackground = false) => {
+    if (!isBackground) {
+      setLoading(true);
+    }
     setError(null);
     try {
-      const res = await fetch('/api/admin/audit-logs?limit=200');
+      const res = await fetch('/api/admin/audit-logs?limit=250');
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to fetch audit logs');
       }
-      setLogs(data.logs || []);
+
+      const fetchedLogs: LocalAuditLog[] = data.logs || [];
+
+      // Check if new records arrived in real-time
+      if (fetchedLogs.length > 0) {
+        const topLog = fetchedLogs[0];
+        if (previousTopIdRef.current && topLog.id !== previousTopIdRef.current) {
+          setLatestLogAlert(topLog);
+          setHasNewAlert(true);
+          setTimeout(() => setHasNewAlert(false), 5000);
+        }
+        previousTopIdRef.current = topLog.id;
+      }
+
+      setLogs(fetchedLogs);
+      setLastSyncedTime(new Date().toLocaleTimeString('en-IN'));
     } catch (err) {
-      setError((err as Error).message || 'Failed to load audit logs.');
+      if (!isBackground) {
+        setError((err as Error).message || 'Failed to load audit logs.');
+      }
     } finally {
-      setLoading(false);
+      if (!isBackground) {
+        setLoading(false);
+      }
     }
   };
 
+  // Initial load
   useEffect(() => {
     if (!initialLogs) {
-      fetchLogs();
+      fetchLogs(false);
+    } else if (initialLogs.length > 0) {
+      previousTopIdRef.current = initialLogs[0].id;
     }
   }, [initialLogs]);
+
+  // Real-time automatic background polling every 3.5 seconds
+  useEffect(() => {
+    if (!isLiveStreamActive) return;
+
+    const interval = setInterval(() => {
+      fetchLogs(true);
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [isLiveStreamActive]);
 
   const uniqueActions = useMemo(() => {
     const set = new Set<string>();
     logs.forEach((l) => set.add(l.action));
     return Array.from(set);
+  }, [logs]);
+
+  const uniqueOperatorsCount = useMemo(() => {
+    const set = new Set<string>();
+    logs.forEach((l) => set.add(l.operatorRollNo));
+    return set.size;
+  }, [logs]);
+
+  const todayLogsCount = useMemo(() => {
+    const today = new Date().toDateString();
+    return logs.filter((l) => new Date(l.createdAt).toDateString() === today).length;
   }, [logs]);
 
   const filteredLogs = useMemo(() => {
@@ -140,41 +200,83 @@ export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
-      {/* Top Header */}
-      <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-50 to-white">
+    <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden space-y-0">
+      {/* Top Real-Time Control & Header */}
+      <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-900 border border-indigo-200 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Immutable PostgreSQL Audit Trail</span>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Super Admin Exclusive Audit Stream</span>
             </span>
-            <span className="text-xs text-slate-500 font-medium">
-              {filteredLogs.length} Records
+
+            {/* Real-Time Radar Badge */}
+            {isLiveStreamActive ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <span>REAL-TIME STREAM ACTIVE</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span>STREAM PAUSED</span>
+              </span>
+            )}
+
+            <span className="text-[11px] text-slate-400 font-mono">
+              Synced: {lastSyncedTime}
             </span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            Security &amp; Operator Audit Logs
+
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+            <span>Live Security &amp; Operator Audit Logs</span>
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Every modification is cryptographically associated with the desk officer&apos;s verified Roll No. / Employee ID.
+          <p className="text-xs text-slate-300 mt-1">
+            Real-time PostgreSQL telemetry capturing exact operator roll numbers, timestamps, target IDs, and attribute diffs across all festival panels.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        {/* Action Controls */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Pause / Resume Live Polling */}
           <button
-            onClick={fetchLogs}
-            disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-2xs transition-colors"
+            type="button"
+            onClick={() => setIsLiveStreamActive(!isLiveStreamActive)}
+            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-colors ${
+              isLiveStreamActive
+                ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300 hover:bg-emerald-900/60'
+                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+            }`}
+            title={isLiveStreamActive ? 'Pause real-time updates' : 'Resume live stream'}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
+            {isLiveStreamActive ? (
+              <>
+                <Pause className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Pause Stream</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Go Live</span>
+              </>
+            )}
           </button>
 
+          {/* Manual Force Refresh */}
+          <button
+            onClick={() => fetchLogs(false)}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white shadow-2xs transition-colors"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Sync Now</span>
+          </button>
+
+          {/* CSV Export */}
           <button
             onClick={handleExportCSV}
             disabled={filteredLogs.length === 0}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 shadow-2xs transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-900 hover:bg-slate-100 shadow-2xs transition-colors disabled:opacity-50"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>
@@ -182,8 +284,66 @@ export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
         </div>
       </div>
 
+      {/* Real-time incoming event flash ticker */}
+      {hasNewAlert && latestLogAlert && (
+        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white px-4 py-2 text-xs font-bold flex items-center justify-between animate-in slide-in-from-top duration-300 shadow-md">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 animate-bounce text-amber-200" />
+            <span>
+              Real-time update: <strong>{latestLogAlert.operatorName}</strong> ({latestLogAlert.operatorRollNo}) executed{' '}
+              <code className="bg-white/20 px-1.5 py-0.5 rounded text-[11px] font-mono">{latestLogAlert.action}</code> on target{' '}
+              <code className="bg-white/20 px-1.5 py-0.5 rounded text-[11px] font-mono">{latestLogAlert.targetId}</code>.
+            </span>
+          </div>
+          <span className="text-[10px] uppercase font-mono tracking-wider bg-black/20 px-2 py-0.5 rounded">
+            Just now
+          </span>
+        </div>
+      )}
+
+      {/* Real-Time Live Metrics Overview Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 sm:p-5 bg-slate-50 border-b border-slate-200">
+        <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Total Mutations</span>
+            <Activity className="w-4 h-4 text-indigo-600" />
+          </div>
+          <span className="text-xl sm:text-2xl font-black text-slate-900">{logs.length}</span>
+          <span className="text-[10px] text-slate-500 block mt-0.5">Immutable records</span>
+        </div>
+
+        <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Active Operators</span>
+            <User className="w-4 h-4 text-emerald-600" />
+          </div>
+          <span className="text-xl sm:text-2xl font-black text-slate-900">{uniqueOperatorsCount}</span>
+          <span className="text-[10px] text-slate-500 block mt-0.5">Identified Roll Nos / IDs</span>
+        </div>
+
+        <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Today&apos;s Actions</span>
+            <Clock className="w-4 h-4 text-amber-600" />
+          </div>
+          <span className="text-xl sm:text-2xl font-black text-slate-900">{todayLogsCount}</span>
+          <span className="text-[10px] text-slate-500 block mt-0.5">Logged past 24 hours</span>
+        </div>
+
+        <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Live Status</span>
+            <Radio className={`w-4 h-4 ${isLiveStreamActive ? 'text-emerald-500 animate-pulse' : 'text-slate-400'}`} />
+          </div>
+          <span className={`text-sm sm:text-base font-black ${isLiveStreamActive ? 'text-emerald-700' : 'text-slate-600'}`}>
+            {isLiveStreamActive ? 'Connected (3.5s)' : 'Manual Mode'}
+          </span>
+          <span className="text-[10px] text-slate-500 block mt-0.5">PostgreSQL Supabase</span>
+        </div>
+      </div>
+
       {/* Filter and Search Bar */}
-      <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row gap-3">
+      <div className="p-4 sm:p-5 border-b border-slate-200 bg-white flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -191,7 +351,7 @@ export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by operator name, roll no, target ID, action..."
-            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white"
           />
         </div>
 
@@ -200,7 +360,7 @@ export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
           <select
             value={selectedAction}
             onChange={(e) => setSelectedAction(e.target.value)}
-            className="bg-white border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900"
           >
             <option value="ALL">All Actions ({logs.length})</option>
             {uniqueActions.map((act) => (
@@ -224,13 +384,13 @@ export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
         {loading && logs.length === 0 ? (
           <div className="p-12 text-center">
             <RefreshCw className="w-8 h-8 animate-spin text-slate-400 mx-auto mb-2" />
-            <p className="text-xs font-semibold text-slate-500">Loading audit records from PostgreSQL...</p>
+            <p className="text-xs font-semibold text-slate-500">Connecting to PostgreSQL audit stream...</p>
           </div>
         ) : filteredLogs.length === 0 ? (
           <div className="p-12 text-center">
             <ShieldCheck className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-            <p className="text-sm font-bold text-slate-700">No audit records match your filters</p>
-            <p className="text-xs text-slate-500 mt-1">Actions taken by desk operators will stream here automatically.</p>
+            <p className="text-sm font-bold text-slate-700">No audit records found</p>
+            <p className="text-xs text-slate-500 mt-1">Actions taken by desk operators will stream here in real-time.</p>
           </div>
         ) : (
           <table className="w-full text-left border-collapse text-xs">
@@ -328,7 +488,7 @@ export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
                           <button
                             type="button"
                             onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
                           >
                             <span>Diff</span>
                             {isExpanded ? (
@@ -353,7 +513,7 @@ export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
                                 Object ID: {log.targetId} ({log.targetType})
                               </span>
                               <span className="text-slate-400 text-[11px]">
-                                Modified by: {log.operatorName} ({log.operatorRollNo})
+                                Modified by: {log.operatorName} ({log.operatorRollNo}) • {log.committeeRoleId}
                               </span>
                             </div>
                             <pre className="text-[11px] font-mono bg-slate-950 p-3 rounded-xl border border-slate-800 overflow-x-auto text-emerald-400">

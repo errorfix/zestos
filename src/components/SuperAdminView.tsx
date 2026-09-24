@@ -461,29 +461,32 @@ export default function SuperAdminView({
                 <span className="text-slate-500">Universal</span>
               </div>
             </button>
-            {/* 6. Security Audit Trail */}
+            {/* 6. Security Audit Trail (Real-Time PostgreSQL Stream) */}
             <button
               type="button"
               onClick={() => setActiveCommittee('AUDIT_LOGS')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'AUDIT_LOGS'
-                  ? 'bg-indigo-950/40 border-indigo-500 ring-2 ring-indigo-500/20'
+                  ? 'bg-indigo-950/60 border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg'
                   : 'bg-slate-900 border-slate-800 hover:border-slate-700'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <ShieldCheck className={`w-4 h-4 ${activeCommittee === 'AUDIT_LOGS' ? 'text-indigo-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-slate-400">PostgreSQL</span>
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck className={`w-4 h-4 ${activeCommittee === 'AUDIT_LOGS' ? 'text-indigo-400' : 'text-slate-400'}`} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                </div>
+                <span className="text-[10px] font-bold text-emerald-400 font-mono">LIVE FEED</span>
               </div>
               <div>
                 <h4 className="text-sm font-bold text-white">Audit Trail</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Operator identity logs</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Real-time operator logs</p>
               </div>
               <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
                 <span className={activeCommittee === 'AUDIT_LOGS' ? 'text-indigo-400' : 'text-slate-500'}>
-                  {activeCommittee === 'AUDIT_LOGS' ? '● Viewing' : 'Switch'}
+                  {activeCommittee === 'AUDIT_LOGS' ? '● Live Stream' : 'Open Stream'}
                 </span>
-                <span className="text-slate-500">Security Log</span>
+                <span className="text-slate-500">Super Admin Only</span>
               </div>
             </button>
           </div>

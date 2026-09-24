@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
 import StageRegistrationsManager from '@/components/StageRegistrationsManager';
-import AuditLogsViewer from '@/components/AuditLogsViewer';
 import { InitialEventData } from '@/lib/mockEvents';
 import {
   Users,
@@ -58,7 +57,6 @@ interface ManagementDashboardViewProps {
 
 export type ManagementWorkspaceTab =
   | 'ALL'
-  | 'AUDIT_LOGS'
   | 'RI'
   | 'MUSIC'
   | 'DANCE'
@@ -431,34 +429,10 @@ export default function ManagementDashboardView({
               {events.length} Catalog
             </span>
           </button>
-
-          {/* Security Audit Trail */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('AUDIT_LOGS')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-              activeTab === 'AUDIT_LOGS'
-                ? 'bg-rose-950/60 text-rose-300 border-rose-500 shadow-md ring-2 ring-rose-500/20'
-                : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700 hover:text-white'
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-rose-400" />
-            <span>Audit Trail (PostgreSQL)</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-900/40 text-rose-300 font-mono">
-              Security
-            </span>
-          </button>
         </div>
       </div>
 
       {/* Observational Workspace Content */}
-
-      {/* 0. SECURITY & OPERATOR AUDIT TRAIL */}
-      {activeTab === 'AUDIT_LOGS' && (
-        <section className="space-y-4 animate-in fade-in-50 duration-200">
-          <AuditLogsViewer />
-        </section>
-      )}
 
       {/* 1. MASTER ALL REGISTRY */}
       {activeTab === 'ALL' && (

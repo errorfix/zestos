@@ -9,10 +9,10 @@ export async function GET(request: NextRequest) {
     const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
     const session = await verifyAdminSessionToken(token);
 
-    if (!session) {
+    if (!session || session.roleId !== 'SUPER_ADMIN') {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized. Committee session required.' },
-        { status: 401 }
+        { success: false, error: 'Forbidden. Super Admin access required for security audit logs.' },
+        { status: 403 }
       );
     }
 
