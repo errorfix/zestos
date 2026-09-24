@@ -1,6 +1,6 @@
 # FestOS v2.0 • Ubuntu 24.04 LTS VPS Docker Deployment Guide
 
-This guide provides end-to-end instructions for deploying FestOS v2.0 onto an **Ubuntu 24.04 LTS (Noble Numbat)** Virtual Private Server (VPS) with Docker, Docker Compose, Nginx Reverse Proxy, and automated Let's Encrypt SSL.
+This guide provides end-to-end instructions for deploying FestOS v2.0 onto an **Ubuntu 24.04 LTS (Noble Numbat)** Virtual Private Server (VPS) with a dedicated self-hosted **PostgreSQL 16** container, **Next.js 16 (Standalone)**, **Nginx Reverse Proxy**, automated **Let's Encrypt SSL**, and daily automated database backups.
 
 ---
 
@@ -87,16 +87,20 @@ nano .env
 
 Ensure all production variables are populated:
 ```ini
-# Supabase Transaction & Session Pooler URLs
-DATABASE_URL="postgresql://postgres.[USER]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true"
-DIRECT_URL="postgresql://postgres.[USER]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
+# ─────────────────────────────────────────────────────────────────────────────
+# Self-Hosted PostgreSQL Configuration (Inside Docker)
+# ─────────────────────────────────────────────────────────────────────────────
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD="YourStrongSecurePasswordHere123!"
+POSTGRES_DB="zestos"
 
-# Supabase Public API Keys
-NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."
-NEXT_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_..."
+# Connect via internal Docker service "db" (0ms latency, unlimited connections)
+DATABASE_URL="postgresql://postgres:YourStrongSecurePasswordHere123!@db:5432/zestos?schema=public"
+DIRECT_URL="postgresql://postgres:YourStrongSecurePasswordHere123!@db:5432/zestos?schema=public"
 
-# Razorpay Production or Staging Keys
+# ─────────────────────────────────────────────────────────────────────────────
+# Razorpay Production Keys
+# ─────────────────────────────────────────────────────────────────────────────
 NEXT_PUBLIC_RAZORPAY_KEY_ID="rzp_live_..."
 RAZORPAY_KEY_ID="rzp_live_..."
 RAZORPAY_KEY_SECRET="your_razorpay_secret"
@@ -116,37 +120,44 @@ Save and exit `nano` (`CTRL+O`, `Enter`, `CTRL+X`).
 
 ---
 
-## 4. Build and Start the Docker Container
+## 4. Build and Start the Docker Services
 
-Build the multi-stage Next.js production image and start the container in detached mode:
+Build the Next.js production image and start both the **PostgreSQL 16** database and the **FestOS WebApp** containers in detached mode:
 ```bash
 docker compose up -d --build
 ```
 
 Monitor live container startup logs:
 ```bash
-docker compose logs -f festos-app
+docker compose logs -f
 ```
 
 Check container status and health:
 ```bash
 docker compose ps
 ```
-The status should indicate `Up (healthy)`.
+Both `festos_postgres` and `festos_production` should indicate `Up (healthy)`.
 
 ---
 
-## 5. Synchronize Prisma Database Schema
+## 5. Synchronize Database & Seed Initial Events
 
-Run database schema migration inside the running container to ensure all tables exist in Supabase:
+Because this is a brand-new high-performance PostgreSQL instance, run Prisma to generate all tables and seed the 31 events:
+
 ```bash
+# Push database schema (creates tables: Event, Registration, AdminUser, AuditLog, etc.)
 docker compose exec festos-app npx prisma db push
-```
 
-Optional: Seed initial events if starting with a clean database:
-```bash
+# Seed all 31 ZEST 2K26 competitive arenas & free informal games
 docker compose exec festos-app npx prisma db seed
 ```
+
+Verify that all tables and seed records are created:
+```bash
+docker compose exec db psql -U postgres -d zestos -c "\dt"
+docker compose exec db psql -U postgres -d zestos -c "SELECT count(*) FROM \"Event\";"
+```
+*(Should return count: 31)*
 
 ---
 
@@ -183,40 +194,73 @@ Reload Nginx:
 sudo systemctl reload nginx
 ```
 
-Obtain and configure your automated SSL Certificate with Certbot:
+Obtain a trusted, automated Let's Encrypt SSL certificate:
 ```bash
 sudo certbot --nginx -d your-domain.com -d www.your-domain.com
 ```
 
-Certbot will automatically modify `/etc/nginx/sites-available/festos` to enforce HTTPS redirect.
-
 ---
 
-## 7. Ongoing Maintenance & Zero-Downtime Updates
+## 7. How to Update the Website When Pushing Changes to GitHub
 
-When updates are pushed to GitHub `main`, deploy the update to your VPS with:
+Whenever you commit and push new code to your GitHub `main` branch, updating the live VPS website takes 30 seconds:
+
 ```bash
 cd /opt/festos
 git pull origin main
-docker compose up -d --build
+docker compose build --no-cache festos-app
+docker compose up -d festos-app
 ```
-Docker will build the updated standalone image in the background and replace the running container smoothly.
 
-### Useful Operational Commands:
+> [!NOTE]
+> Rebuilding `festos-app` does **NOT** touch or delete the PostgreSQL database. All student registrations, tickets, and logs remain permanently safe in the `postgres_data` volume.
 
-- **View Live Logs**:
+---
+
+## 8. Automated Daily Database Backups
+
+To ensure student registrations and ticket data are 100% safeguarded, set up an automated daily backup:
+
+1. Create a backup script:
+```bash
+sudo mkdir -p /var/backups/festos
+sudo tee /opt/festos/backup.sh > /dev/null << 'EOF'
+#!/bin/bash
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_DIR="/var/backups/festos"
+docker compose -f /opt/festos/docker-compose.yml exec -T db pg_dump -U postgres zestos | gzip > "$BACKUP_DIR/zestos_$TIMESTAMP.sql.gz"
+# Keep only the last 14 days of backups
+find "$BACKUP_DIR" -type f -name "zestos_*.sql.gz" -mtime +14 -exec rm {} \;
+EOF
+sudo chmod +x /opt/festos/backup.sh
+```
+
+2. Add a cron job to run every midnight at 02:00 AM:
+```bash
+(crontab -l 2>/dev/null; echo "0 2 * * * /opt/festos/backup.sh") | crontab -
+```
+
+---
+
+## 9. Useful Operational & Monitoring Commands
+
+- **View Live WebApp Logs**:
   ```bash
-  docker compose logs -f --tail=100 festos-app
+  docker compose logs -f festos-app
   ```
-- **Restart Container**:
+- **View Live Database Logs**:
   ```bash
-  docker compose restart festos-app
+  docker compose logs -f db
   ```
-- **Stop Application**:
+- **Check Container Resource Usage (CPU & Memory)**:
   ```bash
-  docker compose down
+  docker stats
   ```
-- **Check Resource Utilization (CPU & RAM)**:
+- **Direct Database Console (psql)**:
   ```bash
-  docker stats festos_production
+  docker compose exec db psql -U postgres -d zestos
+  ```
+- **Restart Services**:
+  ```bash
+  docker compose restart
   ```

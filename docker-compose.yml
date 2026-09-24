@@ -1,4 +1,37 @@
 services:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 🐘 High-Performance Self-Hosted PostgreSQL Database
+  # ─────────────────────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: festos_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-FestOS_Secure_Pass_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-zestos}
+      # Performance tuning for high-concurrency campus fest spikes
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # Bind only to host 127.0.0.1 for local administration & security (not exposed to public internet)
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-zestos}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 🚀 FestOS Production Next.js 16 Web Application
+  # ─────────────────────────────────────────────────────────────────────────────
   festos-app:
     build:
       context: .
@@ -7,6 +40,9 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -18,9 +54,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 20s
+      start_period: 25s
     logging:
       driver: "json-file"
       options:
         max-size: "20m"
         max-file: "5"
+
+volumes:
+  postgres_data:
+    driver: local
