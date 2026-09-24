@@ -17,6 +17,7 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 | **ERR-007** | 2026-09-25 01:30 | Auth (`/api/auth/logout`) | Sign-out redirects to `localhost:3000/login` instead of `lingayaszest.tech/login` on live server | **RESOLVED** |
 | **ERR-008** | 2026-09-25 01:30 | Auth Middleware (`middleware.ts`) | "Unauthorized: Session authentication required." on Super Admin event edits — session cookie expired + missing `ADMIN_AUTH_SECRET` env var | **RESOLVED** |
 | **ERR-009** | 2026-09-25 02:20 | Database / Super Admin (`/super-admin`) | Event price & detail edits saved successfully in UI but reverted to old values after container restart — DB column missing + silent Prisma failure | **RESOLVED** |
+| **ERR-010** | 2026-09-25 04:50 | Auth / Next.js Router (`<Link>`) | Missing/Empty cookie on new device login immediately after landing on dashboard ("Unauthorized") — Next.js automatically prefetched the logout route. | **RESOLVED** |
 
 ---
 
@@ -181,6 +182,20 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
   ```bash
   docker compose exec festos-app prisma db push
   ```
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-010: Missing/Empty Session Cookie Immediately After First Login on New Devices
+- **Component**: Next.js App Router (`<Link>` prefetching), `src/app/api/auth/logout/route.ts`
+- **Symptom**: On new devices, users would successfully log in, get redirected to their dashboard, but immediately get kicked back to login or receive "Unauthorized" when attempting API actions. Checking browser storage revealed the `festos_admin_session` cookie was missing or empty (`""`). However, if they explicitly logged out and logged in again, it worked fine.
+- **Root Cause Analysis**: 
+  1. **Next.js Prefetching**: Next.js `<Link>` components automatically prefetch their `href` target in the background as soon as they appear in the viewport.
+  2. **Destructive GET Handler**: The logout buttons on all dashboard sidebars used `<Link href="/api/auth/logout">`. The API route `src/app/api/auth/logout/route.ts` exported an `async function GET(req)` which cleared the session cookie (`Max-Age: 0`) and redirected to login.
+  3. **The Race Condition**: Upon successful login, the dashboard rendered. Next.js instantly saw the `<Link>` to the logout API and prefetched it in the background via a `GET` request. This triggered the logout logic on the server, which instructed the browser to delete the cookie milliseconds after it was created.
+  4. **Why did it work on the second login?** The Next.js client-side router caches prefetch responses. When the user was kicked out and signed in again, Next.js saw the `<Link>` but bypassed the network request because it had already cached the prefetch. Since no background `GET` request was sent, the server didn't delete the cookie, allowing the session to persist.
+- **Resolution**:
+  - Replaced all `<Link href="/api/auth/logout">` components across all 5 dashboard layouts (`super-admin`, `admin`, `stage`, `informalz`, `committee/[slug]`) with standard HTML `<a href="/api/auth/logout">` anchor tags. Standard `<a>` tags bypass the Next.js router and are never prefetched, preventing the background cookie deletion.
 - **Status**: **RESOLVED**
 
 ---
