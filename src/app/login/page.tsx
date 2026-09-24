@@ -38,7 +38,14 @@ function LoginForm() {
   // Fetch visible roles from API
   useEffect(() => {
     fetch('/api/auth/roles')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch roles');
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Non-JSON response');
+        }
+        return res.json();
+      })
       .then((data) => {
         if (data.roles) {
           setRoles(data.roles);
@@ -74,6 +81,11 @@ function LoginForm() {
             rememberMe,
           }),
         });
+
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Authentication service returned an unexpected response. Please refresh and try again.');
+        }
 
         const data = await res.json();
         if (!res.ok || !data.success) {

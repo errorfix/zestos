@@ -43,6 +43,13 @@ export default function SuperAdminFlagsManager() {
     setIsLoading(true);
     try {
       const res = await fetch('/api/super-admin/flags');
+      if (!res.ok) {
+        throw new Error(`HTTP error ${res.status}: ${res.statusText}`);
+      }
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('API returned non-JSON response');
+      }
       const data = await res.json();
       if (data.success && data.flags) {
         setFlags(data.flags);

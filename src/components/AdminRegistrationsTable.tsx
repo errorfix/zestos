@@ -88,6 +88,13 @@ export default function AdminRegistrationsTable({
     setIsLoading(true);
     try {
       const res = await fetch(apiEndpoint);
+      if (!res.ok) {
+        throw new Error(`HTTP error ${res.status}: ${res.statusText}`);
+      }
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('API returned non-JSON response');
+      }
       const data = await res.json();
       if (data.registrations) {
         setRegistrations(data.registrations);

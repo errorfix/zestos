@@ -22,16 +22,17 @@ export async function middleware(request: NextRequest) {
   // 1. Check if the path requires authentication
   const isProtectedPage = matchesAny(pathname, PROTECTED_PREFIXES);
   const isProtectedApi = matchesAny(pathname, PROTECTED_API_PREFIXES);
+  const isApi = pathname.startsWith('/api/');
 
   if (isProtectedPage || isProtectedApi) {
     const sessionCookie = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
     const session = await verifyAdminSessionToken(sessionCookie);
 
-    // Not authenticated at all → redirect to login or 401
+    // Not authenticated at all → return JSON 401 for APIs, or redirect to login for pages
     if (!session) {
-      if (isProtectedApi) {
+      if (isApi) {
         return NextResponse.json(
-          { success: false, error: 'Unauthorized: Gate check-in password authentication required.' },
+          { success: false, error: 'Unauthorized: Session authentication required.' },
           { status: 401 }
         );
       }
@@ -47,7 +48,7 @@ export async function middleware(request: NextRequest) {
 
     if (isSuperAdminPage || isSuperAdminApi) {
       if (session.roleId !== 'SUPER_ADMIN') {
-        if (isSuperAdminApi) {
+        if (isApi) {
           return NextResponse.json(
             { success: false, error: 'Forbidden. Super Admin access required.' },
             { status: 403 }
@@ -61,7 +62,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // 3. Gate Security isolation:
-    // Gate security can ONLY access /checkin
+    // Gate security can ONLY access /checkin and /api/checkin
     if (session.roleId === 'GATE_SECURITY') {
       const isForbiddenApi = matchesAny(pathname, [
         '/api/admin',
@@ -77,15 +78,14 @@ export async function middleware(request: NextRequest) {
         );
       }
 
-      if (pathname !== '/checkin' && !pathname.startsWith('/checkin/')) {
+      if (!isApi && pathname !== '/checkin' && !pathname.startsWith('/checkin/')) {
         return NextResponse.redirect(new URL('/checkin', request.url));
       }
     }
 
-    // 4. Committee Workspace Boundary Enforcement:
-    // Super Admin has master uninhibited access across all committee workspaces.
-    // Individual committees are routed to their designated domain.
-    if (session.roleId !== 'SUPER_ADMIN' && session.roleId !== 'GATE_SECURITY') {
+    // 4. Page-Level Committee Workspace Boundary Enforcement:
+    // CRITICAL: This MUST ONLY run on PAGE requests (!isApi). NEVER redirect API requests to HTML URLs!
+    if (!isApi && session.roleId !== 'SUPER_ADMIN' && session.roleId !== 'GATE_SECURITY') {
       const userRole = getRoleById(session.roleId);
       const userDashboard = userRole?.dashboard || '/admin';
 
@@ -98,7 +98,7 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL(userDashboard, request.url));
           }
         } else if (session.roleId === 'MANAGEMENT') {
-          // Higher authority is locked to /management observatory
+          // Higher authority is locked to /management observatory page
           return NextResponse.redirect(new URL('/management', request.url));
         } else if (pathname.startsWith('/committee/')) {
           if (!pathname.startsWith(userDashboard)) {
