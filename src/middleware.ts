@@ -122,6 +122,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // If visiting /login while already authenticated, redirect to their dashboard
+  // AND PRESERVE THE COOKIE THROUGH THE REDIRECT
   if (pathname === '/login') {
     const sessionCookie = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
     const session = await verifyAdminSessionToken(sessionCookie);
@@ -129,19 +130,35 @@ export async function middleware(request: NextRequest) {
       const role = getRoleById(session.roleId);
       const nextUrl =
         request.nextUrl.searchParams.get('next') || role?.dashboard || '/admin';
-      return NextResponse.redirect(new URL(nextUrl, request.url));
+
+      const response = NextResponse.redirect(new URL(nextUrl, request.url));
+
+      // Preserve the cookie through redirect
+      if (sessionCookie) {
+        response.cookies.set(ADMIN_COOKIE_NAME, sessionCookie, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          domain: process.env.COOKIE_DOMAIN || 'lingayaszest.tech',
+        });
+      }
+
+      return response;
     }
   }
 
-  // 3. Only delegate to Supabase for non-protected routes
-  // (Admin routes use custom session auth, not Supabase)
-  if (!isProtectedApi && !isProtectedPage) {
+  // Only delegate to Supabase for non-protected, non-login routes
+  // (Admin and login routes use custom session auth, not Supabase)
+  if (!isProtectedApi && !isProtectedPage && pathname !== '/login') {
     try {
       return await updateSession(request);
     } catch {
       return NextResponse.next();
     }
   }
+
+  return NextResponse.next();
 }
 
 export const config = {
@@ -156,4 +173,3 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
-
