@@ -6,6 +6,7 @@ import AdminEventsManager from '@/components/AdminEventsManager';
 import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
 import StageRegistrationsManager from '@/components/StageRegistrationsManager';
 import SuperAdminFlagsManager from '@/components/SuperAdminFlagsManager';
+import AuditLogsViewer from '@/components/AuditLogsViewer';
 import { InitialEventData } from '@/lib/mockEvents';
 import {
   Users,
@@ -27,6 +28,7 @@ import {
   BookOpen,
   Drama,
   ExternalLink,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface MetricsData {
@@ -58,6 +60,7 @@ interface SuperAdminViewProps {
 
 export type SuperAdminWorkspaceTab =
   | 'FLAGS'
+  | 'AUDIT_LOGS'
   | 'RI'
   | 'MUSIC'
   | 'DANCE'
@@ -458,12 +461,37 @@ export default function SuperAdminView({
                 <span className="text-slate-500">Universal</span>
               </div>
             </button>
+            {/* 6. Security Audit Trail */}
+            <button
+              type="button"
+              onClick={() => setActiveCommittee('AUDIT_LOGS')}
+              className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                activeCommittee === 'AUDIT_LOGS'
+                  ? 'bg-indigo-950/40 border-indigo-500 ring-2 ring-indigo-500/20'
+                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-1 mb-2">
+                <ShieldCheck className={`w-4 h-4 ${activeCommittee === 'AUDIT_LOGS' ? 'text-indigo-400' : 'text-slate-400'}`} />
+                <span className="text-[10px] font-bold text-slate-400">PostgreSQL</span>
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">Audit Trail</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5">Operator identity logs</p>
+              </div>
+              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
+                <span className={activeCommittee === 'AUDIT_LOGS' ? 'text-indigo-400' : 'text-slate-500'}>
+                  {activeCommittee === 'AUDIT_LOGS' ? '● Viewing' : 'Switch'}
+                </span>
+                <span className="text-slate-500">Security Log</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
 
       {/* Scoped Metric Cards */}
-      {activeCommittee !== 'FLAGS' && (
+      {activeCommittee !== 'FLAGS' && activeCommittee !== 'AUDIT_LOGS' && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xs">
             <div className="flex items-center justify-between text-slate-500 mb-2">
@@ -565,6 +593,15 @@ export default function SuperAdminView({
       {activeCommittee === 'FLAGS' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
           <SuperAdminFlagsManager />
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 🛡️ SECTION 0.5: IMMUTABLE OPERATOR AUDIT TRAIL (POSTGRESQL) */}
+      {/* ========================================================================= */}
+      {activeCommittee === 'AUDIT_LOGS' && (
+        <div className="space-y-8 animate-in fade-in-50 duration-200">
+          <AuditLogsViewer />
         </div>
       )}
 

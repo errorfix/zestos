@@ -76,3 +76,21 @@ model Ticket {
   securityHash   String       // HMAC-SHA256 signature for offline validation
   checkedInAt    DateTime?
 }
+
+model AuditLog {
+  id              String   @id @default(cuid())
+  targetId        String   // Object ID of the edited record (e.g. registration ID, event ID)
+  action          String   // e.g. UPDATE_STAGE_TRACK, EDIT_EVENT, TOGGLE_FLAG, ONSPOT_REGISTRATION
+  targetType      String   // e.g. REGISTRATION, EVENT, STAGE_TRACK, COMMITTEE_FLAG, TICKET
+  operatorName    String   // Student Name or Faculty Name
+  operatorRollNo  String   // Student Roll Number or Faculty ID
+  operatorType    String?  @default("STUDENT") // STUDENT or FACULTY
+  committeeRoleId String   // Active committee role
+  changes         String?  // Summary or JSON of modified attributes
+  createdAt       DateTime @default(now())
+
+  @@index([targetId])
+  @@index([operatorRollNo])
+  @@index([action])
+  @@index([createdAt])
+}

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createOnSpotRegistration, getEventById } from '@/lib/db';
+import { createOnSpotRegistration, getEventById, createAuditLog } from '@/lib/db';
 import { sendPassEmail } from '@/lib/email';
+import { getOperatorFromRequest } from '@/lib/auth';
 
 const onSpotSchema = z.object({
   eventId: z.string().min(1, 'Event ID is required'),
@@ -122,6 +123,29 @@ export async function POST(req: Request) {
       registrationId: result.registrationId,
       teamMembers: teamMembers.map((m) => ({ fullName: m.fullName })),
     }).catch((err) => console.error('[Email] Failed to dispatch on-spot pass email:', err));
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 📝 IMMUTABLE OPERATOR AUDIT TRAIL
+    // ─────────────────────────────────────────────────────────────────────────
+    const operator = getOperatorFromRequest(req);
+    await createAuditLog({
+      targetId: result.registrationId,
+      action: 'ONSPOT_REGISTRATION',
+      targetType: 'REGISTRATION',
+      operatorName: operator?.operatorName || 'Desk Operator',
+      operatorRollNo: operator?.operatorRollNo || 'ONSPOT_DESK',
+      operatorType: operator?.operatorType || 'STUDENT',
+      committeeRoleId: 'ONSPOT_COMMITTEE',
+      changes: {
+        eventId,
+        eventTitle: event.title,
+        leadName,
+        leadEmail,
+        paymentMethod,
+        amountInr: calculatedFeePaise / 100,
+        ticketsIssued: result.tickets.length,
+      },
+    });
 
     return NextResponse.json({
       success: true,

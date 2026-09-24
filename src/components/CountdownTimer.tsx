@@ -66,28 +66,28 @@ export default function CountdownTimer() {
 
   return (
     <div className="inline-block w-full max-w-lg mx-auto">
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs">
-        <div className="flex items-center justify-between gap-2 mb-3 px-1">
-          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-700">
-            <Clock className="w-3.5 h-3.5 text-amber-600" />
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-5 shadow-xs">
+        <div className="flex items-center justify-between gap-2 mb-2.5 sm:mb-3 px-0.5 sm:px-1">
+          <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-700">
+            <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-amber-600" />
             <span>Festival Countdown</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold text-slate-500">
+            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-emerald-500" />
             <span>October 30, 2026</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 sm:gap-3">
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-3">
           {timeBlocks.map((block) => (
             <div
               key={block.label}
-              className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 sm:p-3 text-center"
+              className="bg-slate-50 border border-slate-200 rounded-xl p-2 sm:p-3 text-center"
             >
-              <span className="block text-xl sm:text-3xl font-black font-mono text-slate-900 tracking-tight">
+              <span className="block text-lg sm:text-3xl font-black font-mono text-slate-900 tracking-tight">
                 {String(block.value).padStart(2, '0')}
               </span>
-              <span className="block text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+              <span className="block text-[8px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
                 {block.label}
               </span>
             </div>

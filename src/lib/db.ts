@@ -1362,3 +1362,129 @@ export async function getStageMetrics() {
     checkedInPerformers,
   };
 }
+
+// ----------------- AUDIT LOGGING OPERATIONS -----------------
+
+export interface CreateAuditLogParams {
+  targetId: string;
+  action: string;
+  targetType: string;
+  operatorName: string;
+  operatorRollNo: string;
+  operatorType?: 'STUDENT' | 'FACULTY' | string;
+  committeeRoleId?: string;
+  changes?: string | Record<string, unknown> | null;
+}
+
+export interface LocalAuditLog {
+  id: string;
+  targetId: string;
+  action: string;
+  targetType: string;
+  operatorName: string;
+  operatorRollNo: string;
+  operatorType?: string | null;
+  committeeRoleId: string;
+  changes?: string | null;
+  createdAt: Date;
+}
+
+const AUDIT_CACHE_FILE = path.join(process.cwd(), '.festos_audit_logs.json');
+
+function saveAuditLogToDisk(entry: LocalAuditLog) {
+  try {
+    let logs: LocalAuditLog[] = [];
+    if (fs.existsSync(AUDIT_CACHE_FILE)) {
+      const raw = fs.readFileSync(AUDIT_CACHE_FILE, 'utf-8');
+      logs = JSON.parse(raw);
+    }
+    logs.unshift(entry);
+    if (logs.length > 500) logs = logs.slice(0, 500);
+    fs.writeFileSync(AUDIT_CACHE_FILE, JSON.stringify(logs, null, 2), 'utf-8');
+  } catch {
+    // Non-fatal
+  }
+}
+
+export async function createAuditLog(params: CreateAuditLogParams): Promise<LocalAuditLog> {
+  const changesStr =
+    typeof params.changes === 'object' && params.changes !== null
+      ? JSON.stringify(params.changes)
+      : params.changes || null;
+
+  const fallbackEntry: LocalAuditLog = {
+    id: `audit_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    targetId: params.targetId,
+    action: params.action,
+    targetType: params.targetType,
+    operatorName: params.operatorName || 'Anonymous Desk Officer',
+    operatorRollNo: params.operatorRollNo || 'N/A',
+    operatorType: params.operatorType || 'STUDENT',
+    committeeRoleId: params.committeeRoleId || 'COMMITTEE',
+    changes: changesStr,
+    createdAt: new Date(),
+  };
+
+  saveAuditLogToDisk(fallbackEntry);
+
+  try {
+    const created = await prisma.auditLog.create({
+      data: {
+        targetId: params.targetId,
+        action: params.action,
+        targetType: params.targetType,
+        operatorName: params.operatorName || 'Anonymous Desk Officer',
+        operatorRollNo: params.operatorRollNo || 'N/A',
+        operatorType: params.operatorType || 'STUDENT',
+        committeeRoleId: params.committeeRoleId || 'COMMITTEE',
+        changes: changesStr,
+      },
+    });
+    return {
+      ...created,
+      createdAt: created.createdAt,
+    };
+  } catch (err) {
+    console.warn('[AuditLog] Failed to persist to PostgreSQL, fallback to disk cache:', err);
+    return fallbackEntry;
+  }
+}
+
+export async function getAuditLogs(options?: {
+  targetId?: string;
+  operatorRollNo?: string;
+  action?: string;
+  limit?: number;
+}): Promise<LocalAuditLog[]> {
+  const limit = options?.limit || 100;
+
+  try {
+    const where: Record<string, string> = {};
+    if (options?.targetId) where.targetId = options.targetId;
+    if (options?.operatorRollNo) where.operatorRollNo = options.operatorRollNo;
+    if (options?.action) where.action = options.action;
+
+    const logs = await prisma.auditLog.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+    return logs;
+  } catch {
+    // Disk fallback
+    try {
+      if (fs.existsSync(AUDIT_CACHE_FILE)) {
+        const raw = fs.readFileSync(AUDIT_CACHE_FILE, 'utf-8');
+        let logs: LocalAuditLog[] = JSON.parse(raw);
+        if (options?.targetId) logs = logs.filter((l) => l.targetId === options.targetId);
+        if (options?.operatorRollNo) logs = logs.filter((l) => l.operatorRollNo === options.operatorRollNo);
+        if (options?.action) logs = logs.filter((l) => l.action === options.action);
+        return logs.slice(0, limit);
+      }
+    } catch {
+      // Non-fatal
+    }
+    return [];
+  }
+}
+

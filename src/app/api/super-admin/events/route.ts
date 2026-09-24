@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getEvents, createEvent, updateEvent } from '@/lib/db';
+import { getEvents, createEvent, updateEvent, createAuditLog } from '@/lib/db';
+import { getOperatorFromRequest } from '@/lib/auth';
 
 // Note: SUPER_ADMIN role enforcement is handled by middleware.ts
 // Any request reaching this route is already verified as SUPER_ADMIN
@@ -80,6 +81,8 @@ export async function POST(req: Request) {
     const onSpotFeeAmount =
       onSpotFeeInr != null && !isNaN(onSpotFeeInr) ? Math.round(onSpotFeeInr * 100) : undefined;
 
+    const operator = getOperatorFromRequest(req);
+
     if (id) {
       const updated = await updateEvent(id, {
         title,
@@ -99,6 +102,26 @@ export async function POST(req: Request) {
         hasDayOptions,
         onSpotFeeAmount,
       });
+
+      await createAuditLog({
+        targetId: id,
+        action: 'EDIT_EVENT',
+        targetType: 'EVENT',
+        operatorName: operator?.operatorName || 'Super Admin Desk',
+        operatorRollNo: operator?.operatorRollNo || 'SUPER_ADMIN',
+        operatorType: operator?.operatorType || 'STUDENT',
+        committeeRoleId: 'SUPER_ADMIN',
+        changes: {
+          title,
+          category,
+          feeInr,
+          onSpotFeeInr,
+          status,
+          venue,
+          date,
+        },
+      });
+
       return NextResponse.json({ success: true, event: updated, action: 'updated' });
     } else {
       const created = await createEvent({
@@ -119,6 +142,26 @@ export async function POST(req: Request) {
         hasDayOptions,
         onSpotFeeAmount,
       });
+
+      await createAuditLog({
+        targetId: created.id,
+        action: 'CREATE_EVENT',
+        targetType: 'EVENT',
+        operatorName: operator?.operatorName || 'Super Admin Desk',
+        operatorRollNo: operator?.operatorRollNo || 'SUPER_ADMIN',
+        operatorType: operator?.operatorType || 'STUDENT',
+        committeeRoleId: 'SUPER_ADMIN',
+        changes: {
+          title,
+          category,
+          feeInr,
+          onSpotFeeInr,
+          status,
+          venue,
+          date,
+        },
+      });
+
       return NextResponse.json({ success: true, event: created, action: 'created' });
     }
   } catch (error) {

@@ -311,3 +311,58 @@ export async function verifyAdminSessionToken(
     return null;
   }
 }
+
+// ─── Desk Operator Identity & Audit Tracking ─────────────────────────────────
+
+export const OPERATOR_COOKIE_NAME = 'festos_operator_session';
+
+export interface OperatorSession {
+  operatorName: string;
+  operatorRollNo: string;
+  operatorType: 'STUDENT' | 'FACULTY';
+  timestamp: number;
+}
+
+export function parseOperatorSession(rawString: string | undefined | null): OperatorSession | null {
+  if (!rawString) return null;
+  try {
+    const decoded = decodeURIComponent(rawString);
+    const parsed = JSON.parse(decoded);
+    if (parsed && typeof parsed.operatorName === 'string' && typeof parsed.operatorRollNo === 'string') {
+      return {
+        operatorName: parsed.operatorName.trim(),
+        operatorRollNo: parsed.operatorRollNo.trim().toUpperCase(),
+        operatorType: parsed.operatorType === 'FACULTY' ? 'FACULTY' : 'STUDENT',
+        timestamp: Number(parsed.timestamp) || Date.now(),
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function getOperatorFromRequest(request: Request): OperatorSession | null {
+  // 1. Try custom headers first
+  const headerName = request.headers.get('x-operator-name');
+  const headerRoll = request.headers.get('x-operator-roll');
+  const headerType = request.headers.get('x-operator-type');
+  if (headerName && headerRoll) {
+    return {
+      operatorName: headerName.trim(),
+      operatorRollNo: headerRoll.trim().toUpperCase(),
+      operatorType: headerType === 'FACULTY' ? 'FACULTY' : 'STUDENT',
+      timestamp: Date.now(),
+    };
+  }
+
+  // 2. Try cookie header
+  const cookieHeader = request.headers.get('cookie') || '';
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${OPERATOR_COOKIE_NAME}=([^;]+)`));
+  if (match && match[1]) {
+    return parseOperatorSession(match[1]);
+  }
+
+  return null;
+}
+

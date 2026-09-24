@@ -1,6 +1,6 @@
 # FestOS v2.0 • Live Production Operations & Maintenance Guide
 
-This document contains official operational procedures, live endpoint links, role-based committee credentials, daily backup routines, and maintenance workflows for the live deployment at **https://lingayaszest.tech**.
+This document contains official operational procedures, live endpoint links, role-based committee credentials, daily backup routines, the Operator Audit Logging architecture, and maintenance workflows for the live deployment at **https://lingayaszest.tech**.
 
 ---
 
@@ -22,6 +22,7 @@ This document contains official operational procedures, live endpoint links, rol
 - **Committee Login Portal**: `https://lingayaszest.tech/login`
 - **Gate Physical QR Check-in**: `https://lingayaszest.tech/checkin`
 - **On-Spot Registration Desk**: `https://lingayaszest.tech/onspot`
+- **Higher Authority Observational Console**: `https://lingayaszest.tech/management`
 
 ---
 
@@ -29,18 +30,95 @@ This document contains official operational procedures, live endpoint links, rol
 
 Committee personnel log in directly at `https://lingayaszest.tech/login`. The system automatically sets an encrypted JWT HTTP-only cookie and redirects them to their designated panel:
 
-| Committee Role | Password | Accessible Panel Route | Responsibilities |
+| Committee Role | Password | Accessible Panel Route | Responsibilities & Access Scope |
 | :--- | :--- | :--- | :--- |
-| **Super Admin** | `phoenix@lv321` | `/super-admin` | Full system audit, revenue analytics, event toggles, export rosters. |
-| **R&I Committee** | `falcon@lv321` | `/admin` | Registration verification, cash on-spot issuance, ticket check-in. |
-| **Informalz Committee** | `tiger@lv321` | `/informalz` | Free informal game rosters, winner tracking, participant check-in. |
-| **Stage / AV Committee** | `lion@lv321` | `/stage` | Audio/video track links, cue notes, on-spot track USB uploads. |
+| **Super Admin** | `phoenix@lv321` | `/super-admin` | Universal oversight, Boolean Access Flags matrix, event editing, and full audit logs. |
+| **Registration & Invitation (R&I)** | `falcon@lv321` | `/admin` | Attendee rosters for competitive events, gate check-in, on-spot walk-ins. |
+| **Informalz Committee** | `tiger@lv321` | `/informalz` | Day 1 / Day 2 Informalz passes (₹150/₹250), game rosters, pass check-ins. |
+| **Stage & AV Committee** | `lion@lv321` | `/stage` | Track audio link uploads, sound cues, performer check-in. |
+| **Cultural Music Committee** | `melody@lv321` | `/committee/music` | Music band battles, vocal solo rosters, and sound tracks. |
+| **Cultural Dance Committee** | `rhythm@lv321` | `/committee/dance` | Step Up dance, duet, group choreography rosters & audio tracks. |
+| **Cultural Fashion Committee** | `vogue@lv321` | `/committee/fashion` | Vogue runway teams, participant rosters, theme tracks. |
+| **Cultural Theatre Committee** | `drama@lv321` | `/committee/theatre` | Rangmanch, Nukkad Natak, street play rosters. |
+| **Literary & Quizzing Committee** | `words@lv321` | `/committee/literary` | Debate, quiz, and literary competition rosters. |
+| **Esports & Gaming Committee** | `nexus@lv321` | `/committee/gaming` | BGMI, Valorant, FIFA tournament rosters. |
+| **Gate Security & Check-In Team** | `gate@lv321` | `/checkin` | High-speed QR scanning, offline HMAC validation, admission stamps. |
+| **Higher Authority / Management** | `apex@lv321` | `/management` | Strictly read-only observational access across all committees, revenue, and audit trails. |
 
 ---
 
-## 3. Automated Daily Database Backups
+## 3. Security & Operator Audit Logging System
 
-To ensure that student registrations, tickets, and transactions are permanently backed up, an automated backup script is scheduled on the VPS:
+To meet stringent university accountability standards, FestOS implements an automated, immutable audit logging architecture.
+
+### 3.1 Operator Identity Check-In Modal
+- **Trigger**: When an operator accesses any committee console (`/admin`, `/super-admin`, `/stage`, `/committee/*`, `/onspot`, `/informalz`, `/management`), an immediate modal prompts for identification if not already registered in the browser session.
+- **Fields Captured**:
+  - **Designation**: Student Desk In-Charge (`STUDENT`) or Faculty Staff In-Charge (`FACULTY`).
+  - **Full Legal Name**: (e.g. *Rohit Sharma* or *Dr. Priya Verma*).
+  - **Identifier**: Student University Roll Number or Faculty Employee ID (e.g. *21BCSE104* or *FAC-882*).
+- **Session Persistence**: Stored in a browser cookie (`festos_operator_session`) and `localStorage`.
+- **Desk Operator Badge**: Header features a persistent badge displaying the active operator with a **"Switch"** button to allow smooth desk handovers during shifts.
+
+### 3.2 Audit Log PostgreSQL Schema (`AuditLog`)
+Every data mutation automatically records an entry in the PostgreSQL `AuditLog` table:
+
+```prisma
+model AuditLog {
+  id              String   @id @default(cuid())
+  targetId        String   // Object ID of the modified entity (Registration ID, Event ID, Ticket ID, etc.)
+  action          String   // e.g. UPDATE_STAGE_TRACK, EDIT_EVENT, CREATE_EVENT, TOGGLE_COMMITTEE_FLAG, ONSPOT_REGISTRATION, TICKET_CHECKIN
+  targetType      String   // e.g. REGISTRATION, EVENT, STAGE_TRACK, COMMITTEE_FLAG, TICKET
+  operatorName    String   // Student Name or Faculty Name
+  operatorRollNo  String   // Roll Number or Faculty ID
+  operatorType    String?  @default("STUDENT") // STUDENT or FACULTY
+  committeeRoleId String   // Committee Role under which mutation was performed
+  changes         String?  // JSON stringified diff of modified fields
+  createdAt       DateTime @default(now())
+
+  @@index([targetId])
+  @@index([operatorRollNo])
+  @@index([action])
+  @@index([createdAt])
+}
+```
+
+### 3.3 Mutation Audit Coverage
+The following system endpoints automatically capture the operator identity and target Object ID:
+1. **Stage Tracks & AV Cues** (`PATCH /api/stage/tracks`):
+   - Logs `UPDATE_STAGE_TRACK` with `targetId = registrationId`, sound notes, and audio link.
+2. **Event Configuration** (`POST /api/super-admin/events`):
+   - Logs `CREATE_EVENT` and `EDIT_EVENT` with `targetId = eventId`, fees, dates, and rule changes.
+3. **Committee Access Flags** (`POST /api/super-admin/flags`):
+   - Logs `TOGGLE_COMMITTEE_FLAG`, `BULK_UPDATE_FLAGS`, and `RESET_COMMITTEE_FLAGS`.
+4. **On-Spot Registration Desk** (`POST /api/onspot`):
+   - Logs `ONSPOT_REGISTRATION` with `targetId = registrationId`, fee collected, and tickets issued.
+5. **Gate Check-In Admission** (`POST /api/checkin`):
+   - Logs `TICKET_CHECKIN` with `targetId = ticketCode` and attendee name.
+
+### 3.4 Audit Trail Viewer Component
+Both the **Super Admin** (`/super-admin`) and **Management Dashboard** (`/management`) feature a dedicated **Audit Trail** tab powered by `<AuditLogsViewer />`:
+- Real-time search by operator name, roll number, action, or target ID.
+- Action filter dropdown (`UPDATE_STAGE_TRACK`, `ONSPOT_REGISTRATION`, `TOGGLE_COMMITTEE_FLAG`, etc.).
+- Expandable JSON diff viewer to inspect exact modifications.
+- One-click **Export to CSV** for offline administrative review.
+
+---
+
+## 4. Mobile View Responsive Design Optimizations
+
+To ensure seamless operation on Android smartphones (360px – 412px viewports) used by campus attendees and desk volunteers:
+- **Navbar Header**: Scaled from 80px (`h-20`) to 64px (`h-16 sm:h-20`) on mobile; University crest resized to `w-9 h-11`; subtitle automatically truncates gracefully.
+- **Hero Typography**: Headline scales smoothly as `text-3xl xs:text-4xl sm:text-6xl`; UGC accreditation badge truncates cleanly without causing horizontal scrollbars.
+- **Action Buttons**: Formatted as full-width responsive buttons (`flex-col xs:flex-row`) to prevent awkward button wrapping on narrow screens.
+- **Countdown Timer**: Compact padding (`p-3 sm:p-5`), responsive typography (`text-lg sm:text-3xl`), and tight grid spacing (`gap-1.5 sm:gap-3`) preventing card overflows.
+- **Metric Cards**: Resized to `p-2.5 sm:p-3.5` with `text-lg sm:text-2xl` font sizes for 2-column mobile grid.
+
+---
+
+## 5. Automated Daily Database Backups
+
+Automated daily backup routine on the VPS:
 
 ### Backup Script Location: `/opt/festos/backup.sh`
 ```bash
@@ -58,112 +136,29 @@ find "$BACKUP_DIR" -type f -name "zestos_*.sql.gz" -mtime +14 -exec rm {} \;
 
 ### Automated Midnight Cron Schedule (Runs daily at 02:00 AM)
 ```bash
-# Verify active cron schedule
 crontab -l
-```
-Expected output:
-```text
-0 2 * * * /opt/festos/backup.sh
-```
-
-### Manual Instant Backup
-Whenever performing major changes or before large event days, run an instant backup:
-```bash
-sudo /opt/festos/backup.sh
-```
-List all generated backups:
-```bash
-ls -lh /var/backups/festos/
+# Expected output:
+# 0 2 * * * /opt/festos/backup.sh
 ```
 
 ---
 
-## 4. How to Update the Live Website from GitHub
+## 6. How to Deploy Updates from GitHub to Live Server
 
-Whenever code is edited and pushed to GitHub (`git push origin main`), update the live VPS with this single command:
+Whenever code changes are committed and pushed to GitHub (`main` branch), apply them on the live VPS with:
 
 ```bash
 cd /opt/festos && git pull origin main && docker compose build --no-cache festos-app && docker compose up -d festos-app
 ```
 
 > [!NOTE]
-> Rebuilding `festos-app` does **NOT** touch or wipe the PostgreSQL database. All student registrations, tickets, and logs remain permanently safe in the `postgres_data` volume.
+> Database migrations and schema pushes run against PostgreSQL without resetting existing tables. All registered participants, tickets, and audit logs are preserved in `postgres_data`.
 
 ---
 
-## 5. Switching Razorpay to Live Mode (Real Payments)
+## 7. Email Dispatch System (Resend)
 
-Currently, the system is configured in test mode. When you are ready to collect real participant payments:
-
-1. Open `/opt/festos/.env` on the VPS:
-   ```bash
-   nano /opt/festos/.env
-   ```
-2. Replace the test keys with your official Razorpay Live credentials:
-   ```ini
-   NEXT_PUBLIC_RAZORPAY_KEY_ID="rzp_live_XXXXXXXXXXXXXX"
-   RAZORPAY_KEY_ID="rzp_live_XXXXXXXXXXXXXX"
-   RAZORPAY_KEY_SECRET="your_live_secret_key"
-   RAZORPAY_WEBHOOK_SECRET="your_live_webhook_secret"
-   ```
-3. Save (`CTRL+O`, `Enter`, `CTRL+X`).
-4. Restart the web app to apply the live credentials:
-   ```bash
-   docker compose restart festos-app
-   ```
-
----
-
-## 6. Daily Monitoring & Operational Commands
-
-### Check Container Health & Status
-```bash
-docker compose ps
-```
-Both `festos_postgres` and `festos_production` should show status: `Up (healthy)`.
-
-### View Live Web Application Logs
-```bash
-docker compose logs -f festos-app
-```
-
-### View Live Database Logs
-```bash
-docker compose logs -f db
-```
-
-### Monitor Real-Time Server Resource Usage (CPU, RAM, Network)
-```bash
-docker stats
-```
-
-### Access PostgreSQL Interactive Console (psql)
-```bash
-docker compose exec db psql -U postgres -d zestos
-```
-Useful SQL queries:
-```sql
--- Count total registrations
-SELECT count(*) FROM "Registration";
-
--- Count registrations per event
-SELECT e.title, count(r.id) FROM "Event" e LEFT JOIN "Registration" r ON e.id = r."eventId" GROUP BY e.title ORDER BY count DESC;
-
--- Exit psql
-\q
-```
-
-### Restart All Services
-```bash
-docker compose restart
-```
-
----
-
-## 7. SSL Certificate Renewal
-
-Let's Encrypt certificates are valid for 90 days. Certbot automatically installs a systemd renewal timer. To test automatic renewal:
-```bash
-sudo certbot renew --dry-run
-```
-*(If this outputs `Congratulations, all simulated renewals succeeded`, SSL will renew automatically in the background with zero downtime).*
+Official passes are delivered via the Resend API (`src/lib/email.ts`):
+- **API Key**: Managed in environment variable `RESEND_API_KEY`.
+- **Sender Address**: `passes@lingayaszest.tech` (or verified domain address).
+- **Trigger**: Automatic upon payment confirmation (Razorpay online or desk on-spot issuance).

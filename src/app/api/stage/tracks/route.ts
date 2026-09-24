@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllRegistrations, getEvents, updateRegistrationTrack, getStageMetrics } from '@/lib/db';
+import { getAllRegistrations, getEvents, updateRegistrationTrack, getStageMetrics, createAuditLog } from '@/lib/db';
 import { cookies } from 'next/headers';
-import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';
+import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getOperatorFromRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -148,6 +148,22 @@ export async function PATCH(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Record immutable audit log
+    const operator = getOperatorFromRequest(request);
+    await createAuditLog({
+      targetId: registrationId,
+      action: 'UPDATE_STAGE_TRACK',
+      targetType: 'REGISTRATION',
+      operatorName: operator?.operatorName || 'Anonymous Desk Officer',
+      operatorRollNo: operator?.operatorRollNo || 'N/A',
+      operatorType: operator?.operatorType || 'STUDENT',
+      committeeRoleId: session.roleId,
+      changes: {
+        trackUploadUrl,
+        trackNotes,
+      },
+    });
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';
+import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getOperatorFromRequest } from '@/lib/auth';
+import { createAuditLog } from '@/lib/db';
 import {
   getCommitteeFlags,
   setCommitteeFlag,
@@ -58,9 +59,21 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
+    const operator = getOperatorFromRequest(request);
+
     // Reset action
     if (body.action === 'RESET_DEFAULTS') {
       const resetFlags = resetCommitteeFlagsToDefault();
+      await createAuditLog({
+        targetId: 'ALL_COMMITTEE_FLAGS',
+        action: 'RESET_COMMITTEE_FLAGS',
+        targetType: 'COMMITTEE_FLAG',
+        operatorName: operator?.operatorName || 'Super Admin Desk',
+        operatorRollNo: operator?.operatorRollNo || 'SUPER_ADMIN',
+        operatorType: operator?.operatorType || 'STUDENT',
+        committeeRoleId: 'SUPER_ADMIN',
+        changes: { action: 'RESET_DEFAULTS' },
+      });
       return NextResponse.json({
         success: true,
         message: 'Committee flags reset to defaults',
@@ -71,6 +84,16 @@ export async function POST(request: NextRequest) {
     // Bulk set action
     if (body.flags && typeof body.flags === 'object') {
       const updated = setAllCommitteeFlags(body.flags);
+      await createAuditLog({
+        targetId: 'ALL_COMMITTEE_FLAGS',
+        action: 'BULK_UPDATE_FLAGS',
+        targetType: 'COMMITTEE_FLAG',
+        operatorName: operator?.operatorName || 'Super Admin Desk',
+        operatorRollNo: operator?.operatorRollNo || 'SUPER_ADMIN',
+        operatorType: operator?.operatorType || 'STUDENT',
+        committeeRoleId: 'SUPER_ADMIN',
+        changes: body.flags,
+      });
       return NextResponse.json({
         success: true,
         message: 'Committee flags updated successfully',
@@ -95,6 +118,21 @@ export async function POST(request: NextRequest) {
     }
 
     const updated = setCommitteeFlag(committeeId, category as EventCategoryKey, enabled);
+
+    await createAuditLog({
+      targetId: `${committeeId}_${category}`,
+      action: 'TOGGLE_COMMITTEE_FLAG',
+      targetType: 'COMMITTEE_FLAG',
+      operatorName: operator?.operatorName || 'Super Admin Desk',
+      operatorRollNo: operator?.operatorRollNo || 'SUPER_ADMIN',
+      operatorType: operator?.operatorType || 'STUDENT',
+      committeeRoleId: 'SUPER_ADMIN',
+      changes: {
+        committeeId,
+        category,
+        enabled,
+      },
+    });
 
     return NextResponse.json({
       success: true,

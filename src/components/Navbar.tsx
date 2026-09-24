@@ -3,43 +3,65 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { Sparkles, Menu, X, ArrowRight } from 'lucide-react';
+import OperatorIdentityModal, { OperatorDeskBadge } from '@/components/OperatorIdentityModal';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname() || '';
+
+  // Check if current route is any committee / administrative desk
+  const isCommitteeRoute =
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/super-admin') ||
+    pathname.startsWith('/stage') ||
+    pathname.startsWith('/committee') ||
+    pathname.startsWith('/onspot') ||
+    pathname.startsWith('/informalz') ||
+    pathname.startsWith('/management') ||
+    pathname.startsWith('/checkin');
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
         {/* Brand & University Crest */}
-        <Link href="/" className="flex items-center gap-3.5 group focus:outline-none">
-          <div className="relative w-12 h-14 sm:w-13 sm:h-15 flex items-center justify-center shrink-0 p-1 group-hover:scale-105 transition-transform">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3.5 group focus:outline-none min-w-0">
+          <div className="relative w-9 h-11 sm:w-12 sm:h-14 flex items-center justify-center shrink-0 p-0.5 group-hover:scale-105 transition-transform">
             <Image
               src="/lingayas_logo.png"
               alt="Lingaya's Vidyapeeth Crest"
-              width={56}
-              height={64}
+              width={48}
+              height={56}
               priority
               className="object-contain max-h-full"
             />
           </div>
 
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-lg sm:text-xl text-slate-900 tracking-tight group-hover:text-amber-600 transition-colors">
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="font-extrabold text-base sm:text-xl text-slate-900 tracking-tight group-hover:text-amber-600 transition-colors">
                 ZEST 2K26
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
                 GENZFY
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 font-medium tracking-tight">
-              Lingaya&apos;s Vidyapeeth (Deemed University)
+            <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium tracking-tight truncate max-w-[145px] xs:max-w-[210px] sm:max-w-none">
+              Lingaya&apos;s Vidyapeeth
+              <span className="hidden sm:inline"> (Deemed University)</span>
             </p>
           </div>
         </Link>
 
-        {/* Desktop Navigation Links - Minimal & Formal (Schedule, Prize, StarNight removed as requested) */}
+        {/* Committee Operator Badge (desktop visible) */}
+        {isCommitteeRoute && (
+          <div className="hidden lg:flex items-center">
+            <OperatorDeskBadge />
+          </div>
+        )}
+
+        {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center gap-1 text-xs font-semibold text-slate-600">
           <Link
             href="/#events-catalog"
@@ -67,11 +89,11 @@ export default function Navbar() {
           </Link>
         </nav>
 
-        {/* Top Registration Button */}
+        {/* Top Registration Button (Desktop) */}
         <div className="hidden sm:flex items-center gap-3">
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-all hover:shadow focus-visible:ring-2 focus-visible:ring-slate-900"
+            className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-all hover:shadow focus-visible:ring-2 focus-visible:ring-slate-900 shrink-0"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>Register Now</span>
@@ -79,28 +101,33 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Mobile Menu Toggle */}
-        <div className="flex sm:hidden items-center gap-2">
+        {/* Mobile Menu & Quick Register Toggle */}
+        <div className="flex sm:hidden items-center gap-1.5 shrink-0">
           <Link
             href="/register"
-            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white"
+            className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white shadow-2xs"
           >
             Register
           </Link>
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            className="p-1.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100"
             aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="sm:hidden px-4 pt-3 pb-6 bg-white border-b border-slate-200 space-y-1.5 text-xs font-semibold text-slate-700 animate-in fade-in-50 shadow-lg">
+        <div className="sm:hidden px-4 pt-3 pb-6 bg-white border-b border-slate-200 space-y-2 text-xs font-semibold text-slate-700 animate-in fade-in-50 shadow-lg">
+          {isCommitteeRoute && (
+            <div className="pb-2 border-b border-slate-100">
+              <OperatorDeskBadge />
+            </div>
+          )}
           <Link
             href="/#events-catalog"
             onClick={() => setMobileMenuOpen(false)}
@@ -133,14 +160,17 @@ export default function Navbar() {
             <Link
               href="/register"
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold bg-slate-900 text-white shadow-sm"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-900 text-white shadow-xs"
             >
-              <Sparkles className="w-4 h-4 text-amber-400" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>Register Now</span>
             </Link>
           </div>
         </div>
       )}
+
+      {/* Mandatory Operator Verification Modal for Committee Routes */}
+      {isCommitteeRoute && <OperatorIdentityModal />}
     </header>
   );
 }

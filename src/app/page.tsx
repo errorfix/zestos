@@ -39,35 +39,36 @@ export default async function HomePage() {
       {/* ─────────────────────────────────────────────────────────────────────── */}
       {/* 🌟 HERO SECTION (Formal University Prestige, Minimal Light Aesthetic) */}
       {/* ─────────────────────────────────────────────────────────────────────── */}
-      <section className="bg-white border-b border-slate-200/80 pt-10 pb-16 sm:pt-14 sm:pb-20">
+      <section className="bg-white border-b border-slate-200/80 pt-8 pb-12 sm:pt-14 sm:pb-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           {/* Institutional Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-700 mb-5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Lingaya&apos;s Vidyapeeth • Deemed-to-be University u/s 3 of UGC Act 1956</span>
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-700 mb-4 sm:mb-5 max-w-full">
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 shrink-0" />
+            <span className="truncate">Lingaya&apos;s Vidyapeeth • Deemed-to-be University</span>
+            <span className="hidden md:inline"> u/s 3 of UGC Act 1956</span>
           </div>
 
           {/* Festival Title */}
-          <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-none mb-3">
+          <h1 className="text-3xl xs:text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-tight sm:leading-none mb-2 sm:mb-3">
             ZEST 2K26{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600">
               GENZFY
             </span>
           </h1>
 
-          <p className="text-base sm:text-xl font-bold text-slate-700 max-w-2xl mx-auto mb-2">
+          <p className="text-sm sm:text-xl font-bold text-slate-700 max-w-2xl mx-auto mb-1.5 sm:mb-2">
             Annual National Cultural &amp; Technical Festival
           </p>
 
-          <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto mb-6">
+          <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto mb-5 sm:mb-6">
             October 30 &amp; 31, 2026 • Lingaya&apos;s Vidyapeeth Campus, Faridabad
           </p>
 
           {/* Minimal Top Action Buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
+          <div className="flex flex-col xs:flex-row items-stretch xs:items-center justify-center gap-2.5 sm:gap-3 mb-6 sm:mb-8 max-w-xs xs:max-w-none mx-auto">
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-all"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-all"
             >
               <Sparkles className="w-4 h-4 text-amber-400" />
               <span>Register Now</span>
@@ -76,34 +77,34 @@ export default async function HomePage() {
 
             <Link
               href="/register?category=informalz"
-              className="inline-flex items-center gap-1.5 px-5 py-3 rounded-xl text-xs sm:text-sm font-semibold bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 transition-colors"
             >
               <span>Entry Pass Day 1 / Day 2</span>
             </Link>
           </div>
 
           {/* Countdown Timer */}
-          <div className="mb-10">
+          <div className="mb-8 sm:mb-10">
             <CountdownTimer />
           </div>
 
           {/* Key Metrics Strip (10 Lakh+ Prize Pool) */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto">
-            <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl text-center">
-              <span className="block text-xl sm:text-2xl font-black text-slate-900">₹10 Lakh+</span>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Prize Pool &amp; Cash</span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 max-w-3xl mx-auto">
+            <div className="bg-slate-50 border border-slate-200/80 p-2.5 sm:p-3.5 rounded-xl text-center">
+              <span className="block text-lg sm:text-2xl font-black text-slate-900">₹10 Lakh+</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider">Prize Pool &amp; Cash</span>
             </div>
-            <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl text-center">
-              <span className="block text-xl sm:text-2xl font-black text-slate-900">15 Arenas</span>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Competitive Events</span>
+            <div className="bg-slate-50 border border-slate-200/80 p-2.5 sm:p-3.5 rounded-xl text-center">
+              <span className="block text-lg sm:text-2xl font-black text-slate-900">15 Arenas</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider">Competitive Events</span>
             </div>
-            <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl text-center">
-              <span className="block text-xl sm:text-2xl font-black text-purple-600">16 Games</span>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Informalz Passes</span>
+            <div className="bg-slate-50 border border-slate-200/80 p-2.5 sm:p-3.5 rounded-xl text-center">
+              <span className="block text-lg sm:text-2xl font-black text-purple-600">16 Games</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider">Informalz Passes</span>
             </div>
-            <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl text-center">
-              <span className="block text-xl sm:text-2xl font-black text-rose-600">Star Night</span>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Live Bollywood Concert</span>
+            <div className="bg-slate-50 border border-slate-200/80 p-2.5 sm:p-3.5 rounded-xl text-center">
+              <span className="block text-lg sm:text-2xl font-black text-rose-600">Star Night</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider">Live Bollywood Concert</span>
             </div>
           </div>
         </div>
