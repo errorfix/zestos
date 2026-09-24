@@ -244,9 +244,28 @@ export async function updateEvent(
   };
 
   try {
-    await prisma.event.update({
+    await prisma.event.upsert({
       where: { id },
-      data: {
+      update: {
+        title: updated.title,
+        category: updated.category,
+        eventType: updated.eventType,
+        feeAmount: updated.feeAmount,
+        minTeamSize: updated.minTeamSize,
+        maxTeamSize: updated.maxTeamSize,
+        prize1: updated.prize1,
+        prize2: updated.prize2,
+        description: updated.description,
+        rules: updated.rules,
+        venue: updated.venue,
+        date: updated.date,
+        status: updated.status,
+        requiresTrackUpload: updated.requiresTrackUpload,
+        hasDayOptions: updated.hasDayOptions,
+        onSpotFeeAmount: updated.onSpotFeeAmount,
+      },
+      create: {
+        id,
         title: updated.title,
         category: updated.category,
         eventType: updated.eventType,
@@ -265,8 +284,10 @@ export async function updateEvent(
         onSpotFeeAmount: updated.onSpotFeeAmount,
       },
     });
-  } catch {
-    // Non-fatal
+  } catch (err) {
+    // Log the error — do not silently swallow DB failures
+    console.error('[updateEvent] Prisma upsert failed for event', id, err);
+    throw err; // Propagate so the API returns a real error response
   }
 
   memoryEvents.set(id, updated);
