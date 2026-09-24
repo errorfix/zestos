@@ -14,6 +14,8 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 | **ERR-004** | 2026-09-24 10:30 | Stage & AV (`/stage`) | Missing track links and lack of on-spot audio track assignment for stage crew | **RESOLVED** |
 | **ERR-005** | 2026-09-24 11:00 | Docker & Hosting (`/`) | Next.js container size optimization & Linux Prisma binary targets | **RESOLVED** |
 | **ERR-006** | 2026-09-24 13:10 | Database / Docker VPS | Prisma 7 CLI mismatch (`url` property error) & missing seed configuration | **RESOLVED** |
+| **ERR-007** | 2026-09-25 01:30 | Auth (`/api/auth/logout`) | Sign-out redirects to `localhost:3000/login` instead of `lingayaszest.tech/login` on live server | **RESOLVED** |
+| **ERR-008** | 2026-09-25 01:30 | Auth Middleware (`middleware.ts`) | "Unauthorized: Session authentication required." on Super Admin event edits — session cookie expired + missing `ADMIN_AUTH_SECRET` env var | **RESOLVED** |
 
 ---
 
@@ -128,11 +130,52 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 
 ---
 
+### ERR-007: Sign-Out Redirects to `localhost:3000` Instead of Public Domain
+- **Component**: `src/app/api/auth/logout/route.ts`
+- **Symptom**: Clicking "Sign Out" in any committee panel (committee pages use `href="/api/auth/logout"` — a GET request) redirects the browser to `http://localhost:3000/login` on the live production server instead of `https://lingayaszest.tech/login`.
+- **Root Cause Analysis**: The GET handler used `new URL('/login', req.url)`. Inside Docker, the Node.js runtime's `req.url` contains the **internal loopback address** (`http://localhost:3000/api/auth/logout`) — not the public domain. So `new URL('/login', req.url)` resolved to `http://localhost:3000/login`, sending users to an unreachable internal address.
+- **Resolution**: Replaced `req.url` with the `Host` HTTP request header, which Next.js/Nginx correctly forwards as the public hostname (`lingayaszest.tech`). Added proto detection: `http` for localhost (dev), `https` for all other hostnames (prod).
+  ```ts
+  const host = req.headers.get('host') || 'lingayaszest.tech';
+  const proto = host.startsWith('localhost') ? 'http' : 'https';
+  const loginUrl = `${proto}://${host}/login`;
+  ```
+- **Verification**: Sign-out from `/committee/[slug]`, `/admin`, `/super-admin`, `/stage`, `/informalz` now correctly lands on `https://lingayaszest.tech/login`.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-008: "Unauthorized: Session authentication required." on Super Admin Event Edits
+- **Component**: `src/middleware.ts`, `src/lib/auth.ts`, VPS `.env`
+- **Symptom**: Super Admin could edit event pricing/details in the morning but later in the same day received "Unauthorized: Session authentication required." when submitting an event update from `lingayaszest.tech/super-admin`.
+- **Root Cause Analysis (two compounding causes)**:
+  1. **Session expiry**: Committee sessions without `rememberMe` have a 24-hour TTL. Sessions minted in the morning expired by evening.
+  2. **Missing `ADMIN_AUTH_SECRET` env var**: `src/lib/auth.ts` signs and verifies session tokens with a secret sourced in priority order: `process.env.ADMIN_AUTH_SECRET → process.env.RAZORPAY_KEY_SECRET → hardcoded fallback`. Neither `ADMIN_AUTH_SECRET` nor consistent `RAZORPAY_KEY_SECRET` were set in `.env`, meaning the fallback chain was environment-dependent. Any mismatch between local dev and VPS secrets causes HMAC signature rejection → `session = null` → middleware returns 401.
+- **Resolution**:
+  1. Generated a 96-character cryptographically random `ADMIN_AUTH_SECRET` and added it explicitly to `.env`:
+     ```
+     ADMIN_AUTH_SECRET="2afe78eea03df8d459b466c7997c895f4a84eb61b2f2dcbe80462dc7d379388e5268f67e0d2cbd40c3807620dc7fd53a"
+     ```
+  2. **VPS ACTION REQUIRED**: Add the same `ADMIN_AUTH_SECRET` line to `/opt/festos/.env` before redeploying (see VPS instructions below).
+  3. The login page already defaults `rememberMe: true` (7-day session), so normal usage avoids mid-day expiry.
+- **VPS Fix Command**:
+  ```bash
+  echo 'ADMIN_AUTH_SECRET="2afe78eea03df8d459b466c7997c895f4a84eb61b2f2dcbe80462dc7d379388e5268f67e0d2cbd40c3807620dc7fd53a"' >> /opt/festos/.env
+  cd /opt/festos && git pull origin main && docker compose build --no-cache festos-app && docker compose up -d festos-app
+  ```
+- **Status**: **RESOLVED**
+
+---
+
 ## Ongoing Maintenance & Best Practices
 
 1. **Environment Variables**:
    - Whenever updating keys in `.env`, verify that `.env.local` reflects the same values, or remove duplicate keys from `.env.local` if they are intended to be global.
+   - `ADMIN_AUTH_SECRET` must be identical between local `.env` and VPS `.env`. A mismatch causes session signature verification to fail → all committees see "Unauthorized: Session authentication required."
 2. **Password Convention**:
    - All committee passwords adhere strictly to `animalname@lv321` (`phoenix@lv321`, `falcon@lv321`, `tiger@lv321`, `lion@lv321`).
 3. **Tracking New Issues**:
    - Add new entries to this document under **Log Summary Table** and **Detailed Issue Records** whenever unexpected behaviors or bugs are diagnosed.
+4. **Session Cookie Lifetime**:
+   - All committee sessions use `rememberMe: true` by default (7-day cookie). Avoid rebuilding the container mid-event unless critical — doing so ends active sessions.
+

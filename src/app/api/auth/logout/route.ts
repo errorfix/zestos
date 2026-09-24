@@ -28,8 +28,14 @@ export async function GET(req: Request) {
   const cookieStore = await cookies();
   cookieStore.delete(ADMIN_COOKIE_NAME);
 
-  const url = new URL('/login', req.url);
-  const response = NextResponse.redirect(url);
+  // Use the Host header to build the public redirect URL.
+  // req.url contains the internal Docker/Node loopback (http://localhost:3000/...)
+  // which causes post-logout redirects to land on localhost instead of the real domain.
+  const host = req.headers.get('host') || 'lingayaszest.tech';
+  const proto = host.startsWith('localhost') ? 'http' : 'https';
+  const loginUrl = `${proto}://${host}/login`;
+
+  const response = NextResponse.redirect(loginUrl);
 
   response.cookies.set({
     name: ADMIN_COOKIE_NAME,
