@@ -63,6 +63,7 @@ function LoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🔵 handleLogin called');  // ← ADD THIS
     setErrorMessage(null);
 
     if (!selectedRole) {
@@ -71,6 +72,7 @@ function LoginForm() {
     }
 
     startTransition(async () => {
+      console.log('🟢 startTransition started');  // ← ADD THIS
       try {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
@@ -88,15 +90,18 @@ function LoginForm() {
         }
 
         const data = await res.json();
+        console.log('🟡 Login response:', data);  // ← ADD THIS
+
         if (!res.ok || !data.success) {
           throw new Error(data.error || 'Authentication failed. Please verify credentials.');
         }
 
-        // Redirect to intended page or role's dashboard
         const redirectTo = nextUrl || data.user?.dashboard || '/admin';
+        console.log('🔴 Redirecting to:', redirectTo);  // ← ADD THIS
         router.push(redirectTo);
         router.refresh();
       } catch (err) {
+        console.error('❌ Login error:', err);  // ← ADD THIS
         setErrorMessage((err as Error).message || 'Invalid credentials.');
       }
     });
@@ -208,6 +213,13 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isSubmitting || !selectedRole}
+              onClick={(e) => {
+                // Prevent double-click within 1 second
+                e.currentTarget.disabled = true;
+                setTimeout(() => {
+                  if (!isSubmitting) e.currentTarget.disabled = false;
+                }, 1000);
+              }}
               className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold bg-[#1a73e8] hover:bg-[#1557b0] text-white shadow-md shadow-blue-500/25 transition-all disabled:opacity-50"
             >
               <span>{isSubmitting ? 'Authenticating...' : 'Enter Committee Portal'}</span>
