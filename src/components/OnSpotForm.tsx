@@ -1032,40 +1032,7 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
                 </div>
               </div>
 
-              {/* Razorpay ID / Transaction Reference & Payer Name */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Razorpay Payment ID / UPI Ref No
-                  </label>
-                  <input
-                    type="text"
-                    value={razorpayPaymentId}
-                    onChange={(e) => setRazorpayPaymentId(e.target.value)}
-                    placeholder="Leave blank to pay online via Razorpay"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm bg-white focus:border-[#1a73e8]"
-                  />
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    Leave blank to open Razorpay checkout on Confirm.
-                  </p>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Payer / Account Holder Name
-                  </label>
-                  <input
-                    type="text"
-                    value={payerName}
-                    onChange={(e) => setPayerName(e.target.value)}
-                    placeholder="Name on UPI / bank account"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm bg-white focus:border-[#1a73e8]"
-                  />
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    Defaults to lead participant if left blank
-                  </p>
-                </div>
-              </div>
             </div>
           )}
         </div>
