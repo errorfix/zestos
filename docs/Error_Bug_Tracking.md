@@ -19,6 +19,8 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 | **ERR-009** | 2026-09-25 02:20 | Database / Super Admin (`/super-admin`) | Event price & detail edits saved successfully in UI but reverted to old values after container restart — DB column missing + silent Prisma failure | **RESOLVED** |
 | **ERR-010** | 2026-09-25 04:50 | Auth / Next.js Router (`<Link>`) | Missing/Empty cookie on new device login immediately after landing on dashboard ("Unauthorized") — Next.js automatically prefetched the logout route. | **RESOLVED** |
 | **ERR-011** | 2026-09-26 18:15 | Metrics (`getAdminMetrics`) | Revenue Collected calculation uses event base fee instead of actual paid amount | **RESOLVED** |
+| **ERR-012** | 2026-09-26 21:15 | On-Spot Desk (`/desk`) | Razorpay order generation uses base online fee instead of on-spot fee, and creates duplicate unlinked registrations | **RESOLVED** |
+| **ERR-013** | 2026-09-26 22:00 | Build / Next.js | Middleware deprecation warnings leading to proxy migration, plus accidental syntax errors breaking the build | **RESOLVED** |
 
 ---
 
@@ -206,6 +208,34 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 - **Symptom**: The "Revenue Collected" metric on the dashboard displayed an inflated value (e.g., ₹400 for 4 registrations) while the actual transaction amounts paid were lower (e.g., ₹1 test payments). The table correctly showed the actual amounts, but the metric card did not.
 - **Root Cause Analysis**: The `getAdminMetrics` function calculated total revenue by looking up the generic `feeAmount` of the event from the database for every `PAID` registration, instead of summing the actual `amount` field recorded in the `Registration` object. 
 - **Resolution**: Updated `getAdminMetrics` to prioritize `reg.amount` (the actual paid transaction amount) and only fall back to the event base price if `reg.amount` is null or undefined.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-012: On-Spot Desk Fallback to Base Price During Razorpay Checkout & Unlinked Duplicates
+- **Component**: `src/app/api/checkout/route.ts`, `src/app/api/onspot/route.ts`, `src/components/OnSpotForm.tsx`
+- **Symptom**: 
+  1. The On-Spot registration form generated Razorpay orders using the online `feeAmount` instead of the inflated `onSpotFeeAmount`. 
+  2. The online checkout module created a `PENDING` registration. Upon successful payment at the physical desk, `/api/onspot` created a *new* duplicate `VERIFIED` registration instead of updating the existing one, failing to properly link the `razorpayOrderId`.
+- **Root Cause Analysis**: The checkout API didn't differentiate between online web registrations and physical on-spot desk registrations. Furthermore, the on-spot API blindly called `createOnSpotRegistration` instead of using the `fulfillPaymentAndGenerateTickets` utility to merge with the existing pending registration.
+- **Resolution**:
+  1. Updated the checkout API schema to accept `isOnSpot` and dynamically use `singleEvent.onSpotFeeAmount` when true.
+  2. Updated `OnSpotForm` to send `isOnSpot: true` to checkout, and send `razorpayOrderId` to the on-spot API.
+  3. Updated the on-spot API to intercept the `razorpayOrderId`. If present, it executes `fulfillPaymentAndGenerateTickets` to update the existing record to `PAID` (thereby keeping `razorpayOrderId` and `razorpayPaymentId` intact) while still issuing the immutable operator audit log.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-013: Next.js 16 Middleware Deprecation & Syntax Errors
+- **Component**: `src/middleware.ts` (now `src/proxy.ts`), `src/app/api/onspot/route.ts`
+- **Symptom**: The production build pipeline crashed (`exit code 1`). The Next.js 16 compiler threw deprecation warnings about the "middleware" file convention, and Turbopack failed on a parsing error inside `api/onspot/route.ts`.
+- **Root Cause Analysis**:
+  1. During the previous refactoring, a comma was missed after a Zod `.enum()` definition, and `photoUrl` was accidentally deleted from a destructuring block in `api/onspot/route.ts`, causing a TypeScript validation failure.
+  2. Next.js 16 has a breaking change where `middleware.ts` is officially deprecated in favor of `proxy.ts`, throwing a loud console warning that breaks strict build pipelines.
+- **Resolution**:
+  1. Fixed the syntax errors by restoring the comma and the `photoUrl` variable.
+  2. Renamed `middleware.ts` to `proxy.ts`.
+  3. Renamed the exported function `export async function middleware` to `export async function proxy` to comply with the Next.js 16 specification.
 - **Status**: **RESOLVED**
 
 ---
