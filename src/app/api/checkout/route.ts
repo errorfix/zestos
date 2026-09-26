@@ -16,6 +16,7 @@ const checkoutSchema = z
     dayOption: z.string().optional(),
     trackUploadUrl: z.string().optional(),
     trackNotes: z.string().optional(),
+    isOnSpot: z.boolean().optional(),
     teamMembers: z
       .array(
         z.object({
@@ -57,6 +58,7 @@ export async function POST(req: Request) {
       dayOption: incomingDayOption,
       trackUploadUrl,
       trackNotes,
+      isOnSpot,
       teamMembers,
     } = parsed.data;
 
@@ -119,7 +121,7 @@ export async function POST(req: Request) {
       // 🎭 COMPETITIVE EVENTS (Single Event Arena with direct designated fee)
       // ─────────────────────────────────────────────────────────────────────────
       const singleEvent = validEvents[0];
-      calculatedFeePaise = singleEvent.feeAmount;
+      calculatedFeePaise = isOnSpot && singleEvent.onSpotFeeAmount != null ? singleEvent.onSpotFeeAmount : singleEvent.feeAmount;
       resolvedDayOption = singleEvent.date?.includes('Both')
         ? 'BOTH_DAYS'
         : singleEvent.date?.includes('2')

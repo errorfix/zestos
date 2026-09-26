@@ -223,6 +223,7 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
             dayOption: currentEvent.hasDayOptions ? dayOption : undefined,
             trackUploadUrl: currentEvent.requiresTrackUpload && trackUploadUrl.trim() ? trackUploadUrl.trim() : undefined,
             trackNotes: currentEvent.requiresTrackUpload && trackNotes.trim() ? trackNotes.trim() : undefined,
+            isOnSpot: true,
             teamMembers: teamMembers.filter((m) => m.fullName.trim().length > 0),
           };
 
@@ -271,6 +272,7 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
                       college: college.trim(),
                       photoUrl: photoUrl.trim() || undefined,
                       razorpayPaymentId: paymentId,
+                      razorpayOrderId: orderId,
                       payerName: payerName.trim() || undefined,
                       paymentMethod: 'ONSPOT_UPI',
                       dayOption: currentEvent.hasDayOptions ? dayOption : undefined,

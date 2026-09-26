@@ -13,8 +13,8 @@ const onSpotSchema = z.object({
   photoUrl: z.string().optional(),
   paymentMethod: z
     .enum(['ONSPOT_CASH', 'ONSPOT_UPI', 'ONLINE_RAZORPAY', 'FREE_REGISTRATION'])
-    .default('ONSPOT_CASH'),
   razorpayPaymentId: z.string().optional(),
+  razorpayOrderId: z.string().optional(),
   payerName: z.string().optional(),
   dayOption: z.enum(['SINGLE_DAY', 'BOTH_DAYS']).optional(),
   trackUploadUrl: z.string().optional(),
@@ -50,9 +50,9 @@ export async function POST(req: Request) {
       leadEmail,
       leadPhone,
       college,
-      photoUrl,
       paymentMethod,
       razorpayPaymentId,
+      razorpayOrderId,
       payerName,
       dayOption,
       trackUploadUrl,
@@ -91,22 +91,36 @@ export async function POST(req: Request) {
       calculatedFeePaise = dayOption === 'BOTH_DAYS' ? 25000 : 15000;
     }
 
-    const result = await createOnSpotRegistration({
-      eventId,
-      leadName,
-      leadEmail,
-      leadPhone,
-      college,
-      photoUrl,
-      paymentMethod,
-      razorpayPaymentId,
-      payerName,
-      amount: calculatedFeePaise,
-      dayOption,
-      trackUploadUrl,
-      trackNotes,
-      teamMembers,
-    });
+    let result: { registrationId: string; tickets: Array<{ ticketCode: string; securityHash: string }> };
+    
+    if (razorpayOrderId && razorpayPaymentId) {
+      // Fast-track: the registration was already created in /api/checkout as PENDING
+      // We just need to fulfill it and generate tickets.
+      const { fulfillPaymentAndGenerateTickets } = await import('@/lib/db');
+      result = await fulfillPaymentAndGenerateTickets({
+        orderId: razorpayOrderId,
+        paymentId: razorpayPaymentId,
+        payerName,
+      });
+      // Optionally we could update paymentMethod to ONSPOT_UPI in the db, but the audit log below catches it.
+    } else {
+      result = await createOnSpotRegistration({
+        eventId,
+        leadName,
+        leadEmail,
+        leadPhone,
+        college,
+        photoUrl,
+        paymentMethod,
+        razorpayPaymentId,
+        payerName,
+        amount: calculatedFeePaise,
+        dayOption,
+        trackUploadUrl,
+        trackNotes,
+        teamMembers,
+      });
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // 📧 DISPATCH OFFICIAL PASS CONFIRMATION EMAIL (Asynchronous / Non-blocking)

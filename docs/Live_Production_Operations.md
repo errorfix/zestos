@@ -30,20 +30,23 @@ This document contains official operational procedures, live endpoint links, rol
 
 Committee personnel log in directly at `https://lingayaszest.tech/login`. The system automatically sets an encrypted JWT HTTP-only cookie and redirects them to their designated panel:
 
-| Committee Role | Password | Accessible Panel Route | Responsibilities & Access Scope |
+| Committee Role | Environment Variable | Accessible Panel Route | Responsibilities & Access Scope |
 | :--- | :--- | :--- | :--- |
-| **Super Admin** | `phoenix@lv321` | `/super-admin` | Universal oversight, Boolean Access Flags matrix, event editing, and full audit logs. |
-| **Registration & Invitation (R&I)** | `falcon@lv321` | `/admin` | Attendee rosters for competitive events, gate check-in, on-spot walk-ins. |
-| **Informalz Committee** | `tiger@lv321` | `/informalz` | Day 1 / Day 2 Informalz passes (₹150/₹250), game rosters, pass check-ins. |
-| **Stage & AV Committee** | `lion@lv321` | `/stage` | Track audio link uploads, sound cues, performer check-in. |
-| **Cultural Music Committee** | `melody@lv321` | `/committee/music` | Music band battles, vocal solo rosters, and sound tracks. |
-| **Cultural Dance Committee** | `rhythm@lv321` | `/committee/dance` | Step Up dance, duet, group choreography rosters & audio tracks. |
-| **Cultural Fashion Committee** | `vogue@lv321` | `/committee/fashion` | Vogue runway teams, participant rosters, theme tracks. |
-| **Cultural Theatre Committee** | `drama@lv321` | `/committee/theatre` | Rangmanch, Nukkad Natak, street play rosters. |
-| **Literary & Quizzing Committee** | `words@lv321` | `/committee/literary` | Debate, quiz, and literary competition rosters. |
-| **Esports & Gaming Committee** | `nexus@lv321` | `/committee/gaming` | BGMI, Valorant, FIFA tournament rosters. |
-| **Gate Security & Check-In Team** | `gate@lv321` | `/checkin` | High-speed QR scanning, offline HMAC validation, admission stamps. |
-| **Higher Authority / Management** | `apex@lv321` | `/management` | Strictly read-only observational access across all committees, revenue, and audit trails. |
+| **Super Admin** | `SUPER_ADMIN_PASSWORD` | `/super-admin` | Universal oversight, Boolean Access Flags matrix, event editing, and full audit logs. |
+| **Registration & Invitation (R&I)** | `RI_COMMITTEE_PASSWORD` | `/admin` | Attendee rosters for competitive events, gate check-in, on-spot walk-ins. |
+| **Informalz Committee** | `INFORMALZ_COMMITTEE_PASSWORD` | `/informalz` | Day 1 / Day 2 Informalz passes (₹150/₹250), game rosters, pass check-ins. |
+| **Stage & AV Committee** | `STAGE_COMMITTEE_PASSWORD` | `/stage` | Track audio link uploads, sound cues, performer check-in. |
+| **Cultural Music Committee** | `MUSIC_COMMITTEE_PASSWORD` | `/committee/music` | Music band battles, vocal solo rosters, and sound tracks. |
+| **Cultural Dance Committee** | `DANCE_COMMITTEE_PASSWORD` | `/committee/dance` | Step Up dance, duet, group choreography rosters & audio tracks. |
+| **Cultural Fashion Committee** | `FASHION_COMMITTEE_PASSWORD` | `/committee/fashion` | Vogue runway teams, participant rosters, theme tracks. |
+| **Cultural Theatre Committee** | `THEATRE_COMMITTEE_PASSWORD` | `/committee/theatre` | Rangmanch, Nukkad Natak, street play rosters. |
+| **Literary & Quizzing Committee** | `LITERARY_COMMITTEE_PASSWORD` | `/committee/literary` | Debate, quiz, and literary competition rosters. |
+| **Esports & Gaming Committee** | `GAMING_COMMITTEE_PASSWORD` | `/committee/gaming` | BGMI, Valorant, FIFA tournament rosters. |
+| **Gate Security & Check-In Team** | `CHECKIN_PASSWORD` | `/checkin` | High-speed QR scanning, offline HMAC validation, admission stamps. |
+| **Higher Authority / Management** | `MANAGEMENT_PASSWORD` | `/management` | Strictly read-only observational access across all committees, revenue, and audit trails. |
+| **On-Spot Registration Desk** | `ONSPOT_DESK_PASSWORD` | `/desk` | Fast-track physical counter for cash and UPI on-spot registrations. |
+
+> **Note:** For security, all passwords have been stripped from the source code. The passwords are now securely loaded from the `.env` file via `process.env` lookups. If a password environment variable is missing, that role's panel becomes inaccessible.
 
 ---
 
