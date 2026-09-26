@@ -12,7 +12,7 @@ const onSpotSchema = z.object({
   college: z.string().optional(),
   photoUrl: z.string().optional(),
   paymentMethod: z
-    .enum(['ONSPOT_CASH', 'ONSPOT_UPI', 'ONLINE_RAZORPAY', 'FREE_REGISTRATION'])
+    .enum(['ONSPOT_CASH', 'ONSPOT_UPI', 'ONLINE_RAZORPAY', 'FREE_REGISTRATION']),
   razorpayPaymentId: z.string().optional(),
   razorpayOrderId: z.string().optional(),
   payerName: z.string().optional(),
@@ -50,6 +50,7 @@ export async function POST(req: Request) {
       leadEmail,
       leadPhone,
       college,
+      photoUrl,
       paymentMethod,
       razorpayPaymentId,
       razorpayOrderId,
