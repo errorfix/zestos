@@ -91,10 +91,33 @@ export default function EventCatalogSection({ initialEvents }: EventCatalogSecti
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredEvents.map((evt) => (
-            <EventCard key={evt.id} event={evt} />
-          ))}
+        <div className="space-y-6">
+          {selectedCategory === 'INFORMALZ' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 md:p-6 w-full shadow-sm">
+              <h3 className="text-lg font-bold text-blue-900 mb-2">
+                Informalz Day Pass Pricing Guide
+              </h3>
+              <p className="text-sm text-blue-800 mb-3 font-medium">
+                Unlock the ultimate fun! Your pass gives you access to multiple events based on the day they are held:
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-sm text-blue-700">
+                <li>
+                  <strong className="font-bold text-blue-900">₹150</strong> — Choose any number of events held <strong className="font-bold">only on Day 1</strong>.
+                </li>
+                <li>
+                  <strong className="font-bold text-blue-900">₹150</strong> — Choose any number of events held <strong className="font-bold">only on Day 2</strong>.
+                </li>
+                <li>
+                  <strong className="font-bold text-blue-900">₹250</strong> — Choose events held on <strong className="font-bold">both days</strong> or a combination spanning both days.
+                </li>
+              </ul>
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredEvents.map((evt) => (
+              <EventCard key={evt.id} event={evt} />
+            ))}
+          </div>
         </div>
       )}
     </div>

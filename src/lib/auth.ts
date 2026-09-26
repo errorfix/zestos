@@ -41,7 +41,7 @@ export function getRoleRegistry(): RoleDefinition[] {
   {
     id: 'SUPER_ADMIN',
     label: 'Super Admin',
-    password: process.env.SUPER_ADMIN_PASSWORD || 'phoenix@lv321',
+    password: process.env.SUPER_ADMIN_PASSWORD || '',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -55,7 +55,7 @@ export function getRoleRegistry(): RoleDefinition[] {
   {
     id: 'REGISTRATION_COMMITTEE',
     label: 'Registration & Invitation Committee',
-    password: process.env.RI_COMMITTEE_PASSWORD || 'falcon@lv321',
+    password: process.env.RI_COMMITTEE_PASSWORD || '',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -67,7 +67,7 @@ export function getRoleRegistry(): RoleDefinition[] {
   {
     id: 'INFORMALZ_COMMITTEE',
     label: 'Informalz Committee',
-    password: process.env.INFORMALZ_COMMITTEE_PASSWORD || 'tiger@lv321',
+    password: process.env.INFORMALZ_COMMITTEE_PASSWORD || '',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -78,7 +78,7 @@ export function getRoleRegistry(): RoleDefinition[] {
   {
     id: 'MUSIC_COMMITTEE',
     label: 'Cultural Music Committee',
-    password: process.env.MUSIC_COMMITTEE_PASSWORD || 'wolf@lv321',
+    password: process.env.MUSIC_COMMITTEE_PASSWORD || '',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -89,7 +89,7 @@ export function getRoleRegistry(): RoleDefinition[] {
   {
     id: 'DANCE_COMMITTEE',
     label: 'Cultural Dance Committee',
-    password: process.env.DANCE_COMMITTEE_PASSWORD || 'panther@lv321',
+    password: process.env.DANCE_COMMITTEE_PASSWORD || '',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -100,7 +100,7 @@ export function getRoleRegistry(): RoleDefinition[] {
   {
     id: 'FASHION_COMMITTEE',
     label: 'Cultural Fashion Committee',
-    password: process.env.FASHION_COMMITTEE_PASSWORD || 'peacock@lv321',
+    password: process.env.FASHION_COMMITTEE_PASSWORD || '',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -111,7 +111,7 @@ export function getRoleRegistry(): RoleDefinition[] {
   {
     id: 'THEATRE_COMMITTEE',
     label: 'Cultural Theatre Committee',
-    password: process.env.THEATRE_COMMITTEE_PASSWORD || 'raven@lv321',
+    password: process.env.THEATRE_COMMITTEE_PASSWORD || '',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -122,7 +122,7 @@ export function getRoleRegistry(): RoleDefinition[] {
   {
     id: 'LITERARY_COMMITTEE',
     label: 'Literary & Quizzing Committee',
-    password: process.env.LITERARY_COMMITTEE_PASSWORD || 'owl@lv321',
+    password: process.env.LITERARY_COMMITTEE_PASSWORD || '',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -133,7 +133,7 @@ export function getRoleRegistry(): RoleDefinition[] {
   {
     id: 'GAMING_COMMITTEE',
     label: 'Esports & Gaming Committee',
-    password: process.env.GAMING_COMMITTEE_PASSWORD || 'dragon@lv321',
+    password: process.env.GAMING_COMMITTEE_PASSWORD || '',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -144,7 +144,7 @@ export function getRoleRegistry(): RoleDefinition[] {
   {
     id: 'STAGE_COMMITTEE',
     label: 'Stage Committee',
-    password: process.env.STAGE_COMMITTEE_PASSWORD || 'lion@lv321',
+    password: process.env.STAGE_COMMITTEE_PASSWORD || '',
     permissions: [
       'view_dashboard',
       'view_registrations',
@@ -154,7 +154,7 @@ export function getRoleRegistry(): RoleDefinition[] {
   {
     id: 'GATE_SECURITY',
     label: 'Gate Security & Check-In Team',
-    password: process.env.CHECKIN_PASSWORD || process.env.GATE_SECURITY_PASSWORD || 'gate@lv321',
+    password: process.env.CHECKIN_PASSWORD || process.env.GATE_SECURITY_PASSWORD || '',
     permissions: [
       'access_checkin',
     ],
@@ -163,12 +163,21 @@ export function getRoleRegistry(): RoleDefinition[] {
   {
     id: 'MANAGEMENT',
     label: 'Higher Authority & Management (Read-Only)',
-    password: process.env.MANAGEMENT_PASSWORD || 'eagle@lv321',
+    password: process.env.MANAGEMENT_PASSWORD || '',
     permissions: [
       'view_dashboard',
       'view_registrations',
     ],
     dashboard: '/management',
+  },
+  {
+    id: 'ONSPOT_DESK',
+    label: 'On-Spot Registration Desk',
+    password: process.env.ONSPOT_DESK_PASSWORD || '',
+    permissions: [
+      'access_onspot',
+    ],
+    dashboard: '/desk',
   },
   ];
 }

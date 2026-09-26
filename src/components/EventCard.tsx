@@ -67,11 +67,11 @@ export default function EventCard({ event }: EventCardProps) {
           <div className="text-right">
             {event.category.toLowerCase() === 'informalz' ? (
               <div>
-                <span className="text-base font-extrabold text-purple-700 block">
-                  ₹150 / ₹250
+                <span className="text-base font-extrabold text-blue-600 block">
+                  {event.date?.toLowerCase().includes('day 1') && event.date?.toLowerCase().includes('day 2') ? 'Day 1 & 2' : event.date || 'Day X'}
                 </span>
                 <span className="text-[10px] font-semibold text-slate-500 block">
-                  Single / Both Days Pass
+                  Informalz Event
                 </span>
               </div>
             ) : isFree ? (

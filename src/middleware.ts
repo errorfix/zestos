@@ -3,7 +3,7 @@ import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getRoleById } from '@/lib/a
 import { updateSession } from '@/utils/supabase/middleware';
 
 // Routes requiring any authenticated committee/admin session
-const PROTECTED_PREFIXES = ['/admin', '/onspot', '/super-admin', '/informalz', '/stage', '/committee', '/management'];
+const PROTECTED_PREFIXES = ['/admin', '/onspot', '/desk', '/super-admin', '/informalz', '/stage', '/committee', '/management'];
 const PROTECTED_API_PREFIXES = ['/api/admin', '/api/onspot', '/api/checkin', '/api/super-admin', '/api/informalz', '/api/stage', '/api/committee'];
 
 // Routes restricted to SUPER_ADMIN role only
@@ -85,7 +85,7 @@ export async function middleware(request: NextRequest) {
 
     // 4. Page-Level Committee Workspace Boundary Enforcement:
     // CRITICAL: This MUST ONLY run on PAGE requests (!isApi). NEVER redirect API requests to HTML URLs!
-    if (!isApi && session.roleId !== 'SUPER_ADMIN' && session.roleId !== 'GATE_SECURITY') {
+    if (!isApi && session.roleId !== 'SUPER_ADMIN' && session.roleId !== 'GATE_SECURITY' && session.roleId !== 'ONSPOT_DESK') {
       const userRole = getRoleById(session.roleId);
       const userDashboard = userRole?.dashboard || '/admin';
 
@@ -117,6 +117,10 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL(userDashboard, request.url));
           }
         }
+      }
+    } else if (!isApi && session.roleId === 'ONSPOT_DESK') {
+      if (pathname !== '/desk' && !pathname.startsWith('/desk/')) {
+        return NextResponse.redirect(new URL('/desk', request.url));
       }
     }
   }

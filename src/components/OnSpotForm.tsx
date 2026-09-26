@@ -104,6 +104,18 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
     setIsCameraActive(false);
   };
 
+  // Inject Razorpay script
+  useEffect(() => {
+    const scriptId = 'razorpay-checkout-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
   const handleCapturePhoto = () => {
     if (!videoRef.current) return;
     try {
@@ -199,6 +211,104 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
 
     startTransition(async () => {
       try {
+        if (effectivePaymentMethod === 'ONSPOT_UPI' && !razorpayPaymentId.trim()) {
+          // Launch Razorpay online module if no manual ID is provided
+          const checkoutPayload = {
+            eventId: currentEvent.id,
+            leadName: leadName.trim(),
+            leadPhone: cleanPhone,
+            leadEmail: leadEmail.trim(),
+            college: college.trim(),
+            photoUrl: photoUrl.trim() || 'https://via.placeholder.com/150',
+            dayOption: currentEvent.hasDayOptions ? dayOption : undefined,
+            trackUploadUrl: currentEvent.requiresTrackUpload && trackUploadUrl.trim() ? trackUploadUrl.trim() : undefined,
+            trackNotes: currentEvent.requiresTrackUpload && trackNotes.trim() ? trackNotes.trim() : undefined,
+            teamMembers: teamMembers.filter((m) => m.fullName.trim().length > 0),
+          };
+
+          const checkoutRes = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(checkoutPayload),
+          });
+
+          const checkoutData = await checkoutRes.json();
+          if (!checkoutRes.ok) {
+            throw new Error(checkoutData.error || 'Failed to initialize Razorpay checkout');
+          }
+
+          const { orderId, amount, isMock, keyId: returnedKeyId, eventTitle } = checkoutData;
+          const keyId = returnedKeyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+          const canUseLiveModal = typeof window !== 'undefined' && window.Razorpay && keyId && !isMock;
+
+          if (canUseLiveModal) {
+            const options = {
+              key: keyId,
+              amount: amount,
+              currency: 'INR',
+              name: "Lingaya's Vidyapeeth ZEST 2K26",
+              description: `On-Spot Pass: ${eventTitle || 'Entry Pass'}`,
+              order_id: orderId,
+              prefill: {
+                name: leadName.trim(),
+                email: leadEmail.trim(),
+                contact: cleanPhone,
+              },
+              theme: { color: '#1a73e8' },
+              handler: async function (response: any) {
+                const paymentId = response.razorpay_payment_id;
+                
+                // Now verify on-spot with the payment ID
+                try {
+                  const onSpotRes = await fetch('/api/onspot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      eventId: currentEvent.id,
+                      leadName: leadName.trim(),
+                      leadEmail: leadEmail.trim(),
+                      leadPhone: cleanPhone,
+                      college: college.trim(),
+                      photoUrl: photoUrl.trim() || undefined,
+                      razorpayPaymentId: paymentId,
+                      payerName: payerName.trim() || undefined,
+                      paymentMethod: 'ONSPOT_UPI',
+                      dayOption: currentEvent.hasDayOptions ? dayOption : undefined,
+                      trackUploadUrl: currentEvent.requiresTrackUpload && trackUploadUrl.trim() ? trackUploadUrl.trim() : undefined,
+                      trackNotes: currentEvent.requiresTrackUpload && trackNotes.trim() ? trackNotes.trim() : undefined,
+                      teamMembers: teamMembers.filter((m) => m.fullName.trim().length > 0),
+                    }),
+                  });
+                  
+                  const data = await onSpotRes.json();
+                  if (!onSpotRes.ok || !data.success) {
+                    setErrorMessage(data.error || 'On-spot registration failed after payment');
+                  } else {
+                    setCompletedRegistration({
+                      ...data,
+                      leadName: leadName.trim(),
+                      leadPhone: cleanPhone,
+                      college: college.trim(),
+                      photoUrl: photoUrl.trim() || undefined,
+                      razorpayPaymentId: paymentId,
+                    });
+                  }
+                } catch (err) {
+                  setErrorMessage((err as Error).message || 'Payment verified but registration failed');
+                }
+              },
+            };
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+            return;
+          } else {
+             // Mock staging simulation
+             const simulatedPaymentId = `pay_sim_onspot_${Date.now()}`;
+             setRazorpayPaymentId(simulatedPaymentId);
+             // Let it fall through to manual onspot submission
+          }
+        }
+
         const res = await fetch('/api/onspot', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -924,17 +1034,17 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Razorpay Payment ID / UPI Ref No {paymentMethod === 'ONSPOT_UPI' && <span className="text-red-500">*</span>}
+                    Razorpay Payment ID / UPI Ref No
                   </label>
                   <input
                     type="text"
                     value={razorpayPaymentId}
                     onChange={(e) => setRazorpayPaymentId(e.target.value)}
-                    placeholder="e.g. pay_XXXXX or UPI Ref / UTR"
+                    placeholder="Leave blank to pay online via Razorpay"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm bg-white focus:border-[#1a73e8]"
                   />
                   <p className="text-[11px] text-slate-500 mt-1">
-                    Recorded in backend & R&I verification audit logs
+                    Leave blank to open Razorpay checkout on Confirm.
                   </p>
                 </div>
 
