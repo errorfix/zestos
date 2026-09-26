@@ -18,6 +18,7 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 | **ERR-008** | 2026-09-25 01:30 | Auth Middleware (`middleware.ts`) | "Unauthorized: Session authentication required." on Super Admin event edits — session cookie expired + missing `ADMIN_AUTH_SECRET` env var | **RESOLVED** |
 | **ERR-009** | 2026-09-25 02:20 | Database / Super Admin (`/super-admin`) | Event price & detail edits saved successfully in UI but reverted to old values after container restart — DB column missing + silent Prisma failure | **RESOLVED** |
 | **ERR-010** | 2026-09-25 04:50 | Auth / Next.js Router (`<Link>`) | Missing/Empty cookie on new device login immediately after landing on dashboard ("Unauthorized") — Next.js automatically prefetched the logout route. | **RESOLVED** |
+| **ERR-011** | 2026-09-26 18:15 | Metrics (`getAdminMetrics`) | Revenue Collected calculation uses event base fee instead of actual paid amount | **RESOLVED** |
 
 ---
 
@@ -195,7 +196,16 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
   3. **The Race Condition**: Upon successful login, the dashboard rendered. Next.js instantly saw the `<Link>` to the logout API and prefetched it in the background via a `GET` request. This triggered the logout logic on the server, which instructed the browser to delete the cookie milliseconds after it was created.
   4. **Why did it work on the second login?** The Next.js client-side router caches prefetch responses. When the user was kicked out and signed in again, Next.js saw the `<Link>` but bypassed the network request because it had already cached the prefetch. Since no background `GET` request was sent, the server didn't delete the cookie, allowing the session to persist.
 - **Resolution**:
-  - Replaced all `<Link href="/api/auth/logout">` components across all 5 dashboard layouts (`super-admin`, `admin`, `stage`, `informalz`, `committee/[slug]`) with standard HTML `<a href="/api/auth/logout">` anchor tags. Standard `<a>` tags bypass the Next.js router and are never prefetched, preventing the background cookie deletion.
+- Replaced all `<Link href="/api/auth/logout">` components across all 5 dashboard layouts (`super-admin`, `admin`, `stage`, `informalz`, `committee/[slug]`) with standard HTML `<a href="/api/auth/logout">` anchor tags. Standard `<a>` tags bypass the Next.js router and are never prefetched, preventing the background cookie deletion.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-011: Revenue Collected Calculation Uses Event Base Fee Instead of Actual Amount Paid
+- **Component**: `src/lib/db.ts` (`getAdminMetrics`)
+- **Symptom**: The "Revenue Collected" metric on the dashboard displayed an inflated value (e.g., ₹400 for 4 registrations) while the actual transaction amounts paid were lower (e.g., ₹1 test payments). The table correctly showed the actual amounts, but the metric card did not.
+- **Root Cause Analysis**: The `getAdminMetrics` function calculated total revenue by looking up the generic `feeAmount` of the event from the database for every `PAID` registration, instead of summing the actual `amount` field recorded in the `Registration` object. 
+- **Resolution**: Updated `getAdminMetrics` to prioritize `reg.amount` (the actual paid transaction amount) and only fall back to the event base price if `reg.amount` is null or undefined.
 - **Status**: **RESOLVED**
 
 ---

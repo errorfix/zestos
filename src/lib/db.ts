@@ -1263,10 +1263,7 @@ export async function getAdminMetrics(options?: {
   for (const reg of registrations) {
     if (reg.status === 'PAID') {
       const evt = events.find((e) => e.id === reg.eventId) || reg.event;
-      let effectiveFee = evt?.feeAmount || 0;
-      if (reg.dayOption === 'BOTH_DAYS') {
-        effectiveFee = 25000; // ₹250
-      }
+      let effectiveFee = reg.amount != null ? reg.amount : (evt?.feeAmount || 0);
       totalRevenuePaise += effectiveFee;
       registrationsByEvent[reg.eventId] = (registrationsByEvent[reg.eventId] || 0) + 1;
     }
