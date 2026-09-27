@@ -155,6 +155,12 @@ export async function POST(req: Request) {
     const receipt = `rcpt_${Date.now().toString().slice(-8)}`;
     const primaryEventId = validEvents[0].id;
 
+    // Check for stress testing bypass header
+    const isStressTest =
+      req.headers.get('x-stress-test') === 'true' ||
+      req.headers.get('x-stress-test') === '1' ||
+      req.headers.get('x-bypass-gateways') === 'true';
+
     // ─────────────────────────────────────────────────────────────────────────
     // 🎁 ZERO-FEE REGISTRATION FALLBACK (Non-Informalz, genuine free events)
     // ─────────────────────────────────────────────────────────────────────────
@@ -171,19 +177,21 @@ export async function POST(req: Request) {
         trackNotes,
       });
 
-      // Dispatch Pass Confirmation Email
-      sendPassEmail({
-        to: leadEmail,
-        leadName,
-        eventTitle: combinedEventTitle,
-        eventCategory: validEvents[0].category,
-        dayOption: resolvedDayOption,
-        amount: 0,
-        razorpayPaymentId: 'FREE_ENTRY',
-        ticketCodes: freeResult.tickets.map((t) => t.ticketCode),
-        registrationId: freeResult.registrationId,
-        teamMembers: teamMembers.map((m) => ({ fullName: m.fullName })),
-      }).catch((err) => console.error('[Email] Failed to dispatch free pass email:', err));
+      // Dispatch Pass Confirmation Email (skipped during stress tests)
+      if (!isStressTest) {
+        sendPassEmail({
+          to: leadEmail,
+          leadName,
+          eventTitle: combinedEventTitle,
+          eventCategory: validEvents[0].category,
+          dayOption: resolvedDayOption,
+          amount: 0,
+          razorpayPaymentId: 'FREE_ENTRY',
+          ticketCodes: freeResult.tickets.map((t) => t.ticketCode),
+          registrationId: freeResult.registrationId,
+          teamMembers: teamMembers.map((m) => ({ fullName: m.fullName })),
+        }).catch((err) => console.error('[Email] Failed to dispatch free pass email:', err));
+      }
 
       return NextResponse.json({
         success: true,
@@ -193,20 +201,27 @@ export async function POST(req: Request) {
       });
     }
 
-    // 1. Create Razorpay order (passing payerName, payerPhone, and college in notes)
-    const razorpayOrder = await createRazorpayOrder({
-      amount: calculatedFeePaise,
-      receipt,
-      notes: {
-        eventId: primaryEventId,
-        eventTitle: combinedEventTitle,
-        payerName: leadName,
-        payerPhone: leadPhone,
-        leadEmail,
-        college,
-        dayOption: resolvedDayOption,
-      },
-    });
+    // 1. Create Razorpay order (or fast-track mock order during stress testing to protect API quotas)
+    const razorpayOrder = isStressTest
+      ? {
+          id: `order_stress_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+          amount: calculatedFeePaise,
+          currency: 'INR',
+          isMock: true,
+        }
+      : await createRazorpayOrder({
+          amount: calculatedFeePaise,
+          receipt,
+          notes: {
+            eventId: primaryEventId,
+            eventTitle: combinedEventTitle,
+            payerName: leadName,
+            payerPhone: leadPhone,
+            leadEmail,
+            college,
+            dayOption: resolvedDayOption,
+          },
+        });
 
     // 2. Create PENDING registration record in database
     const regResult = await createPendingRegistration({

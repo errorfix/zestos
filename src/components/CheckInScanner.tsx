@@ -658,8 +658,18 @@ export default function CheckInScanner() {
                   </span>
 
                   {inspectedAttendee.dayOption && (
-                    <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-900 border border-blue-200 flex items-center gap-1.5">
-                      <Calendar className="w-3 h-3 text-blue-600" />
+                    <span
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border flex items-center gap-1.5 ${
+                        inspectedAttendee.dayOption === 'DAY_2'
+                          ? 'bg-purple-100 text-purple-950 border-purple-300'
+                          : 'bg-blue-100 text-blue-900 border-blue-200'
+                      }`}
+                    >
+                      <Calendar
+                        className={`w-3 h-3 ${
+                          inspectedAttendee.dayOption === 'DAY_2' ? 'text-purple-600' : 'text-blue-600'
+                        }`}
+                      />
                       <span>
                         {inspectedAttendee.dayOption === 'BOTH_DAYS'
                           ? 'Both Days Pass'

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   Search,
@@ -29,6 +29,9 @@ import {
   Pencil,
   Save,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 interface RegistrationRow {
@@ -85,9 +88,30 @@ export default function AdminRegistrationsTable({
   const [canEdit, setCanEdit] = useState<boolean>(false);
   const [editingReg, setEditingReg] = useState<RegistrationRow | null>(null);
 
+  // ─── GMAIL-STYLE PAGINATION STATE (Min: 25, Max: 150) ──────────────────────
+  const [pageSize, setPageSize] = useState<number>(50);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // ─── ASYNCHRONOUS CSV EXPORT MODAL STATE ────────────────────────────────────
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState<boolean>(false);
+  const [csvStartLimit, setCsvStartLimit] = useState<number>(1);
+  const [csvEndLimit, setCsvEndLimit] = useState<number>(1000);
+  const [csvTillLastEntry, setCsvTillLastEntry] = useState<boolean>(false);
+  const [isExportingCsv, setIsExportingCsv] = useState<boolean>(false);
+  const [csvExportProgress, setCsvExportProgress] = useState<number>(0);
+  const [csvProcessedCount, setCsvProcessedCount] = useState<number>(0);
+  const [csvTargetTotal, setCsvTargetTotal] = useState<number>(0);
+  const abortCsvExportRef = useRef<boolean>(false);
+
   useEffect(() => {
     fetchRegistrations();
   }, [apiEndpoint]);
+
+  // Reset to page 1 whenever search, status filter, or page size changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, pageSize]);
 
   const fetchRegistrations = async () => {
     setIsLoading(true);
@@ -142,8 +166,50 @@ export default function AdminRegistrationsTable({
     return matchesStatus && matchesSearch;
   });
 
-  const handleExportCsv = () => {
-    if (registrations.length === 0) return;
+  // Calculate Gmail-style slices
+  const totalFiltered = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = totalFiltered === 0 ? 0 : (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalFiltered);
+  const displayedRegistrations = filtered.slice(startIndex, endIndex);
+
+  // Auto-scrolls smoothly to the top of registrations when traversing pages
+  const handlePageChange = (newPage: number) => {
+    const clamped = Math.max(1, Math.min(totalPages, newPage));
+    setCurrentPage(clamped);
+    containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  // ─── CSV EXPORT MODAL HANDLERS ──────────────────────────────────────────────
+  const handleOpenCsvModal = () => {
+    const total = filtered.length;
+    setCsvStartLimit(1);
+    setCsvEndLimit(total <= 1000 ? Math.max(1, total) : 1000);
+    setCsvTillLastEntry(total <= 1000);
+    setIsExportingCsv(false);
+    setCsvExportProgress(0);
+    setCsvProcessedCount(0);
+    setCsvTargetTotal(0);
+    abortCsvExportRef.current = false;
+    setIsCsvModalOpen(true);
+  };
+
+  const handleStartAsyncExport = async () => {
+    if (filtered.length === 0) return;
+
+    const total = filtered.length;
+    const start = Math.max(1, Math.min(csvStartLimit, total));
+    const end = csvTillLastEntry ? total : Math.max(start, Math.min(csvEndLimit, total));
+
+    const selectedSlice = filtered.slice(start - 1, end);
+    const targetCount = selectedSlice.length;
+
+    setCsvTargetTotal(targetCount);
+    setIsExportingCsv(true);
+    setCsvExportProgress(0);
+    setCsvProcessedCount(0);
+    abortCsvExportRef.current = false;
 
     // Header row
     const headers = [
@@ -169,38 +235,70 @@ export default function AdminRegistrationsTable({
       'Registered Date',
     ];
 
-    const rows = registrations.map((r) => [
-      `"${r.id}"`,
-      `"${r.razorpayPaymentId || 'N/A'}"`,
-      `"${r.razorpayOrderId || 'N/A'}"`,
-      `"${(r.payerName || r.leadName).replace(/"/g, '""')}"`,
-      `"${r.leadName.replace(/"/g, '""')}"`,
-      `"${r.leadPhone || 'N/A'}"`,
-      `"${(r.college || 'N/A').replace(/"/g, '""')}"`,
-      `"${r.leadEmail}"`,
-      `"${r.eventTitle.replace(/"/g, '""')}"`,
-      `"${r.eventCategory}"`,
-      ((r.amount || r.feeAmount) / 100).toFixed(2),
-      `"${r.dayOption || 'Standard'}"`,
-      r.status,
-      r.paymentMethod,
-      1 + r.teamMembers.length,
-      `"${(r.trackUploadUrl || '').replace(/"/g, '""')}"`,
-      `"${(r.trackNotes || '').replace(/"/g, '""')}"`,
-      `"${r.tickets.map((t) => t.ticketCode).join(', ')}"`,
-      `"${r.tickets.map((t) => `${t.ticketCode}: ${t.status}`).join(' | ')}"`,
-      `"${new Date(r.createdAt).toLocaleString()}"`,
-    ]);
+    const csvRows: string[] = [];
+    const chunkSize = 500; // Asynchronously processes in non-blocking 500-item micro-batches
 
-    const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+    for (let i = 0; i < targetCount; i += chunkSize) {
+      if (abortCsvExportRef.current) {
+        setIsExportingCsv(false);
+        return;
+      }
+
+      const chunk = selectedSlice.slice(i, i + chunkSize);
+      for (const r of chunk) {
+        csvRows.push([
+          `"${r.id}"`,
+          `"${r.razorpayPaymentId || 'N/A'}"`,
+          `"${r.razorpayOrderId || 'N/A'}"`,
+          `"${(r.payerName || r.leadName).replace(/"/g, '""')}"`,
+          `"${r.leadName.replace(/"/g, '""')}"`,
+          `"${r.leadPhone || 'N/A'}"`,
+          `"${(r.college || 'N/A').replace(/"/g, '""')}"`,
+          `"${r.leadEmail}"`,
+          `"${r.eventTitle.replace(/"/g, '""')}"`,
+          `"${r.eventCategory}"`,
+          ((r.amount || r.feeAmount) / 100).toFixed(2),
+          `"${r.dayOption || 'Standard'}"`,
+          r.status,
+          r.paymentMethod,
+          1 + r.teamMembers.length,
+          `"${(r.trackUploadUrl || '').replace(/"/g, '""')}"`,
+          `"${(r.trackNotes || '').replace(/"/g, '""')}"`,
+          `"${r.tickets.map((t) => t.ticketCode).join(', ')}"`,
+          `"${r.tickets.map((t) => `${t.ticketCode}: ${t.status}`).join(' | ')}"`,
+          `"${new Date(r.createdAt).toLocaleString()}"`,
+        ].join(','));
+      }
+
+      const currentProcessed = Math.min(targetCount, i + chunkSize);
+      setCsvProcessedCount(currentProcessed);
+      setCsvExportProgress(Math.round((currentProcessed / targetCount) * 100));
+
+      // ⚡ YIELDS BACK TO BROWSER EVENT LOOP: Keeps UI 100% fluid & responsive
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    if (abortCsvExportRef.current) {
+      setIsExportingCsv(false);
+      return;
+    }
+
+    const csvContent = [headers.join(','), ...csvRows].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `festos_registrations_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute(
+      'download',
+      `festos_registrations_entries_${start}_to_${end}_${new Date().toISOString().slice(0, 10)}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setIsExportingCsv(false);
+    setIsCsvModalOpen(false);
   };
 
   return (
@@ -229,9 +327,9 @@ export default function AdminRegistrationsTable({
           </a>
 
           <button
-            onClick={handleExportCsv}
+            onClick={handleOpenCsvModal}
             disabled={registrations.length === 0}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#e8f0fe] text-[#1a73e8] hover:bg-[#d2e3fc] transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#e8f0fe] text-[#1a73e8] hover:bg-[#d2e3fc] transition-colors disabled:opacity-50 shadow-xs"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>
@@ -265,30 +363,106 @@ export default function AdminRegistrationsTable({
         </div>
       </div>
 
-      {/* Table */}
-      {isLoading ? (
-        <div className="py-12 text-center text-xs text-slate-500">
-          Loading registration records...
+      {/* ─── INVISIBLE / TRANSPARENT CONTAINER ───────────────────────────────── */}
+      <div ref={containerRef} className="w-full bg-transparent flex flex-col space-y-3 pt-1">
+        {/* ROW 1: Gmail-style Navigation Bar Anchored to Middle-Right */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-2.5 px-1 border-b border-slate-200/70 bg-transparent">
+          {/* Left: Summary indicator */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-500">
+              Showing{' '}
+              <strong className="text-slate-800 font-bold">
+                {totalFiltered === 0 ? '0' : `${startIndex + 1}–${endIndex}`}
+              </strong>{' '}
+              of{' '}
+              <strong className="text-slate-900 font-extrabold">
+                {totalFiltered.toLocaleString()}
+              </strong>{' '}
+              attendees
+            </span>
+            {searchQuery && (
+              <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium border border-blue-200">
+                Filtered
+              </span>
+            )}
+          </div>
+
+          {/* Middle-Right: Page Size Selector + Index Range + Prev/Next Buttons */}
+          <div className="flex items-center gap-3 self-end sm:self-center">
+            {/* Page Size Selector (Min: 25, Max: 150) */}
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span className="text-slate-400 text-[11px]">Rows:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                  containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 hover:border-slate-400 focus:outline-none focus:ring-1 focus:ring-[#1a73e8]"
+              >
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={75}>75</option>
+                <option value={100}>100</option>
+                <option value={150}>150</option>
+              </select>
+            </div>
+
+            {/* Range Indicator (like Gmail: 1–50 of 10,025) */}
+            <span className="text-xs font-bold text-slate-700 tracking-tight whitespace-nowrap">
+              {totalFiltered === 0 ? '0 of 0' : `${startIndex + 1}–${endIndex} of ${totalFiltered.toLocaleString()}`}
+            </span>
+
+            {/* Previous and Next Navigation Buttons */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => handlePageChange(safeCurrentPage - 1)}
+                disabled={safeCurrentPage <= 1}
+                className="inline-flex items-center justify-center p-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-35 disabled:cursor-not-allowed transition-all shadow-2xs"
+                title="Previous entries"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePageChange(safeCurrentPage + 1)}
+                disabled={safeCurrentPage >= totalPages}
+                className="inline-flex items-center justify-center p-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-35 disabled:cursor-not-allowed transition-all shadow-2xs"
+                title="Next entries"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 text-xs">
-          No registration records matching your filter.
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                <th className="py-3 px-3">Participant</th>
-                <th className="py-3 px-3">Event & Access</th>
-                <th className="py-3 px-3">Transaction ID & Payment</th>
-                <th className="py-3 px-3">Stage Track / Cues</th>
-                <th className="py-3 px-3">Passes & Gate</th>
-                <th className="py-3 px-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filtered.map((reg) => (
+
+        {/* ROW 2: Registration Data stretching container height */}
+        <div className="w-full">
+          {isLoading ? (
+            <div className="py-12 text-center text-xs text-slate-500">
+              Loading registration records...
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 text-xs">
+              No registration records matching your filter.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                    <th className="py-3 px-3">Participant</th>
+                    <th className="py-3 px-3">Event & Access</th>
+                    <th className="py-3 px-3">Transaction ID & Payment</th>
+                    <th className="py-3 px-3">Stage Track / Cues</th>
+                    <th className="py-3 px-3">Passes & Gate</th>
+                    <th className="py-3 px-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {displayedRegistrations.map((reg) => (
                 <tr key={reg.id} className="hover:bg-slate-50/70 transition-colors">
                   {/* Lead Attendee Column with Photo, Name, Phone, Email, College */}
                   <td className="py-3.5 px-3">
@@ -501,6 +675,36 @@ export default function AdminRegistrationsTable({
           </table>
         </div>
       )}
+        </div>
+
+        {/* Bottom Mirror Pagination Row */}
+        {!isLoading && totalPages > 1 && (
+          <div className="flex items-center justify-between pt-3 border-t border-slate-200/70 text-xs text-slate-500 bg-transparent px-1">
+            <span>
+              Page <strong className="text-slate-800 font-bold">{safeCurrentPage}</strong> of{' '}
+              <strong className="text-slate-800 font-bold">{totalPages}</strong> ({totalFiltered.toLocaleString()} total attendees)
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handlePageChange(safeCurrentPage - 1)}
+                disabled={safeCurrentPage <= 1}
+                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-slate-700 shadow-2xs transition-all"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePageChange(safeCurrentPage + 1)}
+                disabled={safeCurrentPage >= totalPages}
+                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-slate-700 shadow-2xs transition-all"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Comprehensive Attendee Details Modal */}
       {selectedReg && (
@@ -925,6 +1129,234 @@ Pass Codes: ${selectedReg.tickets.map((t) => t.ticketCode).join(', ')}`;
             setEditingReg(null);
           }}
         />
+      )}
+
+      {/* ─── ASYNCHRONOUS CSV EXPORT MODAL ────────────────────────────────────── */}
+      {isCsvModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-8 p-6 sm:p-7 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#1a73e8] border border-blue-100 flex items-center justify-center shrink-0">
+                  <FileSpreadsheet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Export Registrations (CSV)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Non-blocking asynchronous export engine.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (isExportingCsv) {
+                    abortCsvExportRef.current = true;
+                  }
+                  setIsCsvModalOpen(false);
+                }}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Scope Badge */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-600">Active Panel Scope:</span>
+                <span className="font-bold text-slate-900 truncate max-w-[220px]">{title}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500">Matching Records:</span>
+                <span className="font-extrabold text-[#1a73e8]">
+                  {filtered.length.toLocaleString()} attendees
+                </span>
+              </div>
+            </div>
+
+            {/* Range Configuration */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                {/* Start Limit */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Starting Entry Index
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={filtered.length || 1}
+                    value={csvStartLimit}
+                    disabled={isExportingCsv}
+                    onChange={(e) => setCsvStartLimit(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-[#1a73e8] disabled:bg-slate-100"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">1 = Most recent</span>
+                </div>
+
+                {/* End Limit */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Ending Entry Index
+                  </label>
+                  <input
+                    type="number"
+                    min={csvStartLimit}
+                    max={filtered.length || 1}
+                    value={csvTillLastEntry ? filtered.length : csvEndLimit}
+                    disabled={csvTillLastEntry || isExportingCsv}
+                    onChange={(e) =>
+                      setCsvEndLimit(
+                        Math.max(csvStartLimit, Math.min(filtered.length, parseInt(e.target.value) || csvStartLimit))
+                      )
+                    }
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-[#1a73e8] disabled:bg-slate-100 disabled:text-slate-500"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                    {csvTillLastEntry ? 'Locked to last' : `Max: ${filtered.length.toLocaleString()}`}
+                  </span>
+                </div>
+              </div>
+
+              {/* Checkbox: Till Last Entry */}
+              <label className="flex items-center gap-2.5 p-3 rounded-2xl border border-slate-200 bg-slate-50/70 cursor-pointer select-none hover:bg-slate-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={csvTillLastEntry}
+                  disabled={isExportingCsv}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setCsvTillLastEntry(checked);
+                    if (checked) {
+                      setCsvEndLimit(filtered.length);
+                    }
+                  }}
+                  className="rounded border-slate-300 text-[#1a73e8] focus:ring-[#1a73e8] w-4 h-4"
+                />
+                <div className="text-xs">
+                  <span className="font-bold text-slate-800 block">
+                    Till last entry ({filtered.length.toLocaleString()} total)
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    Automatically exports all records from starting index to the very last entry.
+                  </span>
+                </div>
+              </label>
+
+              {/* Quick Presets */}
+              {!isExportingCsv && filtered.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 mr-1">Presets:</span>
+                  {[100, 500, 1000, 5000].map(
+                    (preset) =>
+                      filtered.length >= preset && (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => {
+                            setCsvStartLimit(1);
+                            setCsvEndLimit(preset);
+                            setCsvTillLastEntry(false);
+                          }}
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-colors"
+                        >
+                          First {preset.toLocaleString()}
+                        </button>
+                      )
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCsvStartLimit(1);
+                      setCsvEndLimit(filtered.length);
+                      setCsvTillLastEntry(true);
+                    }}
+                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-50 text-[#1a73e8] hover:bg-blue-100 border border-blue-200 transition-colors"
+                  >
+                    All ({filtered.length.toLocaleString()})
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Asynchronous Progress Display */}
+            {isExportingCsv && (
+              <div className="bg-blue-50/60 border border-blue-200 rounded-2xl p-4 space-y-2.5 animate-in fade-in">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-blue-900 flex items-center gap-1.5">
+                    <Loader2 className="w-3.5 h-3.5 text-[#1a73e8] animate-spin" />
+                    Asynchronously processing records...
+                  </span>
+                  <span className="font-extrabold text-[#1a73e8]">{csvExportProgress}%</span>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="w-full bg-blue-200/60 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className="bg-[#1a73e8] h-full transition-all duration-150 ease-out rounded-full"
+                    style={{ width: `${csvExportProgress}%` }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                  <span>
+                    Processed {csvProcessedCount.toLocaleString()} of{' '}
+                    {csvTargetTotal.toLocaleString()} rows
+                  </span>
+                  <span className="text-emerald-700 font-semibold">Zero UI thread blocking</span>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => {
+                  if (isExportingCsv) {
+                    abortCsvExportRef.current = true;
+                  }
+                  setIsCsvModalOpen(false);
+                }}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                {isExportingCsv ? 'Abort Export' : 'Cancel'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleStartAsyncExport}
+                disabled={isExportingCsv || filtered.length === 0}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-[#1a73e8] hover:bg-[#1557b0] text-white shadow-md shadow-blue-500/20 disabled:opacity-50 transition-all"
+              >
+                {isExportingCsv ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Processing CSV...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    <span>
+                      Export{' '}
+                      {(
+                        (csvTillLastEntry ? filtered.length : Math.min(filtered.length, csvEndLimit)) -
+                        csvStartLimit +
+                        1
+                      ).toLocaleString()}{' '}
+                      Rows
+                    </span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

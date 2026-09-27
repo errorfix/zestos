@@ -7,6 +7,7 @@ import Link from 'next/link';
 import {
   Users,
   Sparkles,
+  IndianRupee,
   Scan,
   Calendar,
   Camera,
@@ -108,15 +109,15 @@ export default async function InformalzAdminPage() {
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
             <div className="flex items-center justify-between text-slate-400 mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Participation Fee
+                Revenue Collected
               </span>
-              <Sparkles className="w-4 h-4 text-purple-600" />
+              <IndianRupee className="w-4 h-4 text-emerald-600" />
             </div>
-            <span className="text-2xl sm:text-3xl font-extrabold text-purple-700 block">
-              ₹150 / ₹250
+            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 block">
+              ₹{metrics.totalRevenueInr.toLocaleString('en-IN')}
             </span>
             <span className="text-[11px] text-slate-400 font-medium block mt-1">
-              Single Day / Both Days Pass
+              ₹150 (Day 1/2) • ₹250 (Both Days)
             </span>
           </div>
 
@@ -175,8 +176,8 @@ export default async function InformalzAdminPage() {
                     <h3 className="font-bold text-slate-900 text-sm leading-snug">
                       {event.title}
                     </h3>
-                    <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      FREE
+                    <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                      DAY PASS
                     </span>
                   </div>
                   {event.description && (

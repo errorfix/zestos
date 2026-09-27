@@ -76,7 +76,11 @@ export default async function TicketPage({ params, searchParams }: TicketPagePro
       eventCategory,
       eventDate,
       eventVenue,
-      dayOption: reg.dayOption,
+      dayOption: t.fullName?.includes('Day 1 Pass')
+        ? 'DAY_1'
+        : t.fullName?.includes('Day 2 Pass')
+        ? 'DAY_2'
+        : reg.dayOption,
       trackUploadUrl: reg.trackUploadUrl,
       trackNotes: reg.trackNotes,
       requiresTrackUpload: reg.event?.requiresTrackUpload,

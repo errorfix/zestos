@@ -518,30 +518,24 @@ export default function SuperAdminView({
           <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xs">
             <div className="flex items-center justify-between text-slate-500 mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                {activeCommittee === 'INFORMALZ'
-                  ? 'Event Pricing'
-                  : activeCommittee === 'STAGE'
+                {activeCommittee === 'STAGE'
                   ? 'Tracks Ready'
                   : 'Revenue Collected'}
               </span>
-              {activeCommittee === 'INFORMALZ' ? (
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-              ) : activeCommittee === 'STAGE' ? (
+              {activeCommittee === 'STAGE' ? (
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               ) : (
                 <IndianRupee className="w-4 h-4 text-emerald-400" />
               )}
             </div>
             <span className="text-2xl sm:text-3xl font-extrabold text-white block">
-              {activeCommittee === 'INFORMALZ'
-                ? 'FREE (₹0)'
-                : activeCommittee === 'STAGE'
+              {activeCommittee === 'STAGE'
                 ? stageMetrics?.tracksAttached || 0
                 : `₹${currentMetrics.totalRevenueInr.toLocaleString('en-IN')}`}
             </span>
             <span className="text-[11px] text-slate-500 font-medium block mt-1">
               {activeCommittee === 'INFORMALZ'
-                ? '100% Free Activities'
+                ? 'Day Passes (₹150 / ₹250)'
                 : activeCommittee === 'STAGE'
                 ? 'Audio links attached'
                 : 'Razorpay + Desk Cash'}
@@ -959,8 +953,8 @@ export default function SuperAdminView({
               categoryFilter="Informalz"
               defaultCategory="Informalz"
               apiEndpoint="/api/super-admin/events"
-              title="Informalz Committee Events (100% Free Activities)"
-              subtitle="Full CRUD on informal, social, and gaming activities. All events have ₹0 fee."
+              title="Informalz Committee Events (Day Pass System)"
+              subtitle="Full CRUD on informal, social, and gaming activities covered under the ₹150 / ₹250 Day Pass."
             />
           </section>
 
@@ -968,7 +962,7 @@ export default function SuperAdminView({
             <AdminRegistrationsTable
               apiEndpoint="/api/admin/registrations?category=informalz"
               title="Informalz Attendee Registry"
-              subtitle="Free passes, participant rosters, and gate attendance for all informal activities."
+              subtitle="Day pass holders, participant rosters, and gate attendance for all informal activities."
             />
           </section>
         </div>

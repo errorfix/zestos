@@ -209,16 +209,24 @@ export default function AdminEventsManager({
                   {evt.category}
                 </span>
                 <div className="text-right">
-                  <div className="flex items-center gap-1.5 justify-end">
-                    <span className="text-[10px] text-slate-400">Online:</span>
-                    <span className="font-bold text-xs text-slate-700">₹{evt.feeAmount / 100}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 justify-end mt-0.5">
-                    <span className="text-[10px] font-bold text-amber-700">On-Spot:</span>
-                    <span className="font-extrabold text-sm text-amber-950 bg-amber-100/80 px-2 py-0.5 rounded-md border border-amber-200">
-                      ₹{(evt.onSpotFeeAmount != null ? evt.onSpotFeeAmount : evt.feeAmount) / 100}
+                  {evt.category.toLowerCase() === 'informalz' ? (
+                    <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-200 block">
+                      Day Pass (₹150 / ₹250)
                     </span>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-1.5 justify-end">
+                        <span className="text-[10px] text-slate-400">Online:</span>
+                        <span className="font-bold text-xs text-slate-700">₹{evt.feeAmount / 100}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 justify-end mt-0.5">
+                        <span className="text-[10px] font-bold text-amber-700">On-Spot:</span>
+                        <span className="font-extrabold text-sm text-amber-950 bg-amber-100/80 px-2 py-0.5 rounded-md border border-amber-200">
+                          ₹{(evt.onSpotFeeAmount != null ? evt.onSpotFeeAmount : evt.feeAmount) / 100}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 

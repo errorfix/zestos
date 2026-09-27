@@ -595,26 +595,85 @@ export async function createOnSpotRegistration({
         : 15000
       : (event.onSpotFeeAmount != null ? event.onSpotFeeAmount : event.feeAmount);
 
-  const ticketsToCreate = [
-    {
-      id: `tkt_lead_${Date.now()}`,
-      ticketCode: generateTicketCode(),
-      status: 'ISSUED' as const,
+  const isBothDays = dayOption === 'BOTH_DAYS';
+  const ticketsToCreate: Array<{
+    id: string;
+    ticketCode: string;
+    status: 'ISSUED';
+    securityHash: string;
+    fullName: string;
+    college: string;
+    photoUrl: string | null;
+  }> = [];
+
+  if (isBothDays) {
+    const leadCodeD1 = generateTicketCode();
+    ticketsToCreate.push({
+      id: `tkt_lead_d1_${Date.now()}`,
+      ticketCode: leadCodeD1,
+      status: 'ISSUED',
       securityHash: '',
-      fullName: leadName,
+      fullName: `${leadName} (Day 1 Pass)`,
       college: college || "Lingaya's Vidyapeeth",
       photoUrl: photoUrl || null,
-    },
-    ...teamMembers.map((tm, idx) => ({
-      id: `tkt_tm_${idx}_${Date.now()}`,
-      ticketCode: generateTicketCode(),
-      status: 'ISSUED' as const,
+    });
+
+    const leadCodeD2 = generateTicketCode();
+    ticketsToCreate.push({
+      id: `tkt_lead_d2_${Date.now()}`,
+      ticketCode: leadCodeD2,
+      status: 'ISSUED',
       securityHash: '',
-      fullName: tm.fullName,
-      college: tm.college || college || "Lingaya's Vidyapeeth",
-      photoUrl: tm.photoUrl || photoUrl || null,
-    })),
-  ];
+      fullName: `${leadName} (Day 2 Pass)`,
+      college: college || "Lingaya's Vidyapeeth",
+      photoUrl: photoUrl || null,
+    });
+
+    teamMembers.forEach((tm, idx) => {
+      const tmCodeD1 = generateTicketCode();
+      ticketsToCreate.push({
+        id: `tkt_tm_${idx}_d1_${Date.now()}`,
+        ticketCode: tmCodeD1,
+        status: 'ISSUED',
+        securityHash: '',
+        fullName: `${tm.fullName} (Day 1 Pass)`,
+        college: tm.college || college || "Lingaya's Vidyapeeth",
+        photoUrl: tm.photoUrl || photoUrl || null,
+      });
+
+      const tmCodeD2 = generateTicketCode();
+      ticketsToCreate.push({
+        id: `tkt_tm_${idx}_d2_${Date.now()}`,
+        ticketCode: tmCodeD2,
+        status: 'ISSUED',
+        securityHash: '',
+        fullName: `${tm.fullName} (Day 2 Pass)`,
+        college: tm.college || college || "Lingaya's Vidyapeeth",
+        photoUrl: tm.photoUrl || photoUrl || null,
+      });
+    });
+  } else {
+    ticketsToCreate.push(
+      {
+        id: `tkt_lead_${Date.now()}`,
+        ticketCode: generateTicketCode(),
+        status: 'ISSUED',
+        securityHash: '',
+        fullName: leadName,
+        college: college || "Lingaya's Vidyapeeth",
+        photoUrl: photoUrl || null,
+      },
+      ...teamMembers.map((tm, idx) => ({
+        id: `tkt_tm_${idx}_${Date.now()}`,
+        ticketCode: generateTicketCode(),
+        status: 'ISSUED' as const,
+        securityHash: '',
+        fullName: tm.fullName,
+        college: tm.college || college || "Lingaya's Vidyapeeth",
+        photoUrl: tm.photoUrl || photoUrl || null,
+      }))
+    );
+  }
 
   for (const t of ticketsToCreate) {
     t.securityHash = generateTicketSecurityHash(t.ticketCode, leadEmail);
@@ -724,31 +783,112 @@ export async function fulfillPaymentAndGenerateTickets({
         const existingTickets = await prisma.ticket.findMany({
           where: { registrationId: existing.id },
         });
+
+        // Auto-upgrade legacy BOTH_DAYS registrations if they only have 1 ticket
+        if (existing.dayOption === 'BOTH_DAYS' && existingTickets.length === 1) {
+          const t1 = existingTickets[0];
+          if (!t1.fullName?.includes('Day')) {
+            await prisma.ticket.update({
+              where: { id: t1.id },
+              data: { fullName: `${existing.leadName} (Day 1 Pass)` },
+            });
+          }
+          const leadCodeD2 = generateTicketCode();
+          const d2Hash = generateTicketSecurityHash(leadCodeD2, existing.leadEmail);
+          const t2 = await prisma.ticket.create({
+            data: {
+              ticketCode: leadCodeD2,
+              registrationId: existing.id,
+              status: 'ISSUED',
+              securityHash: d2Hash,
+              fullName: `${existing.leadName} (Day 2 Pass)`,
+              college: existing.college,
+              photoUrl: existing.photoUrl,
+            },
+          });
+          return {
+            registrationId: existing.id,
+            tickets: [
+              { ticketCode: t1.ticketCode, securityHash: t1.securityHash },
+              { ticketCode: t2.ticketCode, securityHash: t2.securityHash },
+            ],
+          };
+        }
+
         return {
           registrationId: existing.id,
           tickets: existingTickets.map((t) => ({ ticketCode: t.ticketCode, securityHash: t.securityHash })),
         };
       }
 
-      const ticketsToCreate = [
-        {
-          ticketCode: generateTicketCode(),
-          securityHash: generateTicketSecurityHash(generateTicketCode(), existing.leadEmail),
+      const isBothDays = existing.dayOption === 'BOTH_DAYS';
+      const ticketsToCreate: Array<{
+        ticketCode: string;
+        securityHash: string;
+        fullName: string;
+        college?: string | null;
+        photoUrl?: string | null;
+      }> = [];
+
+      if (isBothDays) {
+        const leadCodeD1 = generateTicketCode();
+        ticketsToCreate.push({
+          ticketCode: leadCodeD1,
+          securityHash: generateTicketSecurityHash(leadCodeD1, existing.leadEmail),
+          fullName: `${existing.leadName} (Day 1 Pass)`,
+          college: existing.college,
+          photoUrl: existing.photoUrl,
+        });
+
+        const leadCodeD2 = generateTicketCode();
+        ticketsToCreate.push({
+          ticketCode: leadCodeD2,
+          securityHash: generateTicketSecurityHash(leadCodeD2, existing.leadEmail),
+          fullName: `${existing.leadName} (Day 2 Pass)`,
+          college: existing.college,
+          photoUrl: existing.photoUrl,
+        });
+
+        for (const tm of existing.teamMembers) {
+          const tmCodeD1 = generateTicketCode();
+          ticketsToCreate.push({
+            ticketCode: tmCodeD1,
+            securityHash: generateTicketSecurityHash(tmCodeD1, existing.leadEmail),
+            fullName: `${tm.fullName} (Day 1 Pass)`,
+            college: tm.college || existing.college,
+            photoUrl: tm.photoUrl || existing.photoUrl,
+          });
+
+          const tmCodeD2 = generateTicketCode();
+          ticketsToCreate.push({
+            ticketCode: tmCodeD2,
+            securityHash: generateTicketSecurityHash(tmCodeD2, existing.leadEmail),
+            fullName: `${tm.fullName} (Day 2 Pass)`,
+            college: tm.college || existing.college,
+            photoUrl: tm.photoUrl || existing.photoUrl,
+          });
+        }
+      } else {
+        const leadCode = generateTicketCode();
+        ticketsToCreate.push({
+          ticketCode: leadCode,
+          securityHash: generateTicketSecurityHash(leadCode, existing.leadEmail),
           fullName: existing.leadName,
           college: existing.college,
           photoUrl: existing.photoUrl,
-        },
-        ...existing.teamMembers.map((tm) => {
+        });
+
+        for (const tm of existing.teamMembers) {
           const code = generateTicketCode();
-          return {
+          ticketsToCreate.push({
             ticketCode: code,
             securityHash: generateTicketSecurityHash(code, existing.leadEmail),
             fullName: tm.fullName,
             college: tm.college || existing.college,
             photoUrl: tm.photoUrl || existing.photoUrl,
-          };
-        }),
-      ];
+          });
+        }
+      }
 
       await prisma.$transaction([
         prisma.registration.update({
@@ -783,6 +923,10 @@ export async function fulfillPaymentAndGenerateTickets({
     // Check memory store
   }
 
+  if (!orderId || !orderId.trim()) {
+    throw new Error('Valid orderId is required for ticket fulfillment');
+  }
+
   for (const [id, reg] of memoryRegistrations.entries()) {
     if (reg.razorpayOrderId === orderId || id === orderId) {
       reg.status = 'PAID';
@@ -790,28 +934,77 @@ export async function fulfillPaymentAndGenerateTickets({
       if (payerName) reg.payerName = payerName;
 
       if (reg.tickets.length === 0) {
-        const leadCode = generateTicketCode();
-        reg.tickets.push({
-          id: `tkt_lead_${Date.now()}`,
-          ticketCode: leadCode,
-          status: 'ISSUED',
-          securityHash: generateTicketSecurityHash(leadCode, reg.leadEmail),
-          fullName: reg.leadName,
-          college: reg.college,
-          photoUrl: reg.photoUrl,
-        });
-
-        for (const tm of reg.teamMembers) {
-          const tmCode = generateTicketCode();
+        const isBothDays = reg.dayOption === 'BOTH_DAYS';
+        if (isBothDays) {
+          const leadCodeD1 = generateTicketCode();
           reg.tickets.push({
-            id: `tkt_${tm.id}`,
-            ticketCode: tmCode,
+            id: `tkt_lead_d1_${Date.now()}`,
+            ticketCode: leadCodeD1,
             status: 'ISSUED',
-            securityHash: generateTicketSecurityHash(tmCode, reg.leadEmail),
-            fullName: tm.fullName,
-            college: tm.college || reg.college,
-            photoUrl: tm.photoUrl || reg.photoUrl,
+            securityHash: generateTicketSecurityHash(leadCodeD1, reg.leadEmail),
+            fullName: `${reg.leadName} (Day 1 Pass)`,
+            college: reg.college,
+            photoUrl: reg.photoUrl,
           });
+
+          const leadCodeD2 = generateTicketCode();
+          reg.tickets.push({
+            id: `tkt_lead_d2_${Date.now()}`,
+            ticketCode: leadCodeD2,
+            status: 'ISSUED',
+            securityHash: generateTicketSecurityHash(leadCodeD2, reg.leadEmail),
+            fullName: `${reg.leadName} (Day 2 Pass)`,
+            college: reg.college,
+            photoUrl: reg.photoUrl,
+          });
+
+          for (const tm of reg.teamMembers) {
+            const tmCodeD1 = generateTicketCode();
+            reg.tickets.push({
+              id: `tkt_${tm.id}_d1`,
+              ticketCode: tmCodeD1,
+              status: 'ISSUED',
+              securityHash: generateTicketSecurityHash(tmCodeD1, reg.leadEmail),
+              fullName: `${tm.fullName} (Day 1 Pass)`,
+              college: tm.college || reg.college,
+              photoUrl: tm.photoUrl || reg.photoUrl,
+            });
+
+            const tmCodeD2 = generateTicketCode();
+            reg.tickets.push({
+              id: `tkt_${tm.id}_d2`,
+              ticketCode: tmCodeD2,
+              status: 'ISSUED',
+              securityHash: generateTicketSecurityHash(tmCodeD2, reg.leadEmail),
+              fullName: `${tm.fullName} (Day 2 Pass)`,
+              college: tm.college || reg.college,
+              photoUrl: tm.photoUrl || reg.photoUrl,
+            });
+          }
+        } else {
+          const leadCode = generateTicketCode();
+          reg.tickets.push({
+            id: `tkt_lead_${Date.now()}`,
+            ticketCode: leadCode,
+            status: 'ISSUED',
+            securityHash: generateTicketSecurityHash(leadCode, reg.leadEmail),
+            fullName: reg.leadName,
+            college: reg.college,
+            photoUrl: reg.photoUrl,
+          });
+
+          for (const tm of reg.teamMembers) {
+            const tmCode = generateTicketCode();
+            reg.tickets.push({
+              id: `tkt_${tm.id}`,
+              ticketCode: tmCode,
+              status: 'ISSUED',
+              securityHash: generateTicketSecurityHash(tmCode, reg.leadEmail),
+              fullName: tm.fullName,
+              college: tm.college || reg.college,
+              photoUrl: tm.photoUrl || reg.photoUrl,
+            });
+          }
         }
       }
 
@@ -871,7 +1064,11 @@ export async function checkInTicket({
       const phone = reg.leadPhone || null;
       const eventTitle = reg.event.title;
       const eventCategory = reg.event.category;
-      const dayOption = reg.dayOption;
+      const dayOption = dbTicket.fullName?.includes('Day 1 Pass')
+        ? 'DAY_1'
+        : dbTicket.fullName?.includes('Day 2 Pass')
+        ? 'DAY_2'
+        : reg.dayOption;
 
       if (signature) {
         const isValidSig = verifyTicketSecurityHash(
@@ -971,6 +1168,7 @@ export async function checkInTicket({
 
       // Default: CHECK_IN action
       if (dbTicket.status === 'CHECKED_IN') {
+        const dayTag = dayOption === 'DAY_1' ? ' (Day 1 Pass)' : dayOption === 'DAY_2' ? ' (Day 2 Pass)' : '';
         return {
           success: false,
           ticketCode: normalizedCode,
@@ -983,7 +1181,7 @@ export async function checkInTicket({
           dayOption,
           status: 'ALREADY_CHECKED_IN',
           checkedInAt: dbTicket.checkedInAt || new Date(),
-          message: `Replay Warning: Pass already scanned on ${new Date(
+          message: `Replay Warning: Pass${dayTag} already scanned on ${new Date(
             dbTicket.checkedInAt || Date.now()
           ).toLocaleTimeString()}.`,
         };
@@ -998,6 +1196,7 @@ export async function checkInTicket({
         },
       });
 
+      const dayTag = dayOption === 'DAY_1' ? ' (Day 1 Pass)' : dayOption === 'DAY_2' ? ' (Day 2 Pass)' : '';
       return {
         success: true,
         ticketCode: normalizedCode,
@@ -1010,7 +1209,7 @@ export async function checkInTicket({
         dayOption,
         status: 'CHECKED_IN',
         checkedInAt: now,
-        message: 'Access Granted: Attendee checked in & admitted.',
+        message: `Access Granted: Attendee checked in & admitted${dayTag}.`,
       };
     }
   } catch {
@@ -1026,7 +1225,11 @@ export async function checkInTicket({
       const phone = reg.leadPhone || null;
       const eventTitle = reg.event?.title || 'Campus Event';
       const eventCategory = reg.event?.category || 'General';
-      const dayOption = reg.dayOption;
+      const dayOption = ticket.fullName?.includes('Day 1 Pass')
+        ? 'DAY_1'
+        : ticket.fullName?.includes('Day 2 Pass')
+        ? 'DAY_2'
+        : reg.dayOption;
 
       if (signature) {
         const isValidSig = verifyTicketSecurityHash(ticket.ticketCode, reg.leadEmail, signature);
@@ -1111,6 +1314,7 @@ export async function checkInTicket({
       }
 
       if (ticket.status === 'CHECKED_IN') {
+        const dayTag = dayOption === 'DAY_1' ? ' (Day 1 Pass)' : dayOption === 'DAY_2' ? ' (Day 2 Pass)' : '';
         return {
           success: false,
           ticketCode: normalizedCode,
@@ -1123,7 +1327,7 @@ export async function checkInTicket({
           dayOption,
           status: 'ALREADY_CHECKED_IN',
           checkedInAt: ticket.checkedInAt || new Date(),
-          message: `Replay Warning: Pass already scanned on ${new Date(
+          message: `Replay Warning: Pass${dayTag} already scanned on ${new Date(
             ticket.checkedInAt || Date.now()
           ).toLocaleTimeString()}.`,
         };
@@ -1134,6 +1338,7 @@ export async function checkInTicket({
       ticket.checkedInAt = now;
       syncDisk();
 
+      const dayTag = dayOption === 'DAY_1' ? ' (Day 1 Pass)' : dayOption === 'DAY_2' ? ' (Day 2 Pass)' : '';
       return {
         success: true,
         ticketCode: normalizedCode,
@@ -1146,7 +1351,7 @@ export async function checkInTicket({
         dayOption,
         status: 'CHECKED_IN',
         checkedInAt: now,
-        message: 'Access Granted: Ticket successfully verified & stamped.',
+        message: `Access Granted: Ticket successfully verified & stamped${dayTag}.`,
       };
     }
   }
@@ -1263,7 +1468,20 @@ export async function getAdminMetrics(options?: {
   for (const reg of registrations) {
     if (reg.status === 'PAID') {
       const evt = events.find((e) => e.id === reg.eventId) || reg.event;
-      let effectiveFee = reg.amount != null ? reg.amount : (evt?.feeAmount || 0);
+      let effectiveFee = 0;
+      if (reg.amount != null && reg.amount > 0) {
+        effectiveFee = reg.amount;
+      } else if (reg.dayOption === 'BOTH_DAYS') {
+        effectiveFee = 25000; // ₹250 Both Days Pass
+      } else if (
+        reg.dayOption === 'DAY_1' ||
+        reg.dayOption === 'DAY_2' ||
+        evt?.category.toLowerCase() === 'informalz'
+      ) {
+        effectiveFee = 15000; // ₹150 Single Day Pass
+      } else {
+        effectiveFee = evt?.feeAmount || 0;
+      }
       totalRevenuePaise += effectiveFee;
       registrationsByEvent[reg.eventId] = (registrationsByEvent[reg.eventId] || 0) + 1;
     }

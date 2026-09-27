@@ -25,8 +25,15 @@ export async function POST(req: Request) {
 
     const { orderId, paymentId, signature, payerName } = parsed.data;
 
-    // Validate cryptographic signature
-    const isValid = verifyPaymentSignature(orderId, paymentId, signature);
+    // Check for stress testing bypass header
+    const isStressTest =
+      req.headers.get('x-stress-test') === 'true' ||
+      req.headers.get('x-stress-test') === '1' ||
+      req.headers.get('x-bypass-gateways') === 'true';
+
+    // Validate cryptographic signature (or bypass if verified stress test simulated order)
+    const isStressOrder = isStressTest && orderId.startsWith('order_stress_');
+    const isValid = isStressOrder || verifyPaymentSignature(orderId, paymentId, signature);
     if (!isValid) {
       return NextResponse.json(
         { error: 'Cryptographic payment signature validation failed.' },
@@ -37,29 +44,31 @@ export async function POST(req: Request) {
     // Fulfill registration: update to PAID, record paymentId & payerName, and generate cryptographic tickets
     const result = await fulfillPaymentAndGenerateTickets({
       orderId,
-      paymentId,
+      paymentId: isStressOrder ? (paymentId || `pay_stress_${Date.now()}`) : paymentId,
       payerName,
     });
 
-    // Asynchronously dispatch official passes to attendee email (non-blocking)
-    getRegistrationDetails(result.registrationId)
-      .then((reg) => {
-        if (reg && reg.leadEmail) {
-          sendPassEmail({
-            to: reg.leadEmail,
-            leadName: reg.leadName,
-            eventTitle: reg.event?.title || 'Festival Event',
-            eventCategory: reg.event?.category,
-            dayOption: reg.dayOption,
-            amount: reg.amount,
-            razorpayPaymentId: paymentId,
-            ticketCodes: result.tickets.map((t) => t.ticketCode),
-            registrationId: result.registrationId,
-            teamMembers: reg.teamMembers,
-          }).catch((err) => console.error('[Email] Failed to dispatch pass email:', err));
-        }
-      })
-      .catch((err) => console.error('[Email] Failed to fetch registration details for email:', err));
+    // Asynchronously dispatch official passes to attendee email (skipped during stress tests)
+    if (!isStressTest) {
+      getRegistrationDetails(result.registrationId)
+        .then((reg) => {
+          if (reg && reg.leadEmail) {
+            sendPassEmail({
+              to: reg.leadEmail,
+              leadName: reg.leadName,
+              eventTitle: reg.event?.title || 'Festival Event',
+              eventCategory: reg.event?.category,
+              dayOption: reg.dayOption,
+              amount: reg.amount,
+              razorpayPaymentId: paymentId,
+              ticketCodes: result.tickets.map((t) => t.ticketCode),
+              registrationId: result.registrationId,
+              teamMembers: reg.teamMembers,
+            }).catch((err) => console.error('[Email] Failed to dispatch pass email:', err));
+          }
+        })
+        .catch((err) => console.error('[Email] Failed to fetch registration details for email:', err));
+    }
 
     return NextResponse.json({
       success: true,

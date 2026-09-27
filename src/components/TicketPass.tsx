@@ -145,19 +145,23 @@ export default function TicketPass({ ticket, autoDownload }: TicketPassProps) {
       ctx.fillText('ZEST 2K26 OFFICIAL PASS', width / 2, 120);
 
       // Day Badge on Header
-      const dayLabel =
-        ticket.dayOption === 'BOTH_DAYS'
-          ? 'BOTH DAYS ALL-ACCESS (OCT 30 & 31)'
-          : ticket.dayOption === 'DAY_2'
-          ? 'DAY 2 PASS (OCT 31)'
-          : 'DAY 1 PASS (OCT 30)';
+      const isDay2 = ticket.fullName?.includes('Day 2 Pass') || ticket.dayOption === 'DAY_2';
+      const isDay1 = ticket.fullName?.includes('Day 1 Pass') || ticket.dayOption === 'DAY_1';
 
-      ctx.fillStyle = '#dbeafe';
+      const dayLabel = isDay2
+        ? 'DAY 2 PASS (MARCH 28)'
+        : isDay1
+        ? 'DAY 1 PASS (MARCH 27)'
+        : ticket.dayOption === 'BOTH_DAYS'
+        ? 'BOTH DAYS ALL-ACCESS (MARCH 27 & 28)'
+        : 'DAY 1 PASS (MARCH 27)';
+
+      ctx.fillStyle = isDay2 ? '#f3e8ff' : '#dbeafe';
       ctx.beginPath();
       ctx.roundRect((width - 420) / 2, 145, 420, 36, 18);
       ctx.fill();
 
-      ctx.fillStyle = '#1e40af';
+      ctx.fillStyle = isDay2 ? '#6b21a8' : '#1e40af';
       ctx.font = 'bold 16px system-ui, -apple-system, sans-serif';
       ctx.fillText(dayLabel, width / 2, 169);
 
@@ -203,10 +207,11 @@ export default function TicketPass({ ticket, autoDownload }: TicketPassProps) {
       }
 
       // Attendee Name
+      const cleanName = ticket.fullName?.replace(/\s*\(Day [12] Pass\)/i, '') || ticket.fullName;
       ctx.fillStyle = '#0f172a';
       ctx.font = '900 32px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(ticket.fullName, width / 2, 440);
+      ctx.fillText(cleanName, width / 2, 440);
 
       // College Name
       ctx.fillStyle = '#475569';
@@ -324,12 +329,18 @@ export default function TicketPass({ ticket, autoDownload }: TicketPassProps) {
     }
   };
 
-  const dayLabel =
-    ticket.dayOption === 'BOTH_DAYS'
-      ? 'Both Days All-Access'
-      : ticket.dayOption === 'DAY_2'
-      ? 'Day 2 Pass'
-      : 'Day 1 Pass';
+  const isDay2 = ticket.fullName?.includes('Day 2 Pass') || ticket.dayOption === 'DAY_2';
+  const isDay1 = ticket.fullName?.includes('Day 1 Pass') || ticket.dayOption === 'DAY_1';
+
+  const dayLabel = isDay2
+    ? 'Day 2 Pass • March 28'
+    : isDay1
+    ? 'Day 1 Pass • March 27'
+    : ticket.dayOption === 'BOTH_DAYS'
+    ? 'Both Days All-Access'
+    : 'Day 1 Pass';
+
+  const cleanName = ticket.fullName?.replace(/\s*\(Day [12] Pass\)/i, '') || ticket.fullName;
 
   return (
     <div className="flex flex-col items-center my-6">
@@ -339,25 +350,27 @@ export default function TicketPass({ ticket, autoDownload }: TicketPassProps) {
         className="w-full max-w-sm bg-white rounded-[32px] border-2 border-slate-300 shadow-2xl overflow-hidden transition-all relative"
       >
         {/* Lanyard Hole Cutout Styling */}
-        <div className="w-full bg-[#1a56db] pt-3 pb-1 flex justify-center">
+        <div className={`w-full ${isDay2 ? 'bg-[#581c87]' : 'bg-[#1a56db]'} pt-3 pb-1 flex justify-center`}>
           <div className="w-20 h-3 bg-white/30 rounded-full border border-white/40" />
         </div>
 
         {/* Top Header Banner */}
-        <div className="bg-gradient-to-b from-[#1a56db] to-[#1e40af] text-white px-5 pt-3 pb-6 text-center relative">
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-blue-200 block">
+        <div className={`bg-gradient-to-b ${isDay2 ? 'from-[#6b21a8] to-[#4a044e]' : 'from-[#1a56db] to-[#1e40af]'} text-white px-5 pt-3 pb-6 text-center relative`}>
+          <span className={`text-[10px] font-extrabold uppercase tracking-widest ${isDay2 ? 'text-purple-200' : 'text-blue-200'} block`}>
             LINGAYA&apos;S VIDYAPEETH
           </span>
           <h3 className="text-2xl font-black tracking-tight text-white mt-0.5">
             ZEST 2K26
           </h3>
-          <p className="text-[11px] text-blue-100 font-semibold tracking-wide">
+          <p className={`text-[11px] ${isDay2 ? 'text-purple-100' : 'text-blue-100'} font-semibold tracking-wide`}>
             OFFICIAL ENTRY PASS
           </p>
 
           {/* Access Duration Pill */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 mt-2.5 rounded-full text-[11px] font-extrabold bg-white text-[#1a56db] shadow-sm">
-            <Calendar className="w-3 h-3 text-[#1a56db]" />
+          <div className={`inline-flex items-center gap-1.5 px-3 py-1 mt-2.5 rounded-full text-[11px] font-extrabold shadow-sm ${
+            isDay2 ? 'bg-purple-100 text-purple-900 border border-purple-200' : 'bg-white text-[#1a56db]'
+          }`}>
+            <Calendar className={`w-3 h-3 ${isDay2 ? 'text-purple-700' : 'text-[#1a56db]'}`} />
             <span>{dayLabel}</span>
           </div>
 
@@ -374,7 +387,7 @@ export default function TicketPass({ ticket, autoDownload }: TicketPassProps) {
               {ticket.photoUrl ? (
                 <img
                   src={ticket.photoUrl}
-                  alt={ticket.fullName}
+                  alt={cleanName}
                   className="w-24 h-28 object-cover rounded-2xl border-4 border-white shadow-lg bg-slate-100"
                 />
               ) : (
@@ -391,8 +404,15 @@ export default function TicketPass({ ticket, autoDownload }: TicketPassProps) {
           {/* Attendee Identity */}
           <div>
             <h4 className="text-xl font-black text-slate-900 leading-tight">
-              {ticket.fullName}
+              {cleanName}
             </h4>
+            {(isDay1 || isDay2) && (
+              <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                isDay2 ? 'bg-purple-100 text-purple-800 border border-purple-300' : 'bg-blue-100 text-blue-800 border border-blue-300'
+              }`}>
+                {isDay2 ? 'Day 2 Pass' : 'Day 1 Pass'}
+              </span>
+            )}
             {ticket.college && (
               <p className="text-xs font-semibold text-slate-600 flex items-center justify-center gap-1 mt-1">
                 <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
