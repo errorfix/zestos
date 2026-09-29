@@ -250,9 +250,11 @@ export async function createInstituteRegistration(params: {
     const isDay2 = dateStr.includes('day 2') || dateStr.includes('31');
     const festivalDay = isDay2 ? 'DAY_2' : 'DAY_1';
 
+    const isTeam = ev ? ev.eventType === 'Team' && (ev.maxTeamSize || 1) > 1 : squad.participants.length > 1;
+
     for (let i = 0; i < squad.participants.length; i++) {
       const p = squad.participants[i];
-      const isLeader = i === 0;
+      const isLeader = isTeam && (p.isTeamLeader ?? (i === 0));
 
       await prisma.instituteParticipant.create({
         data: {

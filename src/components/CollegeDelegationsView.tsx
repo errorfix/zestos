@@ -345,9 +345,9 @@ export default function CollegeDelegationsView() {
                                     <div>
                                       <div className="flex items-center gap-2">
                                         <span className="font-semibold text-white">{p.fullName}</span>
-                                        {p.isTeamLeader && (
-                                          <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-0.5">
-                                            <Crown className="w-2.5 h-2.5" /> Event Leader
+                                        {p.isTeamLeader && evRoster.participantsCount > 1 && (
+                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-0.5">
+                                            <Crown className="w-2.5 h-2.5" /> Team Leader
                                           </span>
                                         )}
                                       </div>

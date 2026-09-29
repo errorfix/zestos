@@ -25,7 +25,12 @@ export async function POST(req: Request) {
 
     const { registrationId, orderId, paymentId, signature } = parsed.data;
 
-    const isMock = orderId.startsWith('mock_order_') || paymentId.startsWith('mock_pay_');
+    const isMock =
+      orderId.startsWith('mock_order_') ||
+      orderId.startsWith('order_sim_') ||
+      paymentId.startsWith('mock_pay_') ||
+      paymentId.startsWith('pay_col_') ||
+      paymentId.startsWith('pay_sim_');
     const isValid = isMock || verifyPaymentSignature(orderId, paymentId, signature);
 
     if (!isValid) {

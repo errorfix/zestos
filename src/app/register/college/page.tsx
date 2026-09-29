@@ -16,30 +16,30 @@ export default async function CollegeRegisterPage() {
   const events = await getEvents();
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col text-slate-100">
+    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 w-full">
-        <div className="max-w-5xl mx-auto mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="max-w-4xl mx-auto mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <Link
             href="/register"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-indigo-400 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#1a73e8] transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Switch to Individual Event Registration
           </Link>
 
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <Building2 className="w-4 h-4 text-indigo-400" />
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <Building2 className="w-4 h-4 text-[#1a73e8]" />
             <span>Dedicated University &amp; Institute Entry Desk</span>
           </div>
         </div>
 
         <Suspense
           fallback={
-            <div className="max-w-5xl mx-auto p-12 bg-slate-900 rounded-3xl border border-slate-800 text-center">
-              <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm text-slate-400 font-medium">Loading Contingent Registration Engine...</p>
+            <div className="max-w-4xl mx-auto p-12 bg-white rounded-3xl border border-slate-200 text-center">
+              <div className="w-8 h-8 border-4 border-[#1a73e8] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-sm text-slate-600 font-medium">Loading Contingent Registration Engine...</p>
             </div>
           }
         >
@@ -47,7 +47,7 @@ export default async function CollegeRegisterPage() {
         </Suspense>
       </main>
 
-      <footer className="bg-slate-900 border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
         Lingaya&apos;s Vidyapeeth FestOS v2.0 • Inter-College Contingent Registration Engine
       </footer>
     </div>
