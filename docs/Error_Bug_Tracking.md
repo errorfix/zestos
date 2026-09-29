@@ -21,6 +21,8 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 | **ERR-011** | 2026-09-26 18:15 | Metrics (`getAdminMetrics`) | Revenue Collected calculation uses event base fee instead of actual paid amount | **RESOLVED** |
 | **ERR-012** | 2026-09-26 21:15 | On-Spot Desk (`/desk`) | Razorpay order generation uses base online fee instead of on-spot fee, and creates duplicate unlinked registrations | **RESOLVED** |
 | **ERR-013** | 2026-09-26 22:00 | Build / Next.js | Middleware deprecation warnings leading to proxy migration, plus accidental syntax errors breaking the build | **RESOLVED** |
+| **ERR-014** | 2026-09-29 10:20 | Auth (`/management`) | Higher Authority password mismatch: `.env` on VPS defined `MANAGEMENT` / `management` instead of `MANAGEMENT_PASSWORD` | **RESOLVED** |
+
 
 ---
 
@@ -236,6 +238,17 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
   1. Fixed the syntax errors by restoring the comma and the `photoUrl` variable.
   2. Renamed `middleware.ts` to `proxy.ts`.
   3. Renamed the exported function `export async function middleware` to `export async function proxy` to comply with the Next.js 16 specification.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-014: Higher Authority Login Failure due to `.env` Variable Mismatch
+- **Component**: `src/lib/auth.ts`, `/opt/festos/.env`, `/management`
+- **Symptom**: Higher Authority credentials failed authentication on the zest portal login page.
+- **Root Cause Analysis**: The VPS environment file `/opt/festos/.env` designated the password variable as `MANAGEMENT="<password>"` or `management="<password>"`, whereas `src/lib/auth.ts` exclusively checked `process.env.MANAGEMENT_PASSWORD`. As a result, the password evaluated to an empty string (`""`), refusing login attempts.
+- **Resolution**:
+  1. Updated `src/lib/auth.ts` to fallback-check `process.env.MANAGEMENT_PASSWORD || process.env.MANAGEMENT || process.env.management || ''`.
+  2. Verified that both variable naming conventions now authenticate successfully.
 - **Status**: **RESOLVED**
 
 ---

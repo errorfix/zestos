@@ -7,6 +7,8 @@ import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
 import StageRegistrationsManager from '@/components/StageRegistrationsManager';
 import SuperAdminFlagsManager from '@/components/SuperAdminFlagsManager';
 import AuditLogsViewer from '@/components/AuditLogsViewer';
+import CollegeDelegationsView from '@/components/CollegeDelegationsView';
+import CollegePricingExceptionsManager from '@/components/CollegePricingExceptionsManager';
 import { InitialEventData } from '@/lib/mockEvents';
 import {
   Users,
@@ -29,6 +31,8 @@ import {
   Drama,
   ExternalLink,
   ShieldCheck,
+  Building2,
+  Tag,
 } from 'lucide-react';
 
 interface MetricsData {
@@ -61,6 +65,8 @@ interface SuperAdminViewProps {
 export type SuperAdminWorkspaceTab =
   | 'FLAGS'
   | 'AUDIT_LOGS'
+  | 'COLLEGE_DELEGATIONS'
+  | 'COLLEGE_PRICING'
   | 'RI'
   | 'MUSIC'
   | 'DANCE'
@@ -489,12 +495,67 @@ export default function SuperAdminView({
                 <span className="text-slate-500">Super Admin Only</span>
               </div>
             </button>
+
+            {/* 7. College Delegations Drilldown */}
+            <button
+              type="button"
+              onClick={() => setActiveCommittee('COLLEGE_DELEGATIONS')}
+              className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                activeCommittee === 'COLLEGE_DELEGATIONS'
+                  ? 'bg-indigo-950/60 border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg'
+                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-1 mb-2">
+                <Building2 className={`w-4 h-4 ${activeCommittee === 'COLLEGE_DELEGATIONS' ? 'text-indigo-400' : 'text-slate-400'}`} />
+                <span className="text-[10px] font-bold text-indigo-400">INSTITUTES</span>
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">College Contingents</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5">Delegations &amp; passes</p>
+              </div>
+              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
+                <span className={activeCommittee === 'COLLEGE_DELEGATIONS' ? 'text-indigo-400' : 'text-slate-500'}>
+                  {activeCommittee === 'COLLEGE_DELEGATIONS' ? '● Viewing' : 'Switch'}
+                </span>
+                <span className="text-slate-500">Contingents</span>
+              </div>
+            </button>
+
+            {/* 8. College Pricing Exceptions */}
+            <button
+              type="button"
+              onClick={() => setActiveCommittee('COLLEGE_PRICING')}
+              className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                activeCommittee === 'COLLEGE_PRICING'
+                  ? 'bg-amber-950/60 border-amber-500 ring-2 ring-amber-500/20 shadow-lg'
+                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-1 mb-2">
+                <Tag className={`w-4 h-4 ${activeCommittee === 'COLLEGE_PRICING' ? 'text-amber-400' : 'text-slate-400'}`} />
+                <span className="text-[10px] font-bold text-amber-400">RULES</span>
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white">Pricing Exceptions</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5">Additive / Replacement</p>
+              </div>
+              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
+                <span className={activeCommittee === 'COLLEGE_PRICING' ? 'text-amber-400' : 'text-slate-500'}>
+                  {activeCommittee === 'COLLEGE_PRICING' ? '● Config' : 'Configure'}
+                </span>
+                <span className="text-slate-500">Rules</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
 
       {/* Scoped Metric Cards */}
-      {activeCommittee !== 'FLAGS' && activeCommittee !== 'AUDIT_LOGS' && (
+      {activeCommittee !== 'FLAGS' &&
+        activeCommittee !== 'AUDIT_LOGS' &&
+        activeCommittee !== 'COLLEGE_DELEGATIONS' &&
+        activeCommittee !== 'COLLEGE_PRICING' && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xs">
             <div className="flex items-center justify-between text-slate-500 mb-2">
@@ -599,6 +660,54 @@ export default function SuperAdminView({
       {activeCommittee === 'AUDIT_LOGS' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
           <AuditLogsViewer />
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 🏛️ SECTION 0.6: COLLEGE CONTINGENT DELEGATIONS & DRILLDOWN */}
+      {/* ========================================================================= */}
+      {activeCommittee === 'COLLEGE_DELEGATIONS' && (
+        <div className="space-y-8 animate-in fade-in-50 duration-200">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-1">
+                  <Building2 className="w-3.5 h-3.5 text-indigo-400" />
+                  Inter-College Delegations Hub
+                </span>
+                <span className="text-xs text-slate-500 font-medium">Super Admin Access</span>
+              </div>
+              <h3 className="text-xl font-bold text-white">College Contingent Registrations</h3>
+              <p className="text-xs text-slate-400">
+                Drill down into registered institutions, view contingent leaders, activities, and individual attendee passes.
+              </p>
+            </div>
+            <CollegeDelegationsView />
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 🏷️ SECTION 0.7: COLLEGE PRICING EXCEPTIONS CONFIGURATOR */}
+      {/* ========================================================================= */}
+      {activeCommittee === 'COLLEGE_PRICING' && (
+        <div className="space-y-8 animate-in fade-in-50 duration-200">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+                  <Tag className="w-3.5 h-3.5 text-amber-400" />
+                  Pricing Exceptions Configurator
+                </span>
+                <span className="text-xs text-slate-500 font-medium">Live Server Matrix</span>
+              </div>
+              <h3 className="text-xl font-bold text-white">College Registration Event Pricing Exceptions</h3>
+              <p className="text-xs text-slate-400">
+                Configure which events incur an additive fee or replace the base campus entry fee for college delegations.
+              </p>
+            </div>
+            <CollegePricingExceptionsManager events={events} />
+          </div>
         </div>
       )}
 

@@ -28,6 +28,7 @@ model Event {
   hasDayOptions       Boolean        @default(false)  // Legacy flag
   onSpotFeeAmount     Int?           // Optional on-spot walk-in counter fee in paise
   registrations       Registration[]
+  instituteParticipants InstituteParticipant[]
 }
 
 model Registration {
@@ -93,4 +94,42 @@ model AuditLog {
   @@index([operatorRollNo])
   @@index([action])
   @@index([createdAt])
+}
+
+model InstituteRegistration {
+  id                String                 @id @default(cuid())
+  instituteName     String
+  leaderName        String
+  leaderEmail       String
+  leaderPhone       String
+  totalAmount       Int                    // Paid in paise (inclusive of ₹1,000 floor)
+  paymentStatus     String                 @default("PENDING") // PENDING, PAID, FAILED
+  paymentMethod     String?                @default("ONLINE_RAZORPAY")
+  razorpayOrderId   String?                @unique
+  razorpayPaymentId String?                @unique
+  participants      InstituteParticipant[]
+  createdAt         DateTime               @default(now())
+
+  @@index([instituteName])
+  @@index([leaderPhone])
+}
+
+model InstituteParticipant {
+  id             String                @id @default(cuid())
+  registrationId String
+  registration   InstituteRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  instituteName  String
+  eventId        String
+  event          Event                 @relation(fields: [eventId], references: [id])
+  fullName       String
+  phone          String
+  photoUrl       String?
+  isTeamLeader   Boolean               @default(false)
+  festivalDay    String?               // DAY_1, DAY_2, BOTH_DAYS
+  ticketCode     String?               // Unique day-wise ticket code
+  securityHash   String?
+  createdAt      DateTime              @default(now())
+
+  @@index([phone])
+  @@index([instituteName, phone])
 }

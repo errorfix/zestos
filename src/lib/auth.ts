@@ -163,7 +163,7 @@ export function getRoleRegistry(): RoleDefinition[] {
   {
     id: 'MANAGEMENT',
     label: 'Higher Authority & Management (Read-Only)',
-    password: process.env.MANAGEMENT_PASSWORD || '',
+    password: process.env.MANAGEMENT_PASSWORD || process.env.MANAGEMENT || process.env.management || '',
     permissions: [
       'view_dashboard',
       'view_registrations',

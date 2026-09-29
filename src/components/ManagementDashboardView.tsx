@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
 import StageRegistrationsManager from '@/components/StageRegistrationsManager';
+import CollegeDelegationsView from '@/components/CollegeDelegationsView';
 import { InitialEventData } from '@/lib/mockEvents';
 import {
   Users,
@@ -26,6 +27,7 @@ import {
   Clock,
   MapPin,
   Lock,
+  Building2,
 } from 'lucide-react';
 
 interface MetricsData {
@@ -57,6 +59,7 @@ interface ManagementDashboardViewProps {
 
 export type ManagementWorkspaceTab =
   | 'ALL'
+  | 'COLLEGE_DELEGATIONS'
   | 'RI'
   | 'MUSIC'
   | 'DANCE'
@@ -257,6 +260,23 @@ export default function ManagementDashboardView({
             <span>Master Registry</span>
             <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-700 text-slate-200">
               {masterMetrics.totalRegistrations}
+            </span>
+          </button>
+
+          {/* College Delegations */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('COLLEGE_DELEGATIONS')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
+              activeTab === 'COLLEGE_DELEGATIONS'
+                ? 'bg-indigo-950/60 text-indigo-300 border-indigo-500 shadow-md ring-2 ring-indigo-500/20'
+                : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700 hover:text-white'
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5 text-indigo-400" />
+            <span>College Delegations</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-900/40 text-indigo-300">
+              Inter-College
             </span>
           </button>
 
@@ -625,6 +645,28 @@ export default function ManagementDashboardView({
                 </tbody>
               </table>
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* College Delegations Observatory */}
+      {activeTab === 'COLLEGE_DELEGATIONS' && (
+        <section className="space-y-4">
+          <div className="bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-sm space-y-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-1">
+                  <Building2 className="w-3.5 h-3.5 text-indigo-400" />
+                  Inter-College Observational Roster
+                </span>
+                <span className="text-xs text-slate-500 font-medium">Read-Only View</span>
+              </div>
+              <h2 className="text-xl font-bold text-white">College Contingent Registries</h2>
+              <p className="text-xs text-slate-400">
+                Explore participating institutions, view delegation team leaders, participated activities, and issued passes.
+              </p>
+            </div>
+            <CollegeDelegationsView />
           </div>
         </section>
       )}

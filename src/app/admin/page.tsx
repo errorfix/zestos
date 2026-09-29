@@ -1,5 +1,5 @@
 import Navbar from '@/components/Navbar';
-import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
+import RniDashboardView from '@/components/RniDashboardView';
 import { getAdminMetrics, getEvents } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';
@@ -210,13 +210,9 @@ export default async function AdminPage() {
           )}
         </section>
 
-        {/* Section 2: Master Attendee Registry & CSV */}
+        {/* Section 2: Master Attendee Registry & College Delegations */}
         <section>
-          <AdminRegistrationsTable
-            apiEndpoint="/api/admin/registrations?excludeCategory=informalz"
-            title="R&I Attendee Registry"
-            subtitle="R&I Committee registrations, ticket passes, stage track assets, and payment records (excludes Informalz)."
-          />
+          <RniDashboardView />
         </section>
       </main>
 

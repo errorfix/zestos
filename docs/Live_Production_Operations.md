@@ -43,8 +43,24 @@ Committee personnel log in directly at `https://lingayaszest.tech/login`. The sy
 | **Literary & Quizzing Committee** | `LITERARY_COMMITTEE_PASSWORD` | `/committee/literary` | Debate, quiz, and literary competition rosters. |
 | **Esports & Gaming Committee** | `GAMING_COMMITTEE_PASSWORD` | `/committee/gaming` | BGMI, Valorant, FIFA tournament rosters. |
 | **Gate Security & Check-In Team** | `CHECKIN_PASSWORD` | `/checkin` | High-speed QR scanning, offline HMAC validation, admission stamps. |
-| **Higher Authority / Management** | `MANAGEMENT_PASSWORD` | `/management` | Strictly read-only observational access across all committees, revenue, and audit trails. |
+| **Higher Authority / Management** | `MANAGEMENT_PASSWORD` (or alias `MANAGEMENT`) | `/management` | Strictly read-only observational access across all committees, revenue, and audit trails. |
 | **On-Spot Registration Desk** | `ONSPOT_DESK_PASSWORD` | `/desk` | Fast-track physical counter for cash and UPI on-spot registrations. |
+
+> [!TIP]
+> **Active Production Password Registry in VPS `.env`**:
+> - `SUPER_ADMIN_PASSWORD`: `"phoenix@lv321"`
+> - `RI_COMMITTEE_PASSWORD`: `"falcon@lv321"`
+> - `INFORMALZ_COMMITTEE_PASSWORD`: `"tiger@lv321"`
+> - `STAGE_COMMITTEE_PASSWORD`: `"lion@lv321"`
+> - `MUSIC_COMMITTEE_PASSWORD`: `"Music@Zest26_1pY"`
+> - `DANCE_COMMITTEE_PASSWORD`: `"Dance@Zest26_3rQ"`
+> - `FASHION_COMMITTEE_PASSWORD`: `"Fashion@Zest26_5wN"`
+> - `THEATRE_COMMITTEE_PASSWORD`: `"Theatre@Zest26_8dT"`
+> - `LITERARY_COMMITTEE_PASSWORD`: `"Lit@Zest26_2sM"`
+> - `GAMING_COMMITTEE_PASSWORD`: `"Game@Zest26_6jH"`
+> - `CHECKIN_PASSWORD`: `"Gate@Zest26_8qW"`
+> - `ONSPOT_DESK_PASSWORD`: `"desk@lv321"`
+> - `MANAGEMENT_PASSWORD`: `"apex@lv321"`
 
 > **Note:** For security, all passwords have been stripped from the source code. The passwords are now securely loaded from the `.env` file via `process.env` lookups. If a password environment variable is missing, that role's panel becomes inaccessible.
 
@@ -156,8 +172,15 @@ Whenever code changes are committed and pushed to GitHub (`main` branch), apply 
 cd /opt/festos && git pull origin main && docker compose build --no-cache festos-app && docker compose up -d festos-app
 ```
 
+### When Prisma Schema Changes (`prisma/schema.prisma` modified)
+If the update includes database schema modifications (new models, new columns, or index updates), apply the schema changes to the live PostgreSQL container immediately after starting the app:
+
+```bash
+docker compose exec festos-app npx prisma db push
+```
+
 > [!NOTE]
-> Database migrations and schema pushes run against PostgreSQL without resetting existing tables. All registered participants, tickets, and audit logs are preserved in `postgres_data`.
+> `npx prisma db push` synchronizes the live PostgreSQL database with `schema.prisma` safely without resetting existing tables. All registered participants, tickets, and audit logs are preserved in the persistent `postgres_data` volume.
 
 ---
 
@@ -195,3 +218,153 @@ Only **Super Admin** (`/super-admin`) and **R&I Committee** (`/admin`) can edit 
 | `.festos_committee_edit_flags.json` | Participant data edit permission flags per committee |
 
 Both files are git-ignored and persist across container restarts via the NVMe volume at `/opt/festos`.
+
+---
+
+## 9. College Contingent Registration Architecture & Data Structure
+
+### 9.1 Multi-Event Cart & Contingent Registration Flow (`/register/college`)
+To accommodate delegations competing across multiple activities (including solo, duet, and group events) without triggering false minimum-order penalties, the college registration follows a **Multi-Event Contingent Cart Architecture**:
+
+1. **Institute Identification**:
+   - Searchable Combobox / Creatable Select component.
+   - Preloaded with known universities/institutes.
+   - Allows typing fuzzy search; if college is not present, allows adding a new institution.
+   - Prominent notice: *"Please ensure your Institution Name is entered with proper casing and official formatting (e.g. 'Lingaya's Vidyapeeth', 'Amity University Noida')."*
+
+2. **Squad Entry & Event Selection**:
+   - Select event from dropdown.
+   - **Entry #1 is explicitly designated as the Team Leader** (Name, Personal Mobile, Photo).
+   - Additional entries for team members (Name, Personal Mobile, Photo).
+   - Validation Notice: *"Every student must provide their own personal mobile number. Do NOT enter coordinator or faculty phone numbers. Each attendee receives their personal Day-wise QR pass linked to this phone number."*
+   - Operator/Contingent Leader clicks **"Add Event Squad to Contingent"** to push to cart.
+
+3. **Multi-Event Cart & Summary**:
+   - The contingent can add multiple events (e.g., Solo Singing, Duet Dance, Battle of Bands, Street Play).
+   - Live summary calculates:
+     - Total Unique Participants.
+     - Day 1 Unique Passes.
+     - Day 2 Unique Passes.
+     - Itemized fee calculation with Day 1 tier and Day 2 flat fees.
+     - Minimum Order Floor check (₹1,000 threshold).
+   - Single unified Razorpay checkout for the entire contingent.
+
+### 9.2 Exact Pricing & Tier Calculation Engine
+Campus entry is tokenized on a per-day, per-person basis:
+
+1. **Quota Calculation (20-Participant Threshold)**:
+   - A college has a quota of **20 participants** eligible for the discounted rate.
+   - The quota counter $N_{\text{quota}}$ includes **all unique participants registered across both Day 1 and Day 2**.
+2. **Day 1 Pricing (October 30)**:
+   - For Day 1 participants within the college's first 20 participants: **₹100 / person**.
+   - For Day 1 participants from the 21st participant onwards: **₹150 / person**.
+3. **Day 2 Pricing (October 31)**:
+   - Day 2 participants are **always ₹150 / person** (no discounted tier).
+   - Day 2 participants still consume slots toward the college's 20-participant quota.
+4. **Minimum Order Floor**:
+   - Each contingent checkout submission enforces a **minimum total charge of ₹1,000**.
+   - If the calculated participant sum is < ₹1,000 (e.g. 8 Day 1 participants = ₹800), the cart total automatically floors to ₹1,000.
+5. **Super Admin Event Exception Surcharges**:
+   - In `/super-admin`, a dedicated **"College Registration Event Pricing Exceptions"** manager provides dropdown controls to mark specific events as exceptions:
+     - **Mode A (Additive)**: Event fee is added on top of the campus entry fee.
+     - **Mode B (Replacement)**: Event fee replaces the campus entry fee for participants in that activity.
+     - Default for all other events: Standard campus entry fee rules apply.
+
+### 9.3 Day-Wise QR Pass Deduplication Engine
+- Keyed on `(phoneNumber, festivalDay)`.
+- If *Aryan* participates in 3 different events on Day 1: **Exactly 1 Day 1 QR Pass is generated**.
+- If *Aryan* participates in an event on Day 1 and an event on Day 2: **Exactly 2 passes are generated (1 for Day 1, 1 for Day 2)**.
+- If a phone number is registered again in a subsequent contingent submission under the same institution, the system verifies their existing Day pass in PostgreSQL and links it rather than creating duplicate ticket codes.
+
+### 9.4 Separated Committee Observational & Audit Consoles
+To prevent mixing with individual registrations, a dedicated **"College Delegations"** tab is embedded in:
+- **R&I Committee Panel** (`/admin`)
+- **Super Admin Console** (`/super-admin`)
+- **Higher Authority Panel** (`/management`)
+
+**Hierarchical Roster Drilldown**:
+```
+[Select College / Institute Dropdown]
+   └── [Team Leader Card: Name, Phone, Total Events, Total Contingent Size]
+        └── [Participated Event Accordion]
+             └── [Expandable Attendee Roster]
+                  ├── #1 Team Leader (Badge, Phone, Photo, QR Pass Day 1/2)
+                  ├── #2 Participant (Phone, Photo, QR Pass Day 1/2)
+                  └── #3 Participant (Phone, Photo, QR Pass Day 1/2)
+```
+
+### 9.5 Prisma Schema Updater Code
+```prisma
+model InstituteRegistration {
+  id                String                 @id @default(cuid())
+  instituteName     String
+  leaderName        String
+  leaderEmail       String
+  leaderPhone       String
+  totalAmount       Int                    // Paid in paise (inclusive of ₹1,000 floor)
+  paymentStatus     String                 @default("PENDING") // PENDING, PAID, FAILED
+  paymentMethod     String?                @default("ONLINE_RAZORPAY")
+  razorpayOrderId   String?                @unique
+  razorpayPaymentId String?                @unique
+  participants      InstituteParticipant[]
+  createdAt         DateTime               @default(now())
+
+  @@index([instituteName])
+  @@index([leaderPhone])
+}
+
+model InstituteParticipant {
+  id             String                @id @default(cuid())
+  registrationId String
+  registration   InstituteRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  eventId        String
+  event          Event                 @relation(fields: [eventId], references: [id])
+  fullName       String
+  phone          String
+  photoUrl       String?
+  isTeamLeader   Boolean               @default(false)
+  festivalDay    String?               // DAY_1, DAY_2, BOTH_DAYS
+  ticketCode     String?               // Unique day-wise ticket code
+  createdAt      DateTime              @default(now())
+
+  @@index([phone])
+  @@index([instituteName, phone])
+}
+```
+
+### 9.6 Deployment Execution Requisites on Live VPS
+Apply schema modifications and container updates on `/opt/festos`:
+```bash
+# 1. Pull latest code
+cd /opt/festos && git pull origin main
+
+# 2. Synchronize PostgreSQL database schema safely (non-destructive)
+docker compose exec festos-app npx prisma db push
+
+# 3. Rebuild and launch the application container
+docker compose build --no-cache festos-app && docker compose up -d festos-app
+```
+
+---
+
+## 10. Higher Authority (`/management`) Environment Configuration & Password Troubleshooting
+
+### 10.1 Root Cause & Resolution
+On the live VPS `/opt/festos/.env`, the credential variable was named `MANAGEMENT="<password>"` or `management="<password>"`, whereas `src/lib/auth.ts` looked solely for `MANAGEMENT_PASSWORD`.
+
+`src/lib/auth.ts` has been updated to evaluate:
+```typescript
+password: process.env.MANAGEMENT_PASSWORD || process.env.MANAGEMENT || process.env.management || '',
+```
+Both variable names (`MANAGEMENT` and `MANAGEMENT_PASSWORD`) are now fully supported.
+
+### 10.2 Reloading `.env` Changes in Docker
+Docker Compose reads `.env` **only during container creation**. If `/opt/festos/.env` was modified while the container was running, Docker continues using the old values until re-created.
+
+To reload updated passwords from `.env` on the VPS without a full image rebuild:
+```bash
+cd /opt/festos && docker compose up -d festos-app
+```
+This restarts `festos-app` with the active environment variables in ~3 seconds.
+
+
