@@ -41,7 +41,7 @@ export default async function ManagementPage() {
   const events = await getEvents();
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col text-slate-100">
+    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 w-full space-y-8">
@@ -49,36 +49,36 @@ export default async function ManagementPage() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-950/60 text-indigo-300 border border-indigo-700/50 flex items-center gap-1">
-                <Building2 className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200 flex items-center gap-1">
+                <Building2 className="w-3.5 h-3.5 text-slate-700" />
                 Executive Leadership
               </span>
               <span className="text-xs text-slate-500 font-medium">Read-Only Observatory</span>
             </div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
               Higher Authority &amp; Management Panel
             </h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-sm text-slate-600 mt-1">
               High-level institutional observation of festival metrics, committee attendee registries, and stage track readiness.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="hidden sm:flex flex-col items-end pr-2 text-right">
-              <span className="text-xs font-bold text-white">
+              <span className="text-xs font-bold text-slate-900">
                 {session?.roleLabel || 'Executive Management'}
               </span>
-              <span className="text-[10px] text-indigo-400 font-semibold flex items-center gap-1">
-                <Lock className="w-3 h-3" /> Audit &amp; View Only
+              <span className="text-[10px] text-slate-500 font-semibold flex items-center gap-1">
+                <Lock className="w-3 h-3 text-slate-600" /> Audit &amp; View Only
               </span>
             </div>
 
             <form action="/api/auth/logout" method="POST">
               <button
                 type="submit"
-                className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors flex items-center gap-1.5 shadow-sm"
+                className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors flex items-center gap-1.5 shadow-xs"
               >
-                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <LogOut className="w-3.5 h-3.5 text-rose-500" />
                 <span>Log Out</span>
               </button>
             </form>
@@ -96,12 +96,12 @@ export default async function ManagementPage() {
       </main>
 
       {/* Institutional Footer Notice */}
-      <footer className="border-t border-slate-800/80 bg-slate-900/50 py-6 mt-12">
+      <footer className="border-t border-slate-200 bg-white py-6 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500">
           <p>
             FestOS v2.0 • Lingaya&apos;s Vidyapeeth Campus Events &bull; Confidential Executive Access
           </p>
-          <p className="text-[11px] text-slate-600 mt-1">
+          <p className="text-[11px] text-slate-400 mt-1">
             All data displayed is refreshed dynamically from the unified transaction store.
           </p>
         </div>

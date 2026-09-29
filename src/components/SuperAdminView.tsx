@@ -111,33 +111,33 @@ export default function SuperAdminView({
       <div className="space-y-4">
         {/* Top Flag Access Matrix Feature Banner */}
         <div
-          className={`p-4 sm:p-5 rounded-2xl border-2 transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+          className={`p-4 sm:p-5 rounded-2xl border transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
             activeCommittee === 'FLAGS'
-              ? 'bg-gradient-to-r from-amber-950/60 via-slate-900 to-indigo-950/60 border-amber-500 ring-2 ring-amber-500/20 shadow-xl'
-              : 'bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800/80 border-slate-700/80 hover:border-amber-500/50'
+              ? 'bg-amber-50/80 border-amber-300 ring-2 ring-amber-400/20 shadow-xs'
+              : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
           }`}
         >
           <div className="flex items-center gap-3.5">
             <div
               className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${
                 activeCommittee === 'FLAGS'
-                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                  : 'bg-slate-800 border-slate-700 text-slate-400'
+                  ? 'bg-amber-100 border-amber-300 text-amber-800'
+                  : 'bg-slate-100 border-slate-200 text-slate-700'
               }`}
             >
               <Sliders className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
                   Access Control Engine
                 </span>
-                <span className="text-xs text-slate-400">Dynamic Boolean Matrix</span>
+                <span className="text-xs text-slate-500">Dynamic Boolean Matrix</span>
               </div>
-              <h3 className="text-base font-bold text-white mt-0.5">
+              <h3 className="text-base font-bold text-slate-900 mt-0.5">
                 Committee Event Visibility &amp; Boolean Flags Matrix
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600">
                 Grant or restrict any committee panel&apos;s access to specific event types in real time.
               </p>
             </div>
@@ -147,8 +147,8 @@ export default function SuperAdminView({
             onClick={() => setActiveCommittee('FLAGS')}
             className={`w-full md:w-auto px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shrink-0 ${
               activeCommittee === 'FLAGS'
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 ring-2 ring-white/20'
-                : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-600'
+                ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
+                : 'bg-slate-900 hover:bg-slate-800 text-white border border-slate-900 shadow-xs'
             }`}
           >
             <Sliders className="w-3.5 h-3.5" />
@@ -159,10 +159,10 @@ export default function SuperAdminView({
         {/* Specialized Event Panels (The 6 Cultural & Gaming Committees) */}
         <div>
           <div className="flex items-center justify-between mb-2.5">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-fuchsia-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700">
               Specialized Event Committee Workspaces
             </span>
-            <span className="text-[11px] text-slate-400">
+            <span className="text-[11px] text-slate-500">
               Direct attendee rosters &amp; dedicated panel access
             </span>
           </div>
@@ -174,23 +174,27 @@ export default function SuperAdminView({
               onClick={() => setActiveCommittee('MUSIC')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'MUSIC'
-                  ? 'bg-rose-950/40 border-rose-500 ring-2 ring-rose-500/20'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <Music className={`w-4 h-4 ${activeCommittee === 'MUSIC' ? 'text-rose-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-slate-400">{musicCount} Events</span>
+                <Music className={`w-4 h-4 ${activeCommittee === 'MUSIC' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'MUSIC' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  {musicCount} Events
+                </span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white truncate">Cultural Music</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Vocal &amp; Band tracks</p>
+                <h4 className="text-sm font-bold truncate">Cultural Music</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'MUSIC' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Vocal &amp; Band tracks
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'MUSIC' ? 'text-rose-400' : 'text-slate-500'}>
-                  {activeCommittee === 'MUSIC' ? '● Viewing' : 'Switch'}
-                </span>
-                <span className="text-slate-500">/committee/music</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'MUSIC' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'MUSIC' ? '● Viewing' : 'Switch'}</span>
+                <span>/committee/music</span>
               </div>
             </button>
 
@@ -200,23 +204,27 @@ export default function SuperAdminView({
               onClick={() => setActiveCommittee('DANCE')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'DANCE'
-                  ? 'bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/20'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <Flame className={`w-4 h-4 ${activeCommittee === 'DANCE' ? 'text-amber-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-slate-400">{danceCount} Events</span>
+                <Flame className={`w-4 h-4 ${activeCommittee === 'DANCE' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'DANCE' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  {danceCount} Events
+                </span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white truncate">Cultural Dance</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Solo &amp; Group tracks</p>
+                <h4 className="text-sm font-bold truncate">Cultural Dance</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'DANCE' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Solo &amp; Group tracks
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'DANCE' ? 'text-amber-400' : 'text-slate-500'}>
-                  {activeCommittee === 'DANCE' ? '● Viewing' : 'Switch'}
-                </span>
-                <span className="text-slate-500">/committee/dance</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'DANCE' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'DANCE' ? '● Viewing' : 'Switch'}</span>
+                <span>/committee/dance</span>
               </div>
             </button>
 
@@ -226,23 +234,27 @@ export default function SuperAdminView({
               onClick={() => setActiveCommittee('FASHION')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'FASHION'
-                  ? 'bg-fuchsia-950/40 border-fuchsia-500 ring-2 ring-fuchsia-500/20'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <Sparkles className={`w-4 h-4 ${activeCommittee === 'FASHION' ? 'text-fuchsia-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-slate-400">{fashionCount} Events</span>
+                <Sparkles className={`w-4 h-4 ${activeCommittee === 'FASHION' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'FASHION' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  {fashionCount} Events
+                </span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white truncate">Cultural Fashion</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Runway &amp; Vogue</p>
+                <h4 className="text-sm font-bold truncate">Cultural Fashion</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'FASHION' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Runway &amp; Vogue
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'FASHION' ? 'text-fuchsia-400' : 'text-slate-500'}>
-                  {activeCommittee === 'FASHION' ? '● Viewing' : 'Switch'}
-                </span>
-                <span className="text-slate-500">/committee/fashion</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'FASHION' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'FASHION' ? '● Viewing' : 'Switch'}</span>
+                <span>/committee/fashion</span>
               </div>
             </button>
 
@@ -252,23 +264,27 @@ export default function SuperAdminView({
               onClick={() => setActiveCommittee('THEATRE')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'THEATRE'
-                  ? 'bg-violet-950/40 border-violet-500 ring-2 ring-violet-500/20'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <Drama className={`w-4 h-4 ${activeCommittee === 'THEATRE' ? 'text-violet-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-slate-400">{theatreCount} Events</span>
+                <Drama className={`w-4 h-4 ${activeCommittee === 'THEATRE' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'THEATRE' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  {theatreCount} Events
+                </span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white truncate">Cultural Theatre</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Nukkad &amp; Drama</p>
+                <h4 className="text-sm font-bold truncate">Cultural Theatre</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'THEATRE' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Nukkad &amp; Drama
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'THEATRE' ? 'text-violet-400' : 'text-slate-500'}>
-                  {activeCommittee === 'THEATRE' ? '● Viewing' : 'Switch'}
-                </span>
-                <span className="text-slate-500">/committee/theatre</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'THEATRE' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'THEATRE' ? '● Viewing' : 'Switch'}</span>
+                <span>/committee/theatre</span>
               </div>
             </button>
 
@@ -278,23 +294,27 @@ export default function SuperAdminView({
               onClick={() => setActiveCommittee('LITERARY')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'LITERARY'
-                  ? 'bg-blue-950/40 border-blue-500 ring-2 ring-blue-500/20'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <BookOpen className={`w-4 h-4 ${activeCommittee === 'LITERARY' ? 'text-blue-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-slate-400">{literaryCount} Events</span>
+                <BookOpen className={`w-4 h-4 ${activeCommittee === 'LITERARY' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'LITERARY' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  {literaryCount} Events
+                </span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white truncate">Literary &amp; Quizzing</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Debate &amp; Trivia</p>
+                <h4 className="text-sm font-bold truncate">Literary &amp; Quizzing</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'LITERARY' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Debate &amp; Trivia
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'LITERARY' ? 'text-blue-400' : 'text-slate-500'}>
-                  {activeCommittee === 'LITERARY' ? '● Viewing' : 'Switch'}
-                </span>
-                <span className="text-slate-500">/committee/literary</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'LITERARY' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'LITERARY' ? '● Viewing' : 'Switch'}</span>
+                <span>/committee/literary</span>
               </div>
             </button>
 
@@ -304,23 +324,27 @@ export default function SuperAdminView({
               onClick={() => setActiveCommittee('GAMING')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'GAMING'
-                  ? 'bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/20'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <Gamepad2 className={`w-4 h-4 ${activeCommittee === 'GAMING' ? 'text-emerald-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-slate-400">{gamingCount} Events</span>
+                <Gamepad2 className={`w-4 h-4 ${activeCommittee === 'GAMING' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'GAMING' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  {gamingCount} Events
+                </span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white truncate">Esports &amp; Gaming</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">BGMI, Valorant, FIFA</p>
+                <h4 className="text-sm font-bold truncate">Esports &amp; Gaming</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'GAMING' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  BGMI, Valorant, FIFA
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'GAMING' ? 'text-emerald-400' : 'text-slate-500'}>
-                  {activeCommittee === 'GAMING' ? '● Viewing' : 'Switch'}
-                </span>
-                <span className="text-slate-500">/committee/gaming</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'GAMING' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'GAMING' ? '● Viewing' : 'Switch'}</span>
+                <span>/committee/gaming</span>
               </div>
             </button>
           </div>
@@ -329,10 +353,10 @@ export default function SuperAdminView({
         {/* Core Operations Workspaces */}
         <div>
           <div className="flex items-center justify-between mb-2.5">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700">
               Core Operations &amp; Registries
             </span>
-            <span className="text-[11px] text-slate-400">
+            <span className="text-[11px] text-slate-500">
               Master aggregation, desk, AV console &amp; R&amp;I
             </span>
           </div>
@@ -344,23 +368,27 @@ export default function SuperAdminView({
               onClick={() => setActiveCommittee('RI')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'RI'
-                  ? 'bg-blue-950/40 border-blue-500 ring-2 ring-blue-500/20'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <Trophy className={`w-4 h-4 ${activeCommittee === 'RI' ? 'text-blue-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-slate-400">{riCount} Events</span>
+                <Trophy className={`w-4 h-4 ${activeCommittee === 'RI' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'RI' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  {riCount} Events
+                </span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">R&amp;I Committee</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Competitive &amp; Paid events</p>
+                <h4 className="text-sm font-bold">R&amp;I Committee</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'RI' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Competitive &amp; Paid events
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'RI' ? 'text-blue-400' : 'text-slate-500'}>
-                  {activeCommittee === 'RI' ? '● Viewing' : 'Switch'}
-                </span>
-                <span className="text-slate-500">/admin/rni</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'RI' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'RI' ? '● Viewing' : 'Switch'}</span>
+                <span>/admin/rni</span>
               </div>
             </button>
 
@@ -370,23 +398,27 @@ export default function SuperAdminView({
               onClick={() => setActiveCommittee('INFORMALZ')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'INFORMALZ'
-                  ? 'bg-purple-950/40 border-purple-500 ring-2 ring-purple-500/20'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <PartyPopper className={`w-4 h-4 ${activeCommittee === 'INFORMALZ' ? 'text-purple-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-slate-400">{informalzCount} Free</span>
+                <PartyPopper className={`w-4 h-4 ${activeCommittee === 'INFORMALZ' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'INFORMALZ' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  {informalzCount} Free
+                </span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">Informalz</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Zero-fee campus activities</p>
+                <h4 className="text-sm font-bold">Informalz</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'INFORMALZ' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Zero-fee campus activities
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'INFORMALZ' ? 'text-purple-400' : 'text-slate-500'}>
-                  {activeCommittee === 'INFORMALZ' ? '● Viewing' : 'Switch'}
-                </span>
-                <span className="text-slate-500">/admin/informalz</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'INFORMALZ' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'INFORMALZ' ? '● Viewing' : 'Switch'}</span>
+                <span>/admin/informalz</span>
               </div>
             </button>
 
@@ -396,23 +428,27 @@ export default function SuperAdminView({
               onClick={() => setActiveCommittee('STAGE')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'STAGE'
-                  ? 'bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/20'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <Mic2 className={`w-4 h-4 ${activeCommittee === 'STAGE' ? 'text-amber-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-slate-400">{trackCount} Tracks</span>
+                <Mic2 className={`w-4 h-4 ${activeCommittee === 'STAGE' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'STAGE' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  {trackCount} Tracks
+                </span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">Stage &amp; AV Cues</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Audio &amp; Drive tracks</p>
+                <h4 className="text-sm font-bold">Stage &amp; AV Cues</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'STAGE' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Audio &amp; Drive tracks
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'STAGE' ? 'text-amber-400' : 'text-slate-500'}>
-                  {activeCommittee === 'STAGE' ? '● Viewing' : 'Switch'}
-                </span>
-                <span className="text-slate-500">/admin/stage</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'STAGE' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'STAGE' ? '● Viewing' : 'Switch'}</span>
+                <span>/admin/stage</span>
               </div>
             </button>
 
@@ -422,23 +458,27 @@ export default function SuperAdminView({
               onClick={() => setActiveCommittee('ONSPOT')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'ONSPOT'
-                  ? 'bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/20'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <Banknote className={`w-4 h-4 ${activeCommittee === 'ONSPOT' ? 'text-emerald-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-slate-400">Surge Pricing</span>
+                <Banknote className={`w-4 h-4 ${activeCommittee === 'ONSPOT' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'ONSPOT' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Surge Pricing
+                </span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">On-Spot Desk</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Counter price &amp; cash audit</p>
+                <h4 className="text-sm font-bold">On-Spot Desk</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'ONSPOT' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Counter price &amp; cash audit
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'ONSPOT' ? 'text-emerald-400' : 'text-slate-500'}>
-                  {activeCommittee === 'ONSPOT' ? '● Viewing' : 'Switch'}
-                </span>
-                <span className="text-slate-500">Door Counter</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'ONSPOT' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'ONSPOT' ? '● Viewing' : 'Switch'}</span>
+                <span>Door Counter</span>
               </div>
             </button>
 
@@ -448,51 +488,58 @@ export default function SuperAdminView({
               onClick={() => setActiveCommittee('ALL')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'ALL'
-                  ? 'bg-slate-800 border-slate-500 ring-2 ring-slate-500/20'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <Layers className={`w-4 h-4 ${activeCommittee === 'ALL' ? 'text-slate-200' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-slate-400">{events.length} Total</span>
+                <Layers className={`w-4 h-4 ${activeCommittee === 'ALL' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'ALL' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  {events.length} Total
+                </span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">Master View</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Universal combined audit</p>
+                <h4 className="text-sm font-bold">Master View</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'ALL' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Universal combined audit
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'ALL' ? 'text-slate-200' : 'text-slate-500'}>
-                  {activeCommittee === 'ALL' ? '● Viewing' : 'Switch'}
-                </span>
-                <span className="text-slate-500">Universal</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'ALL' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'ALL' ? '● Viewing' : 'Switch'}</span>
+                <span>Universal</span>
               </div>
             </button>
-            {/* 6. Security Audit Trail (Real-Time PostgreSQL Stream) */}
+
+            {/* 6. Security Audit Trail */}
             <button
               type="button"
               onClick={() => setActiveCommittee('AUDIT_LOGS')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'AUDIT_LOGS'
-                  ? 'bg-indigo-950/60 border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
                 <div className="flex items-center gap-1.5">
-                  <ShieldCheck className={`w-4 h-4 ${activeCommittee === 'AUDIT_LOGS' ? 'text-indigo-400' : 'text-slate-400'}`} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <ShieldCheck className={`w-4 h-4 ${activeCommittee === 'AUDIT_LOGS' ? 'text-white' : 'text-slate-700'}`} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                 </div>
-                <span className="text-[10px] font-bold text-emerald-400 font-mono">LIVE FEED</span>
+                <span className="text-[10px] font-bold text-emerald-600 font-mono">LIVE FEED</span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">Audit Trail</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Real-time operator logs</p>
+                <h4 className="text-sm font-bold">Audit Trail</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'AUDIT_LOGS' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Real-time operator logs
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'AUDIT_LOGS' ? 'text-indigo-400' : 'text-slate-500'}>
-                  {activeCommittee === 'AUDIT_LOGS' ? '● Live Stream' : 'Open Stream'}
-                </span>
-                <span className="text-slate-500">Super Admin Only</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'AUDIT_LOGS' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'AUDIT_LOGS' ? '● Live Stream' : 'Open Stream'}</span>
+                <span>Super Admin Only</span>
               </div>
             </button>
 
@@ -502,23 +549,27 @@ export default function SuperAdminView({
               onClick={() => setActiveCommittee('COLLEGE_DELEGATIONS')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'COLLEGE_DELEGATIONS'
-                  ? 'bg-indigo-950/60 border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <Building2 className={`w-4 h-4 ${activeCommittee === 'COLLEGE_DELEGATIONS' ? 'text-indigo-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-indigo-400">INSTITUTES</span>
+                <Building2 className={`w-4 h-4 ${activeCommittee === 'COLLEGE_DELEGATIONS' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'COLLEGE_DELEGATIONS' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  INSTITUTES
+                </span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">College Contingents</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Delegations &amp; passes</p>
+                <h4 className="text-sm font-bold">College Contingents</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'COLLEGE_DELEGATIONS' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Delegations &amp; passes
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'COLLEGE_DELEGATIONS' ? 'text-indigo-400' : 'text-slate-500'}>
-                  {activeCommittee === 'COLLEGE_DELEGATIONS' ? '● Viewing' : 'Switch'}
-                </span>
-                <span className="text-slate-500">Contingents</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'COLLEGE_DELEGATIONS' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'COLLEGE_DELEGATIONS' ? '● Viewing' : 'Switch'}</span>
+                <span>Contingents</span>
               </div>
             </button>
 
@@ -528,23 +579,27 @@ export default function SuperAdminView({
               onClick={() => setActiveCommittee('COLLEGE_PRICING')}
               className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                 activeCommittee === 'COLLEGE_PRICING'
-                  ? 'bg-amber-950/60 border-amber-500 ring-2 ring-amber-500/20 shadow-lg'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-2">
-                <Tag className={`w-4 h-4 ${activeCommittee === 'COLLEGE_PRICING' ? 'text-amber-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-bold text-amber-400">RULES</span>
+                <Tag className={`w-4 h-4 ${activeCommittee === 'COLLEGE_PRICING' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'COLLEGE_PRICING' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  RULES
+                </span>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">Pricing Exceptions</h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">Additive / Replacement</p>
+                <h4 className="text-sm font-bold">Pricing Exceptions</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'COLLEGE_PRICING' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Additive / Replacement
+                </p>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-slate-800/80 text-[10px] font-bold flex justify-between">
-                <span className={activeCommittee === 'COLLEGE_PRICING' ? 'text-amber-400' : 'text-slate-500'}>
-                  {activeCommittee === 'COLLEGE_PRICING' ? '● Config' : 'Configure'}
-                </span>
-                <span className="text-slate-500">Rules</span>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${
+                activeCommittee === 'COLLEGE_PRICING' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+              }`}>
+                <span>{activeCommittee === 'COLLEGE_PRICING' ? '● Config' : 'Configure'}</span>
+                <span>Rules</span>
               </div>
             </button>
           </div>
@@ -557,39 +612,39 @@ export default function SuperAdminView({
         activeCommittee !== 'COLLEGE_DELEGATIONS' &&
         activeCommittee !== 'COLLEGE_PRICING' && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xs">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between text-slate-400 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 {activeCommittee === 'STAGE' ? 'Track Performers' : 'Registrations'}
               </span>
-              <Users className="w-4 h-4 text-blue-400" />
+              <Users className="w-4 h-4 text-slate-700" />
             </div>
-            <span className="text-2xl sm:text-3xl font-extrabold text-white block">
+            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 block">
               {activeCommittee === 'STAGE'
                 ? stageMetrics?.totalTrackRegistrations || 0
                 : currentMetrics.totalRegistrations}
             </span>
-            <span className="text-[11px] text-emerald-400 font-medium block mt-1">
+            <span className="text-[11px] text-emerald-600 font-semibold block mt-1">
               {activeCommittee === 'STAGE'
                 ? `${stageMetrics?.totalPerformers || 0} Registered Performers`
                 : `${currentMetrics.paidRegistrations} Confirmed Passes`}
             </span>
           </div>
 
-          <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xs">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between text-slate-400 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 {activeCommittee === 'STAGE'
                   ? 'Tracks Ready'
                   : 'Revenue Collected'}
               </span>
               {activeCommittee === 'STAGE' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               ) : (
-                <IndianRupee className="w-4 h-4 text-emerald-400" />
+                <IndianRupee className="w-4 h-4 text-emerald-600" />
               )}
             </div>
-            <span className="text-2xl sm:text-3xl font-extrabold text-white block">
+            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 block">
               {activeCommittee === 'STAGE'
                 ? stageMetrics?.tracksAttached || 0
                 : `₹${currentMetrics.totalRevenueInr.toLocaleString('en-IN')}`}
@@ -603,14 +658,14 @@ export default function SuperAdminView({
             </span>
           </div>
 
-          <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xs">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between text-slate-400 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 {activeCommittee === 'STAGE' ? 'Action Required' : 'Gate Checked In'}
               </span>
-              <Scan className="w-4 h-4 text-amber-400" />
+              <Scan className="w-4 h-4 text-amber-600" />
             </div>
-            <span className="text-2xl sm:text-3xl font-extrabold text-white block">
+            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 block">
               {activeCommittee === 'STAGE'
                 ? stageMetrics?.tracksMissing || 0
                 : currentMetrics.totalCheckedInTickets}
@@ -622,14 +677,14 @@ export default function SuperAdminView({
             </span>
           </div>
 
-          <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xs">
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between text-slate-400 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 {activeCommittee === 'STAGE' ? 'Track Events' : 'Active Events'}
               </span>
-              <Calendar className="w-4 h-4 text-purple-400" />
+              <Calendar className="w-4 h-4 text-slate-700" />
             </div>
-            <span className="text-2xl sm:text-3xl font-extrabold text-white block">
+            <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 block">
               {activeCommittee === 'INFORMALZ'
                 ? informalzCount
                 : activeCommittee === 'RI'
@@ -638,7 +693,7 @@ export default function SuperAdminView({
                 ? trackCount
                 : events.length}
             </span>
-            <span className="text-[11px] text-amber-400 font-medium block mt-1">
+            <span className="text-[11px] text-slate-500 font-medium block mt-1">
               Full Super Admin CRUD
             </span>
           </div>
@@ -668,17 +723,17 @@ export default function SuperAdminView({
       {/* ========================================================================= */}
       {activeCommittee === 'COLLEGE_DELEGATIONS' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+          <div className="p-6 rounded-3xl bg-white border border-slate-200 space-y-4 shadow-xs">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-1">
-                  <Building2 className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1">
+                  <Building2 className="w-3.5 h-3.5 text-slate-600" />
                   Inter-College Delegations Hub
                 </span>
                 <span className="text-xs text-slate-500 font-medium">Super Admin Access</span>
               </div>
-              <h3 className="text-xl font-bold text-white">College Contingent Registrations</h3>
-              <p className="text-xs text-slate-400">
+              <h3 className="text-xl font-bold text-slate-900">College Contingent Registrations</h3>
+              <p className="text-xs text-slate-600">
                 Drill down into registered institutions, view contingent leaders, activities, and individual attendee passes.
               </p>
             </div>
@@ -692,17 +747,17 @@ export default function SuperAdminView({
       {/* ========================================================================= */}
       {activeCommittee === 'COLLEGE_PRICING' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+          <div className="p-6 rounded-3xl bg-white border border-slate-200 space-y-4 shadow-xs">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
-                  <Tag className="w-3.5 h-3.5 text-amber-400" />
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1">
+                  <Tag className="w-3.5 h-3.5 text-slate-600" />
                   Pricing Exceptions Configurator
                 </span>
                 <span className="text-xs text-slate-500 font-medium">Live Server Matrix</span>
               </div>
-              <h3 className="text-xl font-bold text-white">College Registration Event Pricing Exceptions</h3>
-              <p className="text-xs text-slate-400">
+              <h3 className="text-xl font-bold text-slate-900">College Registration Event Pricing Exceptions</h3>
+              <p className="text-xs text-slate-600">
                 Configure which events incur an additive fee or replace the base campus entry fee for college delegations.
               </p>
             </div>
@@ -716,23 +771,23 @@ export default function SuperAdminView({
       {/* ========================================================================= */}
       {activeCommittee === 'MUSIC' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
-          <div className="bg-rose-950/30 border border-rose-800/40 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
                   melody@lv321
                 </span>
-                <span className="text-xs text-rose-300 font-mono">Dedicated Portal: /committee/music</span>
+                <span className="text-xs text-slate-500 font-mono">Dedicated Portal: /committee/music</span>
               </div>
-              <h3 className="text-lg font-bold text-white mt-1">Cultural Music Operations &amp; Soundtracks</h3>
-              <p className="text-xs text-slate-300">
+              <h3 className="text-lg font-bold text-slate-900 mt-1">Cultural Music Operations &amp; Soundtracks</h3>
+              <p className="text-xs text-slate-600">
                 Attendees, vocal track submissions, and band audio cues for all music events.
               </p>
             </div>
             <Link
               href="/committee/music"
               target="_blank"
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0 shadow-xs"
             >
               Open Live Portal
               <ExternalLink className="w-3.5 h-3.5" />
@@ -749,7 +804,7 @@ export default function SuperAdminView({
             />
           </section>
 
-          <section className="bg-slate-900 rounded-3xl border border-slate-800 shadow-sm p-6 sm:p-8">
+          <section className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8">
             <AdminEventsManager
               initialEvents={events}
               categoryFilter="Cultural - Music"
@@ -775,23 +830,23 @@ export default function SuperAdminView({
       {/* ========================================================================= */}
       {activeCommittee === 'DANCE' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
-          <div className="bg-amber-950/30 border border-amber-800/40 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
                   rhythm@lv321
                 </span>
-                <span className="text-xs text-amber-300 font-mono">Dedicated Portal: /committee/dance</span>
+                <span className="text-xs text-slate-500 font-mono">Dedicated Portal: /committee/dance</span>
               </div>
-              <h3 className="text-lg font-bold text-white mt-1">Cultural Dance Operations &amp; Soundtracks</h3>
-              <p className="text-xs text-slate-300">
+              <h3 className="text-lg font-bold text-slate-900 mt-1">Cultural Dance Operations &amp; Soundtracks</h3>
+              <p className="text-xs text-slate-600">
                 Attendees, choreography soundtrack submissions, and stage cues for solo &amp; group dances.
               </p>
             </div>
             <Link
               href="/committee/dance"
               target="_blank"
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0 shadow-xs"
             >
               Open Live Portal
               <ExternalLink className="w-3.5 h-3.5" />
@@ -808,7 +863,7 @@ export default function SuperAdminView({
             />
           </section>
 
-          <section className="bg-slate-900 rounded-3xl border border-slate-800 shadow-sm p-6 sm:p-8">
+          <section className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8">
             <AdminEventsManager
               initialEvents={events}
               categoryFilter="Cultural - Dance"
@@ -834,30 +889,30 @@ export default function SuperAdminView({
       {/* ========================================================================= */}
       {activeCommittee === 'FASHION' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
-          <div className="bg-fuchsia-950/30 border border-fuchsia-800/40 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
                   vogue@lv321
                 </span>
-                <span className="text-xs text-fuchsia-300 font-mono">Dedicated Portal: /committee/fashion</span>
+                <span className="text-xs text-slate-500 font-mono">Dedicated Portal: /committee/fashion</span>
               </div>
-              <h3 className="text-lg font-bold text-white mt-1">Cultural Fashion Operations</h3>
-              <p className="text-xs text-slate-300">
+              <h3 className="text-lg font-bold text-slate-900 mt-1">Cultural Fashion Operations</h3>
+              <p className="text-xs text-slate-600">
                 Runway model teams, styling groups, and attendee records for fashion shows.
               </p>
             </div>
             <Link
               href="/committee/fashion"
               target="_blank"
-              className="px-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0 shadow-xs"
             >
               Open Live Portal
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <section className="bg-slate-900 rounded-3xl border border-slate-800 shadow-sm p-6 sm:p-8">
+          <section className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8">
             <AdminEventsManager
               initialEvents={events}
               categoryFilter="Cultural - Fashion"
@@ -883,30 +938,30 @@ export default function SuperAdminView({
       {/* ========================================================================= */}
       {activeCommittee === 'THEATRE' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
-          <div className="bg-violet-950/30 border border-violet-800/40 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
                   drama@lv321
                 </span>
-                <span className="text-xs text-violet-300 font-mono">Dedicated Portal: /committee/theatre</span>
+                <span className="text-xs text-slate-500 font-mono">Dedicated Portal: /committee/theatre</span>
               </div>
-              <h3 className="text-lg font-bold text-white mt-1">Cultural Theatre Operations</h3>
-              <p className="text-xs text-slate-300">
+              <h3 className="text-lg font-bold text-slate-900 mt-1">Cultural Theatre Operations</h3>
+              <p className="text-xs text-slate-600">
                 Nukkad Natak, stage plays, mono-acts, and theater troupe rosters.
               </p>
             </div>
             <Link
               href="/committee/theatre"
               target="_blank"
-              className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0 shadow-xs"
             >
               Open Live Portal
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <section className="bg-slate-900 rounded-3xl border border-slate-800 shadow-sm p-6 sm:p-8">
+          <section className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8">
             <AdminEventsManager
               initialEvents={events}
               categoryFilter="Cultural - Theatre"
@@ -932,30 +987,30 @@ export default function SuperAdminView({
       {/* ========================================================================= */}
       {activeCommittee === 'LITERARY' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
-          <div className="bg-blue-950/30 border border-blue-800/40 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
                   words@lv321
                 </span>
-                <span className="text-xs text-blue-300 font-mono">Dedicated Portal: /committee/literary</span>
+                <span className="text-xs text-slate-500 font-mono">Dedicated Portal: /committee/literary</span>
               </div>
-              <h3 className="text-lg font-bold text-white mt-1">Literary &amp; Quizzing Operations</h3>
-              <p className="text-xs text-slate-300">
+              <h3 className="text-lg font-bold text-slate-900 mt-1">Literary &amp; Quizzing Operations</h3>
+              <p className="text-xs text-slate-600">
                 Debaters, quizzers, poetry slams, and creative writing attendee rosters.
               </p>
             </div>
             <Link
               href="/committee/literary"
               target="_blank"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0 shadow-xs"
             >
               Open Live Portal
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <section className="bg-slate-900 rounded-3xl border border-slate-800 shadow-sm p-6 sm:p-8">
+          <section className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8">
             <AdminEventsManager
               initialEvents={events}
               categoryFilter="Literary"
@@ -981,30 +1036,30 @@ export default function SuperAdminView({
       {/* ========================================================================= */}
       {activeCommittee === 'GAMING' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
-          <div className="bg-emerald-950/30 border border-emerald-800/40 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
                   nexus@lv321
                 </span>
-                <span className="text-xs text-emerald-300 font-mono">Dedicated Portal: /committee/gaming</span>
+                <span className="text-xs text-slate-500 font-mono">Dedicated Portal: /committee/gaming</span>
               </div>
-              <h3 className="text-lg font-bold text-white mt-1">Esports &amp; Gaming Operations</h3>
-              <p className="text-xs text-slate-300">
+              <h3 className="text-lg font-bold text-slate-900 mt-1">Esports &amp; Gaming Operations</h3>
+              <p className="text-xs text-slate-600">
                 Squad rosters, in-game tags, and tournament brackets for BGMI, Valorant, FIFA.
               </p>
             </div>
             <Link
               href="/committee/gaming"
               target="_blank"
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0 shadow-xs"
             >
               Open Live Portal
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <section className="bg-slate-900 rounded-3xl border border-slate-800 shadow-sm p-6 sm:p-8">
+          <section className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8">
             <AdminEventsManager
               initialEvents={events}
               categoryFilter="Gaming"
@@ -1030,7 +1085,7 @@ export default function SuperAdminView({
       {/* ========================================================================= */}
       {activeCommittee === 'RI' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
-          <section className="bg-slate-900 rounded-3xl border border-slate-800 shadow-sm p-6 sm:p-8">
+          <section className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8">
             <AdminEventsManager
               initialEvents={events}
               excludeCategory="Informalz"
@@ -1056,7 +1111,7 @@ export default function SuperAdminView({
       {/* ========================================================================= */}
       {activeCommittee === 'INFORMALZ' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
-          <section className="bg-slate-900 rounded-3xl border border-purple-900/40 shadow-sm p-6 sm:p-8">
+          <section className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8">
             <AdminEventsManager
               initialEvents={events}
               categoryFilter="Informalz"
@@ -1098,7 +1153,7 @@ export default function SuperAdminView({
       {/* ========================================================================= */}
       {activeCommittee === 'ONSPOT' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
-          <section className="bg-slate-900 rounded-3xl border border-emerald-900/40 shadow-sm p-6 sm:p-8">
+          <section className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8">
             <AdminEventsManager
               initialEvents={events}
               apiEndpoint="/api/super-admin/events"
@@ -1122,7 +1177,7 @@ export default function SuperAdminView({
       {/* ========================================================================= */}
       {activeCommittee === 'ALL' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
-          <section className="bg-slate-900 rounded-3xl border border-slate-800 shadow-sm p-6 sm:p-8">
+          <section className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8">
             <AdminEventsManager
               initialEvents={events}
               apiEndpoint="/api/super-admin/events"

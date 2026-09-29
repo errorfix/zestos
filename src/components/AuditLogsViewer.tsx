@@ -202,36 +202,36 @@ export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
   return (
     <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden space-y-0">
       {/* Top Real-Time Control & Header */}
-      <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white">
+      <div className="p-5 sm:p-6 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white text-slate-900">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-700" />
               <span>Super Admin Exclusive Audit Stream</span>
             </span>
 
             {/* Real-Time Radar Badge */}
             {isLiveStreamActive ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                 <span>REAL-TIME STREAM ACTIVE</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                <span className="w-2 h-2 rounded-full bg-amber-400" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
                 <span>STREAM PAUSED</span>
               </span>
             )}
 
-            <span className="text-[11px] text-slate-400 font-mono">
+            <span className="text-[11px] text-slate-500 font-mono">
               Synced: {lastSyncedTime}
             </span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
             <span>Live Security &amp; Operator Audit Logs</span>
           </h2>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs text-slate-600 mt-1">
             Real-time PostgreSQL telemetry capturing exact operator roll numbers, timestamps, target IDs, and attribute diffs across all festival panels.
           </p>
         </div>
@@ -244,19 +244,19 @@ export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
             onClick={() => setIsLiveStreamActive(!isLiveStreamActive)}
             className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-colors ${
               isLiveStreamActive
-                ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300 hover:bg-emerald-900/60'
-                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+                : 'bg-slate-900 border-slate-900 text-white hover:bg-slate-800'
             }`}
             title={isLiveStreamActive ? 'Pause real-time updates' : 'Resume live stream'}
           >
             {isLiveStreamActive ? (
               <>
-                <Pause className="w-3.5 h-3.5 text-emerald-400" />
+                <Pause className="w-3.5 h-3.5 text-slate-700" />
                 <span>Pause Stream</span>
               </>
             ) : (
               <>
-                <Play className="w-3.5 h-3.5 text-emerald-400" />
+                <Play className="w-3.5 h-3.5 text-white" />
                 <span>Go Live</span>
               </>
             )}
@@ -266,7 +266,7 @@ export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
           <button
             onClick={() => fetchLogs(false)}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white shadow-2xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 border border-slate-900 text-white shadow-2xs transition-colors"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Sync Now</span>
@@ -276,7 +276,7 @@ export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
           <button
             onClick={handleExportCSV}
             disabled={filteredLogs.length === 0}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-900 hover:bg-slate-100 shadow-2xs transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 shadow-2xs transition-colors disabled:opacity-50"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>
