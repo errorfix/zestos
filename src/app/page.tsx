@@ -48,15 +48,15 @@ export default async function HomePage() {
             <span className="hidden md:inline"> u/s 3 of UGC Act 1956</span>
           </div>
 
-          {/* Festival Official Logo - Responsive scaling across media query breakpoints */}
-          <div className="flex justify-center mb-3 sm:mb-5">
+          {/* Festival Official Logo - Responsive scaling across media query breakpoints (~1.5x) */}
+          <div className="flex justify-center mb-4 sm:mb-6">
             <Image
               src="/zest2k26_logo.png"
               alt="ZEST 2K26 GENZFY Logo"
               width={826}
               height={656}
               priority
-              className="w-28 xs:w-36 sm:w-44 md:w-52 lg:w-60 h-auto object-contain drop-shadow-sm transition-transform duration-300 hover:scale-105"
+              className="w-44 xs:w-56 sm:w-72 md:w-80 lg:w-[360px] h-auto object-contain drop-shadow-sm transition-transform duration-300 hover:scale-105"
             />
           </div>
 
