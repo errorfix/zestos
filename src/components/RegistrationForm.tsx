@@ -37,6 +37,7 @@ import {
   TeamMemberDraft,
 } from '@/lib/storage';
 import { compressAndStripExif } from '@/lib/imageCompressor';
+import EventSelectorGrid from '@/components/EventSelectorGrid';
 
 interface RegistrationFormProps {
   events: InitialEventData[];
@@ -858,98 +859,15 @@ export default function RegistrationForm({
         {/* ========================================================================= */}
         {registrationMode === 'COMPETITIVE' && (
           <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-[#1a73e8]">
-                  Step 1 of 2
-                </span>
-                <h2 className="text-xl font-bold text-slate-900">Choose Competition or Arena</h2>
-              </div>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 self-start sm:self-auto">
-                {competitiveEvents.length} Competitive Events
-              </span>
-            </div>
-
-            {/* Category Filter Chips */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-none">
-              {competitiveCategories.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                    selectedCategory === cat
-                      ? 'bg-[#1a73e8] text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
-                >
-                  {cat === 'ALL' ? 'All Competitive' : cat}
-                </button>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[460px] overflow-y-auto pr-1">
-              {filteredCompetitiveEvents.map((evt) => {
-                const isSelected = evt.id === selectedEventId;
-                const isSolo = evt.minTeamSize === 1 && evt.maxTeamSize === 1;
-
-                return (
-                  <div
-                    key={evt.id}
-                    onClick={() => setSelectedEventId(evt.id)}
-                    className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-150 flex flex-col justify-between ${
-                      isSelected
-                        ? 'border-[#1a73e8] bg-[#f8faff] shadow-md ring-2 ring-[#1a73e8]/20'
-                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
-                          {evt.category}
-                        </span>
-                        <span className="font-extrabold text-base text-slate-900">
-                          ₹{evt.feeAmount / 100}
-                        </span>
-                      </div>
-
-                      <h4 className="font-bold text-slate-900 leading-snug mb-1">
-                        {evt.title}
-                      </h4>
-
-                      <div className="flex items-center gap-1.5 text-xs text-slate-600 mt-2">
-                        <Users className="w-3.5 h-3.5 text-slate-400" />
-                        <span>
-                          {isSolo
-                            ? 'Solo (1 Attendee)'
-                            : `Team (${evt.minTeamSize} – ${evt.maxTeamSize} members)`}
-                        </span>
-                      </div>
-
-                      {evt.prize1 && (
-                        <div className="mt-2 text-[11px] text-amber-800 bg-amber-50 px-2 py-1 rounded-md flex items-center gap-1.5">
-                          <Trophy className="w-3 h-3 text-amber-600 shrink-0" />
-                          <span className="truncate">1st: {evt.prize1}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                      <span className="text-slate-500 font-medium">
-                        {evt.venue || "Lingaya's Campus"}
-                      </span>
-                      <span
-                        className={`font-semibold flex items-center gap-1 ${
-                          isSelected ? 'text-[#1a73e8]' : 'text-slate-500'
-                        }`}
-                      >
-                        {isSelected ? '✓ Selected' : 'Select'}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <EventSelectorGrid
+              events={events}
+              selectedEventId={selectedEventId}
+              onSelectEvent={(evt) => setSelectedEventId(evt.id)}
+              showStepHeader={true}
+              stepLabel="Step 1 of 2"
+              title="Choose Competition or Arena"
+              maxHeightClass="max-h-[460px]"
+            />
 
             {/* Stage Track Upload Notice if required */}
             {currentEvent?.requiresTrackUpload && (

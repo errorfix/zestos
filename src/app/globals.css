@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./theme.css";
 
 :root {
   --google-blue: #1a73e8;
