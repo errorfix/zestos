@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
 import StageRegistrationsManager from '@/components/StageRegistrationsManager';
-import CollegeDelegationsView from '@/components/CollegeDelegationsView';
 import { InitialEventData } from '@/lib/mockEvents';
 import {
   Users,
@@ -27,7 +26,6 @@ import {
   Clock,
   MapPin,
   Lock,
-  Building2,
 } from 'lucide-react';
 
 interface MetricsData {
@@ -59,7 +57,6 @@ interface ManagementDashboardViewProps {
 
 export type ManagementWorkspaceTab =
   | 'ALL'
-  | 'COLLEGE_DELEGATIONS'
   | 'RI'
   | 'MUSIC'
   | 'DANCE'
@@ -250,37 +247,16 @@ export default function ManagementDashboardView({
           <button
             type="button"
             onClick={() => setActiveTab('ALL')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-              activeTab === 'ALL'
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'ALL'
                 ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
-            }`}
+              }`}
           >
             <Layers className="w-3.5 h-3.5" />
             <span>Master Registry</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeTab === 'ALL' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
-            }`}>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'ALL' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+              }`}>
               {masterMetrics.totalRegistrations}
-            </span>
-          </button>
-
-          {/* College Delegations */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('COLLEGE_DELEGATIONS')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-              activeTab === 'COLLEGE_DELEGATIONS'
-                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
-            }`}
-          >
-            <Building2 className="w-3.5 h-3.5" />
-            <span>College Delegations</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeTab === 'COLLEGE_DELEGATIONS' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
-            }`}>
-              Inter-College
             </span>
           </button>
 
@@ -288,17 +264,15 @@ export default function ManagementDashboardView({
           <button
             type="button"
             onClick={() => setActiveTab('MUSIC')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-              activeTab === 'MUSIC'
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'MUSIC'
                 ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
-            }`}
+              }`}
           >
             <Music className="w-3.5 h-3.5" />
             <span>Cultural Music</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeTab === 'MUSIC' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
-            }`}>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'MUSIC' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+              }`}>
               {musicCount} Events
             </span>
           </button>
@@ -307,17 +281,15 @@ export default function ManagementDashboardView({
           <button
             type="button"
             onClick={() => setActiveTab('DANCE')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-              activeTab === 'DANCE'
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'DANCE'
                 ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
-            }`}
+              }`}
           >
             <Flame className="w-3.5 h-3.5" />
             <span>Cultural Dance</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeTab === 'DANCE' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
-            }`}>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'DANCE' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+              }`}>
               {danceCount} Events
             </span>
           </button>
@@ -326,17 +298,15 @@ export default function ManagementDashboardView({
           <button
             type="button"
             onClick={() => setActiveTab('FASHION')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-              activeTab === 'FASHION'
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'FASHION'
                 ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
-            }`}
+              }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Cultural Fashion</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeTab === 'FASHION' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
-            }`}>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'FASHION' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+              }`}>
               {fashionCount} Events
             </span>
           </button>
@@ -345,17 +315,15 @@ export default function ManagementDashboardView({
           <button
             type="button"
             onClick={() => setActiveTab('THEATRE')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-              activeTab === 'THEATRE'
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'THEATRE'
                 ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
-            }`}
+              }`}
           >
             <Drama className="w-3.5 h-3.5" />
             <span>Cultural Theatre</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeTab === 'THEATRE' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
-            }`}>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'THEATRE' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+              }`}>
               {theatreCount} Events
             </span>
           </button>
@@ -364,17 +332,15 @@ export default function ManagementDashboardView({
           <button
             type="button"
             onClick={() => setActiveTab('LITERARY')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-              activeTab === 'LITERARY'
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'LITERARY'
                 ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
-            }`}
+              }`}
           >
             <BookOpen className="w-3.5 h-3.5" />
             <span>Literary &amp; Quizzing</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeTab === 'LITERARY' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
-            }`}>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'LITERARY' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+              }`}>
               {literaryCount} Events
             </span>
           </button>
@@ -383,17 +349,15 @@ export default function ManagementDashboardView({
           <button
             type="button"
             onClick={() => setActiveTab('GAMING')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-              activeTab === 'GAMING'
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'GAMING'
                 ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
-            }`}
+              }`}
           >
             <Gamepad2 className="w-3.5 h-3.5" />
             <span>Esports &amp; Gaming</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeTab === 'GAMING' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
-            }`}>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'GAMING' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+              }`}>
               {gamingCount} Events
             </span>
           </button>
@@ -402,17 +366,15 @@ export default function ManagementDashboardView({
           <button
             type="button"
             onClick={() => setActiveTab('INFORMALZ')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-              activeTab === 'INFORMALZ'
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'INFORMALZ'
                 ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
-            }`}
+              }`}
           >
             <PartyPopper className="w-3.5 h-3.5" />
             <span>Informalz (Free)</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeTab === 'INFORMALZ' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
-            }`}>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'INFORMALZ' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+              }`}>
               {informalzCount} Free
             </span>
           </button>
@@ -421,17 +383,15 @@ export default function ManagementDashboardView({
           <button
             type="button"
             onClick={() => setActiveTab('RI')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-              activeTab === 'RI'
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'RI'
                 ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
-            }`}
+              }`}
           >
             <Trophy className="w-3.5 h-3.5" />
             <span>R&amp;I Competitive</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeTab === 'RI' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
-            }`}>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'RI' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+              }`}>
               {riCount} Events
             </span>
           </button>
@@ -440,17 +400,15 @@ export default function ManagementDashboardView({
           <button
             type="button"
             onClick={() => setActiveTab('STAGE')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-              activeTab === 'STAGE'
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'STAGE'
                 ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
-            }`}
+              }`}
           >
             <Mic2 className="w-3.5 h-3.5" />
             <span>Stage Audio Tracks</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeTab === 'STAGE' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
-            }`}>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'STAGE' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+              }`}>
               {trackCount} Tracks
             </span>
           </button>
@@ -459,17 +417,15 @@ export default function ManagementDashboardView({
           <button
             type="button"
             onClick={() => setActiveTab('EVENTS')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
-              activeTab === 'EVENTS'
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'EVENTS'
                 ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
-            }`}
+              }`}
           >
             <Calendar className="w-3.5 h-3.5" />
             <span>Events Directory</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeTab === 'EVENTS' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
-            }`}>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'EVENTS' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+              }`}>
               {events.length} Catalog
             </span>
           </button>
@@ -477,6 +433,32 @@ export default function ManagementDashboardView({
       </div>
 
       {/* Observational Workspace Content */}
+
+      {/* 0. DAILY TRACKING OBSERVATORY (HEADS & SUBHEADS) */}
+      {activeTab === 'TRACKING' && (
+        <section className="space-y-4 animate-in fade-in-50 duration-200">
+          <ManagementDailyTracking />
+        </section>
+      )}
+
+      {/* 0.5. CORPORATE SPONSORSHIP OBSERVATORY */}
+      {activeTab === 'SPONSORSHIP' && (
+        <section className="space-y-4 animate-in fade-in-50 duration-200">
+          <div className="bg-emerald-950/20 border border-emerald-800/40 rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Corporate Deals Observatory
+              </span>
+              <h3 className="text-lg font-bold text-white mt-1">Institutional Sponsorship Deal Flow</h3>
+              <p className="text-xs text-slate-400">
+                Complete audit of corporate sponsors, signed MoUs, deliverables, and bank receipts.
+              </p>
+            </div>
+            <span className="text-xs font-semibold text-emerald-400">Executive View (Read-Only)</span>
+          </div>
+          <SponsorshipManager allowEdit={false} isSuperAdmin={false} />
+        </section>
+      )}
 
       {/* 1. MASTER ALL REGISTRY */}
       {activeTab === 'ALL' && (

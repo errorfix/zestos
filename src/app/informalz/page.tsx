@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar';
 import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
+import CommitteeDailyTracker from '@/components/CommitteeDailyTracker';
 import { getAdminMetrics, getEvents } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';
@@ -206,6 +207,14 @@ export default async function InformalzAdminPage() {
               ))}
             </div>
           )}
+        </section>
+
+        {/* Section: Informalz Daily Work Tracking */}
+        <section>
+          <CommitteeDailyTracker
+            committeeId="INFORMALZ_COMMITTEE"
+            committeeName="Informalz Committee"
+          />
         </section>
 
         {/* Section 2: Informalz Attendee Registry */}

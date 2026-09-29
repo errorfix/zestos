@@ -169,6 +169,21 @@ export const COMMITTEE_METAS: CommitteeMeta[] = [
       text: 'text-blue-800',
     },
   },
+  {
+    id: 'SPONSORSHIP_COMMITTEE',
+    name: 'Sponsorship & Corporate Partnerships Committee',
+    slug: 'sponsorship',
+    badge: 'Deals & Corporate',
+    description: 'Corporate brand outreach, sponsorship pitches, MoU contract execution, and fund receipts verification.',
+    defaultCategories: [],
+    color: {
+      badgeBg: 'bg-emerald-50',
+      badgeText: 'text-emerald-800',
+      border: 'border-emerald-300',
+      iconBg: 'bg-emerald-100',
+      text: 'text-emerald-800',
+    },
+  },
 ];
 
 export type CommitteeFlagsStore = Record<string, Record<EventCategoryKey, boolean>>;

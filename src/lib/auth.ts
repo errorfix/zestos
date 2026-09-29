@@ -171,6 +171,16 @@ export function getRoleRegistry(): RoleDefinition[] {
     dashboard: '/management',
   },
   {
+    id: 'SPONSORSHIP_COMMITTEE',
+    label: 'Sponsorship & Corporate Partnerships Committee',
+    password: process.env.SPONSORSHIP_COMMITTEE_PASSWORD || 'sponsor@lv2026',
+    permissions: [
+      'view_dashboard',
+      'view_registrations',
+    ],
+    dashboard: '/committee/sponsorship',
+  },
+  {
     id: 'ONSPOT_DESK',
     label: 'On-Spot Registration Desk',
     password: process.env.ONSPOT_DESK_PASSWORD || '',

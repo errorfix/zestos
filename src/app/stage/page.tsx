@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar';
 import StageRegistrationsManager from '@/components/StageRegistrationsManager';
+import CommitteeDailyTracker from '@/components/CommitteeDailyTracker';
 import { getStageMetrics, getEvents } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';
@@ -167,6 +168,14 @@ export default async function StageCommitteePage() {
             title="Performer Stage Roster &amp; Audio Tracks"
             subtitle="Live feed of participants in track-required events. Click 'Open Audio Track' to preview or use 'Add Track' for manual submissions."
             allowEdit={true}
+          />
+        </section>
+
+        {/* Section: Stage Daily Work Tracking */}
+        <section className="space-y-4">
+          <CommitteeDailyTracker
+            committeeId="STAGE_COMMITTEE"
+            committeeName="Stage Committee"
           />
         </section>
 

@@ -1,5 +1,5 @@
 import Navbar from '@/components/Navbar';
-import RniDashboardView from '@/components/RniDashboardView';
+import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
 import { getAdminMetrics, getEvents } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';
@@ -179,11 +179,10 @@ export default async function AdminPage() {
                       {event.title}
                     </h3>
                     <span
-                      className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        event.status === 'OPEN'
+                      className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${event.status === 'OPEN'
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           : 'bg-red-50 text-red-600 border border-red-200'
-                      }`}
+                        }`}
                     >
                       {event.status}
                     </span>
@@ -208,6 +207,14 @@ export default async function AdminPage() {
               ))}
             </div>
           )}
+        </section>
+
+        {/* Section: Daily Tracking Heads & Subheads */}
+        <section>
+          <CommitteeDailyTracker
+            committeeId="REGISTRATION_COMMITTEE"
+            committeeName="Registration & Invitation Committee"
+          />
         </section>
 
         {/* Section 2: Master Attendee Registry & College Delegations */}

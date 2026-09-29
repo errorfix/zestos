@@ -2,6 +2,7 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
 import StageRegistrationsManager from '@/components/StageRegistrationsManager';
+import CommitteeDailyTracker from '@/components/CommitteeDailyTracker';
 import { notFound, redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getRoleById } from '@/lib/auth';
@@ -260,6 +261,15 @@ export default async function CommitteePortalPage({ params }: PageProps) {
             </div>
           </div>
         </div>
+
+        {/* Daily Tracking (Heads & Subheads) Section */}
+        <section className="space-y-4">
+          <CommitteeDailyTracker
+            committeeId={committee.id}
+            committeeName={committee.name}
+            themeColor={committee.color}
+          />
+        </section>
 
         {/* Committee Participant Registry Table */}
         <section className="space-y-4">
