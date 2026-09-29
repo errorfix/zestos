@@ -95,3 +95,68 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
 }
+
+model InstituteRegistration {
+  id                String                 @id @default(cuid())
+  instituteName     String
+  leaderName        String
+  leaderEmail       String
+  leaderPhone       String
+  totalAmount       Int                    // Paid in paise (inclusive of ₹1,000 floor)
+  paymentStatus     String                 @default("PENDING") // PENDING, PAID, FAILED
+  paymentMethod     String?                @default("ONLINE_RAZORPAY")
+  razorpayOrderId   String?                @unique
+  razorpayPaymentId String?                @unique
+  participants      InstituteParticipant[]
+  createdAt         DateTime               @default(now())
+
+  @@index([instituteName])
+  @@index([leaderPhone])
+}
+
+model InstituteParticipant {
+  id             String                @id @default(cuid())
+  registrationId String
+  registration   InstituteRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  instituteName  String
+  eventId        String
+  event          Event                 @relation(fields: [eventId], references: [id])
+  fullName       String
+  phone          String
+  photoUrl       String?
+  isTeamLeader   Boolean               @default(false)
+  festivalDay    String?               // DAY_1, DAY_2, BOTH_DAYS
+  ticketCode     String?               // Unique day-wise ticket code
+  securityHash   String?
+  createdAt      DateTime              @default(now())
+
+  @@index([phone])
+  @@index([instituteName, phone])
+}
+
+model DailyTrackingItem {
+  id                 String    @id @default(cuid())
+  committeeId        String    // e.g. MUSIC_COMMITTEE, STAGE_COMMITTEE, REGISTRATION_COMMITTEE
+  committeeName      String    // Human-readable committee name
+  date               String    // YYYY-MM-DD daily reporting date
+  head               String    // Functional Department/Head (e.g. "Logistics & Equipment")
+  subhead            String    // Specific Workstream/Subhead (e.g. "Drum Kit Rental")
+  title              String    // Short title / milestone summary
+  workDescription    String    // Detailed work done for the day
+  status             String    @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, DELAYED, BLOCKED, PENDING_REVIEW
+  progressPercentage Int       @default(0) // 0 to 100%
+  blockers           String?   // Remarks on bottlenecks, delays, or required approvals
+  operatorName       String    // Coordinator / Member Name
+  operatorRollNo     String    // Roll Number or Faculty ID
+  operatorType       String?   @default("STUDENT") // STUDENT or FACULTY
+  attachmentsUrl     String?   // Link to Google Drive / photos / proof
+  superAdminRemarks  String?   // Feedback / Directives from Super Admin
+  superAdminReviewed Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([committeeId])
+  @@index([date])
+  @@index([head])
+  @@index([status])
+}

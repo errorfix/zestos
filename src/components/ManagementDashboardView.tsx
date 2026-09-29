@@ -3,6 +3,9 @@
 import React, { useState } from 'react';
 import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
 import StageRegistrationsManager from '@/components/StageRegistrationsManager';
+import ManagementDailyTracking from '@/components/ManagementDailyTracking';
+import SponsorshipManager from '@/components/SponsorshipManager';
+import CollegeDelegationsView from '@/components/CollegeDelegationsView';
 import { InitialEventData } from '@/lib/mockEvents';
 import {
   Users,
@@ -26,6 +29,9 @@ import {
   Clock,
   MapPin,
   Lock,
+  Building2,
+  Sliders,
+  Handshake,
 } from 'lucide-react';
 
 interface MetricsData {
@@ -57,6 +63,9 @@ interface ManagementDashboardViewProps {
 
 export type ManagementWorkspaceTab =
   | 'ALL'
+  | 'TRACKING'
+  | 'SPONSORSHIP'
+  | 'COLLEGE_DELEGATIONS'
   | 'RI'
   | 'MUSIC'
   | 'DANCE'
@@ -257,6 +266,54 @@ export default function ManagementDashboardView({
             <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'ALL' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
               }`}>
               {masterMetrics.totalRegistrations}
+            </span>
+          </button>
+
+          {/* Daily Work Tracking (Heads & Subheads) */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('TRACKING')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'TRACKING'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
+              }`}
+          >
+            <Sliders className="w-3.5 h-3.5 text-indigo-500" />
+            <span>Daily Tracking (Heads &amp; Subheads)</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+          </button>
+
+          {/* Corporate Sponsorship Deals */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('SPONSORSHIP')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'SPONSORSHIP'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
+              }`}
+          >
+            <Handshake className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Sponsorship &amp; Brand Deals</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'SPONSORSHIP' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+              }`}>
+              Corporate
+            </span>
+          </button>
+
+          {/* College Delegations */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('COLLEGE_DELEGATIONS')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${activeTab === 'COLLEGE_DELEGATIONS'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-xs'
+              }`}
+          >
+            <Building2 className="w-3.5 h-3.5 text-slate-600" />
+            <span>College Contingents</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'COLLEGE_DELEGATIONS' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+              }`}>
+              Institutes
             </span>
           </button>
 

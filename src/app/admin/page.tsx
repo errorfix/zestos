@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar';
-import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
+import CommitteeDailyTracker from '@/components/CommitteeDailyTracker';
+import RniDashboardView from '@/components/RniDashboardView';
 import { getAdminMetrics, getEvents } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';

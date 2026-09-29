@@ -7,6 +7,10 @@ import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
 import StageRegistrationsManager from '@/components/StageRegistrationsManager';
 import SuperAdminFlagsManager from '@/components/SuperAdminFlagsManager';
 import AuditLogsViewer from '@/components/AuditLogsViewer';
+import SuperAdminDailyTracking from '@/components/SuperAdminDailyTracking';
+import SponsorshipManager from '@/components/SponsorshipManager';
+import CollegeDelegationsView from '@/components/CollegeDelegationsView';
+import CollegePricingExceptionsManager from '@/components/CollegePricingExceptionsManager';
 import { InitialEventData } from '@/lib/mockEvents';
 import {
   Users,
@@ -29,6 +33,9 @@ import {
   Drama,
   ExternalLink,
   ShieldCheck,
+  Building2,
+  Tag,
+  Handshake,
 } from 'lucide-react';
 
 interface MetricsData {
@@ -539,6 +546,88 @@ export default function SuperAdminView({
                 }`}>
                 <span>{activeCommittee === 'COLLEGE_DELEGATIONS' ? '● Viewing' : 'Switch'}</span>
                 <span>Contingents</span>
+              </div>
+            </button>
+
+            {/* Daily Work Tracking */}
+            <button
+              type="button"
+              onClick={() => setActiveCommittee('DAILY_TRACKING')}
+              className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${activeCommittee === 'DAILY_TRACKING'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
+                }`}
+            >
+              <div className="flex items-center justify-between gap-1 mb-2">
+                <Calendar className={`w-4 h-4 ${activeCommittee === 'DAILY_TRACKING' ? 'text-white' : 'text-slate-700'}`} />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold">Daily Tracking</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'DAILY_TRACKING' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Heads &amp; subheads progress
+                </p>
+              </div>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${activeCommittee === 'DAILY_TRACKING' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+                }`}>
+                <span>{activeCommittee === 'DAILY_TRACKING' ? '● Active' : 'Switch'}</span>
+                <span>Workstreams</span>
+              </div>
+            </button>
+
+            {/* Sponsorship & Brand Deals */}
+            <button
+              type="button"
+              onClick={() => setActiveCommittee('SPONSORSHIP')}
+              className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${activeCommittee === 'SPONSORSHIP'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
+                }`}
+            >
+              <div className="flex items-center justify-between gap-1 mb-2">
+                <Handshake className={`w-4 h-4 ${activeCommittee === 'SPONSORSHIP' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'SPONSORSHIP' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  DEALS
+                </span>
+              </div>
+              <div>
+                <h4 className="text-sm font-bold">Sponsorship</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'SPONSORSHIP' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Corporate brand pipeline
+                </p>
+              </div>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${activeCommittee === 'SPONSORSHIP' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+                }`}>
+                <span>{activeCommittee === 'SPONSORSHIP' ? '● Active' : 'Switch'}</span>
+                <span>Brands &amp; MoUs</span>
+              </div>
+            </button>
+
+            {/* College Pricing Exceptions */}
+            <button
+              type="button"
+              onClick={() => setActiveCommittee('COLLEGE_PRICING')}
+              className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${activeCommittee === 'COLLEGE_PRICING'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
+                }`}
+            >
+              <div className="flex items-center justify-between gap-1 mb-2">
+                <Tag className={`w-4 h-4 ${activeCommittee === 'COLLEGE_PRICING' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'COLLEGE_PRICING' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  FEES
+                </span>
+              </div>
+              <div>
+                <h4 className="text-sm font-bold">Pricing Exceptions</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'COLLEGE_PRICING' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Contingent fee matrix
+                </p>
+              </div>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${activeCommittee === 'COLLEGE_PRICING' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+                }`}>
+                <span>{activeCommittee === 'COLLEGE_PRICING' ? '● Active' : 'Switch'}</span>
+                <span>Config</span>
               </div>
             </button>
           </div>
