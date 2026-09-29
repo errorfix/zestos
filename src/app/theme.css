@@ -6,23 +6,36 @@
 
 :root {
   /* Page Surfaces */
-  --fest-page-bg: #f8fafc;            /* Canvas background (slate-50) */
-  --fest-card-bg: #ffffff;            /* Card surface (white) */
-  --fest-card-border: #e2e8f0;        /* Card border (slate-200) */
-  --fest-card-border-hover: #cbd5e1;  /* Border on hover (slate-300) */
-  --fest-surface-subtle: #f1f5f9;     /* Subtle container (slate-100) */
-  --fest-surface-muted: #f8fafc;      /* Muted container (slate-50) */
+  --fest-page-bg: #f8fafc;
+  /* Canvas background (slate-50) */
+  --fest-card-bg: #ffffff;
+  /* Card surface (white) */
+  --fest-card-border: #e2e8f0;
+  /* Card border (slate-200) */
+  --fest-card-border-hover: #cbd5e1;
+  /* Border on hover (slate-300) */
+  --fest-surface-subtle: #f1f5f9;
+  /* Subtle container (slate-100) */
+  --fest-surface-muted: #f8fafc;
+  /* Muted container (slate-50) */
 
   /* Text & Typography */
-  --fest-text-primary: #0f172a;       /* Dark slate header & emphasis (slate-900) */
-  --fest-text-secondary: #334155;     /* Body & field labels (slate-700) */
-  --fest-text-muted: #64748b;         /* Descriptions & timestamps (slate-500) */
-  --fest-text-subtle: #94a3b8;        /* Placeholders & icons (slate-400) */
+  --fest-text-primary: #0f172a;
+  /* Dark slate header & emphasis (slate-900) */
+  --fest-text-secondary: #334155;
+  /* Body & field labels (slate-700) */
+  --fest-text-muted: #64748b;
+  /* Descriptions & timestamps (slate-500) */
+  --fest-text-subtle: #94a3b8;
+  /* Placeholders & icons (slate-400) */
 
   /* Accents & Primary Action Buttons */
-  --fest-accent-primary: #0f172a;     /* Primary button fill (slate-900) */
-  --fest-accent-primary-hover: #1e293b;/* Primary button hover (slate-800) */
-  --fest-accent-primary-text: #ffffff;/* Text on primary button */
+  --fest-accent-primary: #344f8b;
+  /* Primary button fill (slate-900) */
+  --fest-accent-primary-hover: #304566;
+  /* Primary button hover (slate-800) */
+  --fest-accent-primary-text: #ffffff;
+  /* Text on primary button */
 
   /* Brand Highlight (Clean Google/Fest Blue) */
   --fest-brand-blue: #1a73e8;
@@ -36,17 +49,26 @@
   --fest-badge-border: #e2e8f0;
 
   /* Status Colors */
-  --fest-success-text: #15803d;       /* emerald-700 */
-  --fest-success-bg: #f0fdf4;         /* emerald-50 */
-  --fest-success-border: #bbf7d0;     /* emerald-200 */
-  
-  --fest-warning-text: #92400e;       /* amber-800 */
-  --fest-warning-bg: #fffbeb;         /* amber-50 */
-  --fest-warning-border: #fde68a;     /* amber-200 */
-  
-  --fest-error-text: #b91c1c;         /* red-700 */
-  --fest-error-bg: #fef2f2;           /* red-50 */
-  --fest-error-border: #fecaca;       /* red-200 */
+  --fest-success-text: #15803d;
+  /* emerald-700 */
+  --fest-success-bg: #f0fdf4;
+  /* emerald-50 */
+  --fest-success-border: #bbf7d0;
+  /* emerald-200 */
+
+  --fest-warning-text: #92400e;
+  /* amber-800 */
+  --fest-warning-bg: #fffbeb;
+  /* amber-50 */
+  --fest-warning-border: #fde68a;
+  /* amber-200 */
+
+  --fest-error-text: #b91c1c;
+  /* red-700 */
+  --fest-error-bg: #fef2f2;
+  /* red-50 */
+  --fest-error-border: #fecaca;
+  /* red-200 */
 }
 
 /* Utility Tokens */

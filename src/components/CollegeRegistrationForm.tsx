@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import CollegeCombobox from '@/components/CollegeCombobox';
 import EventSelectModal from '@/components/EventSelectModal';
+import EditCartSquadModal from '@/components/EditCartSquadModal';
 import { InitialEventData } from '@/lib/mockEvents';
 import { compressAndStripExif } from '@/lib/imageCompressor';
 import { PricingCalculationResult } from '@/lib/collegeDb';
@@ -66,6 +67,10 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
   // Modal State for Event Selection
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
+  // Modal State for Editing Squad in Cart
+  const [editingSquad, setEditingSquad] = useState<CartSquad | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   // Institution & Delegation Contact
   const [instituteName, setInstituteName] = useState('');
   const [leaderName, setLeaderName] = useState('');
@@ -74,6 +79,21 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
 
   // Cart of Event Squads
   const [cartSquads, setCartSquads] = useState<CartSquad[]>([]);
+
+  // Handler to open squad edit modal
+  const handleOpenEditSquad = (squad: CartSquad) => {
+    setEditingSquad(squad);
+    setIsEditModalOpen(true);
+  };
+
+  // Handler to save updated squad
+  const handleSaveEditedSquad = (updatedSquad: CartSquad) => {
+    setCartSquads((prev) =>
+      prev.map((s) => (s.id === updatedSquad.id ? updatedSquad : s))
+    );
+    setEditingSquad(null);
+    setIsEditModalOpen(false);
+  };
 
   // Current Squad Form
   const competitiveList = eventsList.filter((e) => e.category.toLowerCase() !== 'informalz');
@@ -490,6 +510,18 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
         onSelectEvent={handleSelectEvent}
       />
 
+      {/* Edit Squad Modal */}
+      <EditCartSquadModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingSquad(null);
+        }}
+        squad={editingSquad}
+        event={eventsList.find((e) => e.id === editingSquad?.eventId)}
+        onSave={handleSaveEditedSquad}
+      />
+
       {/* Overview Banner */}
       <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-2">
         <div className="flex items-center gap-2">
@@ -896,14 +928,26 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSquad(squad.id)}
-                    className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                    title="Remove event from cart"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditSquad(squad)}
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition shadow-2xs"
+                      title="View and edit participant details"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-slate-600" />
+                      <span className="hidden sm:inline">View / Edit Details</span>
+                      <span className="sm:hidden">Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSquad(squad.id)}
+                      className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition border border-transparent hover:border-rose-100"
+                      title="Remove event from cart"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
