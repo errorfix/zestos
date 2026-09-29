@@ -48,11 +48,25 @@ export default async function HomePage() {
             <span className="hidden md:inline"> u/s 3 of UGC Act 1956</span>
           </div>
 
+          {/* Festival Official Logo - Responsive scaling across media query breakpoints */}
+          <div className="flex justify-center mb-3 sm:mb-5">
+            <Image
+              src="/zest2k26_logo.png"
+              alt="ZEST 2K26 GENZFY Logo"
+              width={826}
+              height={656}
+              priority
+              className="w-28 xs:w-36 sm:w-44 md:w-52 lg:w-60 h-auto object-contain drop-shadow-sm transition-transform duration-300 hover:scale-105"
+            />
+          </div>
+
           {/* Festival Title */}
           <h1 className="text-3xl xs:text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-tight sm:leading-none mb-2 sm:mb-3">
             ZEST 2K26{' '}
+          </h1>
+          <h1 className="text-4xl xs:text-5xl sm:text-6xl font-black text-slate-900 tracking-tight leading-tight sm:leading-none mb-2 sm:mb-3">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600">
-              GENZFY
+              "GENZFY"
             </span>
           </h1>
 
