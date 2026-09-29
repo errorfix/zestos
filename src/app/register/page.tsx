@@ -27,19 +27,19 @@ export default async function RegisterPage() {
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
             Event Registration & Passes
           </h1>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4 p-4 rounded-2xl bg-indigo-50 border border-indigo-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
-                <span className="text-xs font-bold">COL</span>
+              <div className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
+                <span className="text-xs font-bold text-amber-400">COL</span>
               </div>
               <div>
-                <div className="text-xs font-bold text-indigo-950">Registering on behalf of a College or University?</div>
-                <div className="text-[11px] text-indigo-700">Use the Contingent Portal for multi-event delegation cart &amp; tiered campus entry passes.</div>
+                <div className="text-xs font-bold text-slate-900">Registering on behalf of a College or University?</div>
+                <div className="text-[11px] text-slate-500">Use the Contingent Portal for multi-event delegation cart &amp; tiered campus entry passes.</div>
               </div>
             </div>
             <Link
               href="/register/college"
-              className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-sm shrink-0"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs shrink-0"
             >
               Open College Registration Portal →
             </Link>

@@ -113,11 +113,11 @@ export default function CollegeCombobox({
           <div
             onClick={() => !disabled && setIsOpen(!isOpen)}
             className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl bg-white border ${
-              isOpen ? 'border-[#1a73e8] ring-2 ring-[#1a73e8]/20' : 'border-slate-300 hover:border-slate-400'
+              isOpen ? 'border-slate-900 ring-2 ring-slate-900/10' : 'border-slate-300 hover:border-slate-400'
             } cursor-pointer transition text-sm shadow-xs`}
           >
             <div className="flex items-center gap-2.5 text-slate-500">
-              <Building2 className="w-4 h-4 text-[#1a73e8]" />
+              <Building2 className="w-4 h-4 text-slate-700" />
               <span>Select or search your College / University...</span>
             </div>
             <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -164,10 +164,10 @@ export default function CollegeCombobox({
                     key={college}
                     type="button"
                     onClick={() => handleSelect(college)}
-                    className="w-full text-left px-3 py-2.5 rounded-xl text-xs text-slate-800 hover:text-[#1a73e8] hover:bg-blue-50 transition flex items-center justify-between group"
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-xs text-slate-800 hover:text-slate-900 hover:bg-slate-100 transition flex items-center justify-between group"
                   >
                     <span className="truncate pr-2 font-medium">{college}</span>
-                    <Check className="w-3.5 h-3.5 text-[#1a73e8] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Check className="w-3.5 h-3.5 text-slate-900 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                 ))}
 
@@ -176,9 +176,9 @@ export default function CollegeCombobox({
                   <button
                     type="button"
                     onClick={handleAddNew}
-                    className="w-full text-left p-2.5 rounded-xl text-xs font-semibold text-[#1a73e8] hover:bg-blue-50 border border-dashed border-blue-200 transition flex items-center gap-2 mt-1"
+                    className="w-full text-left p-2.5 rounded-xl text-xs font-semibold text-slate-900 hover:bg-slate-100 border border-dashed border-slate-300 transition flex items-center gap-2 mt-1"
                   >
-                    <Plus className="w-4 h-4 text-[#1a73e8] shrink-0" />
+                    <Plus className="w-4 h-4 text-slate-900 shrink-0" />
                     <span className="truncate">
                       Add <strong>&quot;{searchQuery.trim()}&quot;</strong> as new institution
                     </span>

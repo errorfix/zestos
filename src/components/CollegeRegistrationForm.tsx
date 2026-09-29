@@ -313,7 +313,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
               type: 'COLLEGE_CONTINGENT',
               instituteName,
             },
-            theme: { color: '#1a73e8' },
+            theme: { color: '#0f172a' },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             handler: async function (response: any) {
               try {
@@ -368,11 +368,11 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
     });
   };
 
-  // SUCCESS CONFIRMATION SCREEN (LIGHT THEME)
+  // SUCCESS CONFIRMATION SCREEN (WHITE THEME)
   if (successResult) {
     return (
       <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6 animate-in fade-in-0 duration-500">
-        <div className="p-8 rounded-3xl bg-white border border-emerald-200 text-center space-y-3 shadow-sm">
+        <div className="p-8 rounded-3xl bg-white border border-emerald-200 text-center space-y-3 shadow-xs">
           <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mx-auto">
             <CheckCircle2 className="w-8 h-8" />
           </div>
@@ -390,10 +390,10 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
         </div>
 
         {/* Issued Passes Roster */}
-        <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+        <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-[#1a73e8]" />
+              <Receipt className="w-5 h-5 text-slate-800" />
               <h3 className="text-base font-bold text-slate-900">Issued Day-Wise Passes</h3>
             </div>
             <span className="text-xs font-semibold text-slate-500">
@@ -411,7 +411,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
                   <div className="font-bold text-slate-900 text-sm">{ticket.fullName}</div>
                   <div className="text-xs text-slate-500 flex items-center gap-2">
                     <span>{ticket.phone}</span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-[#1a73e8] border border-blue-200">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
                       {ticket.festivalDay === 'DAY_2' ? 'Day 2 Pass' : 'Day 1 Pass'}
                     </span>
                   </div>
@@ -433,7 +433,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
             <button
               type="button"
               onClick={() => router.push('/')}
-              className="px-6 py-2.5 rounded-xl bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-bold transition shadow-sm"
+              className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs"
             >
               Return to Festival Home
             </button>
@@ -447,8 +447,8 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
   return (
     <form onSubmit={handleCheckout} className="max-w-4xl mx-auto space-y-6">
       {/* Header Banner */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#1a73e8] border border-blue-200">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
           <Building2 className="w-3.5 h-3.5" />
           Inter-College Delegation Portal
         </div>
@@ -468,9 +468,9 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
       )}
 
       {/* STEP 1: Institution & Delegation Coordinator */}
-      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
+      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-5">
         <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-          <div className="w-7 h-7 rounded-xl bg-blue-50 text-[#1a73e8] flex items-center justify-center font-bold text-xs border border-blue-200">
+          <div className="w-7 h-7 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
             1
           </div>
           <div>
@@ -499,7 +499,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
               value={leaderName}
               onChange={(e) => setLeaderName(e.target.value)}
               placeholder="e.g. Dr. Priya Verma / Rohit Sharma"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-800/10"
             />
           </div>
 
@@ -515,7 +515,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
                 value={leaderEmail}
                 onChange={(e) => setLeaderEmail(e.target.value)}
                 placeholder="coordinator@college.edu"
-                className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20"
+                className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-800/10"
               />
             </div>
           </div>
@@ -533,7 +533,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
                 value={leaderPhone}
                 onChange={(e) => setLeaderPhone(e.target.value.replace(/\D/g, ''))}
                 placeholder="10-digit mobile"
-                className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20"
+                className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-800/10"
               />
             </div>
           </div>
@@ -541,10 +541,10 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
       </div>
 
       {/* STEP 2: Event Squad Builder */}
-      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
+      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-5">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-xl bg-blue-50 text-[#1a73e8] flex items-center justify-center font-bold text-xs border border-blue-200">
+            <div className="w-7 h-7 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
               2
             </div>
             <div>
@@ -558,19 +558,19 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
           </div>
 
           {isTeamEvent ? (
-            <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 flex items-center gap-1">
-              <Crown className="w-3.5 h-3.5 text-amber-500" /> Entry #1 = Team Leader
+            <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 flex items-center gap-1">
+              <Crown className="w-3.5 h-3.5 text-amber-600" /> Entry #1 = Team Leader
             </span>
           ) : (
-            <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+            <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
               Individual Event
             </span>
           )}
         </div>
 
         {/* Warning Callout for Student Mobile Numbers */}
-        <div className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 text-blue-950 text-xs">
-          <Info className="w-4 h-4 text-[#1a73e8] shrink-0 mt-0.5" />
+        <div className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-xs">
+          <Info className="w-4 h-4 text-slate-800 shrink-0 mt-0.5" />
           <div>
             <strong>Personal Student Numbers Required:</strong> Every participant must enter their own personal 10-digit mobile number. Do <em>NOT</em> enter faculty or coordinator numbers for students. Day-wise entry QR passes are directly tied to each student&apos;s phone number.
           </div>
@@ -585,7 +585,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
             <select
               value={activeEventId}
               onChange={(e) => setActiveEventId(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-800/10"
             >
               {events.map((ev) => (
                 <option key={ev.id} value={ev.id}>
@@ -607,7 +607,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
                 </div>
               </div>
               <div className="text-right">
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-[#1a73e8] border border-blue-200">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
                   {activeEvent.date?.includes('2') || activeEvent.date?.includes('31') ? 'Festival Day 2' : 'Festival Day 1'}
                 </span>
               </div>
@@ -671,7 +671,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
                     copy[idx].fullName = e.target.value;
                     setCurrentParticipants(copy);
                   }}
-                  className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1a73e8]"
+                  className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800"
                 />
               </div>
 
@@ -687,7 +687,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
                     copy[idx].phone = e.target.value.replace(/\D/g, '');
                     setCurrentParticipants(copy);
                   }}
-                  className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1a73e8]"
+                  className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800"
                 />
               </div>
 
@@ -730,7 +730,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
               }}
               className="w-full py-2.5 rounded-2xl border border-dashed border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
             >
-              <UserPlus className="w-3.5 h-3.5 text-[#1a73e8]" />
+              <UserPlus className="w-3.5 h-3.5 text-slate-800" />
               <span>Add Another Member to &quot;{activeEvent.title}&quot;</span>
             </button>
           )}
@@ -740,7 +740,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
             <button
               type="button"
               onClick={handleAddSquadToCart}
-              className="w-full py-3 rounded-2xl bg-[#1a73e8] hover:bg-[#1557b0] text-white font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 transition"
+              className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-xs flex items-center justify-center gap-2 transition"
             >
               <PlusCircle className="w-4 h-4" />
               <span>
@@ -752,10 +752,10 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
       </div>
 
       {/* STEP 3: Contingent Cart & Price Summary */}
-      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
+      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-5">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-xl bg-blue-50 text-[#1a73e8] flex items-center justify-center font-bold text-xs border border-blue-200">
+            <div className="w-7 h-7 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
               3
             </div>
             <div>
@@ -765,7 +765,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
           </div>
 
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-800 text-xs font-bold border border-slate-200">
-            <ShoppingCart className="w-3.5 h-3.5 text-[#1a73e8]" />
+            <ShoppingCart className="w-3.5 h-3.5 text-slate-800" />
             <span>{cartSquads.length} Event(s) Added</span>
           </div>
         </div>
@@ -787,7 +787,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-slate-900">{squad.eventTitle}</span>
-                      <span className="text-[10px] font-bold text-[#1a73e8] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                      <span className="text-[10px] font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                         {squad.eventCategory}
                       </span>
                       <span className="text-[10px] text-slate-500">
@@ -823,7 +823,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
                   <span className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">
                     Contingent Calculation Breakdown
                   </span>
-                  {isCalculating && <span className="text-[#1a73e8] font-semibold animate-pulse">Calculating...</span>}
+                  {isCalculating && <span className="text-slate-600 font-semibold animate-pulse">Calculating...</span>}
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-slate-600">
@@ -833,11 +833,11 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
                   </div>
                   <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
                     <div className="text-[10px] uppercase font-bold text-slate-400">Day 1 Passes</div>
-                    <div className="text-lg font-extrabold text-[#1a73e8]">{pricing.day1ParticipantsCount}</div>
+                    <div className="text-lg font-extrabold text-slate-900">{pricing.day1ParticipantsCount}</div>
                   </div>
                   <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
                     <div className="text-[10px] uppercase font-bold text-slate-400">Day 2 Passes</div>
-                    <div className="text-lg font-extrabold text-[#1a73e8]">{pricing.day2ParticipantsCount}</div>
+                    <div className="text-lg font-extrabold text-slate-900">{pricing.day2ParticipantsCount}</div>
                   </div>
                   <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
                     <div className="text-[10px] uppercase font-bold text-slate-400">Quota Used</div>
@@ -872,7 +872,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
                   )}
 
                   {pricing.isFloorApplied && (
-                    <div className="flex justify-between text-[#1a73e8] font-bold pt-1.5 border-t border-slate-200">
+                    <div className="flex justify-between text-slate-900 font-bold pt-1.5 border-t border-slate-200">
                       <span>Subtotal ₹{pricing.subtotalInr} → Minimum Order Floor Applied</span>
                       <span>₹1,000</span>
                     </div>
@@ -890,7 +890,7 @@ export default function CollegeRegistrationForm({ events }: CollegeRegistrationF
             <button
               type="submit"
               disabled={isSubmitting || cartSquads.length === 0}
-              className="w-full py-4 rounded-2xl bg-[#1a73e8] hover:bg-[#1557b0] disabled:opacity-50 text-white font-extrabold text-base shadow-sm flex items-center justify-center gap-2 transition"
+              className="w-full py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-extrabold text-base shadow-xs flex items-center justify-center gap-2 transition"
             >
               {isSubmitting ? (
                 <span>Processing Contingent Registration...</span>

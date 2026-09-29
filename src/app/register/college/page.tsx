@@ -23,22 +23,22 @@ export default async function CollegeRegisterPage() {
         <div className="max-w-4xl mx-auto mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <Link
             href="/register"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#1a73e8] transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Switch to Individual Event Registration
           </Link>
 
           <div className="flex items-center gap-2 text-xs text-slate-500">
-            <Building2 className="w-4 h-4 text-[#1a73e8]" />
+            <Building2 className="w-4 h-4 text-slate-800" />
             <span>Dedicated University &amp; Institute Entry Desk</span>
           </div>
         </div>
 
         <Suspense
           fallback={
-            <div className="max-w-4xl mx-auto p-12 bg-white rounded-3xl border border-slate-200 text-center">
-              <div className="w-8 h-8 border-4 border-[#1a73e8] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="max-w-4xl mx-auto p-12 bg-white rounded-3xl border border-slate-200 text-center shadow-xs">
+              <div className="w-8 h-8 border-4 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
               <p className="text-sm text-slate-600 font-medium">Loading Contingent Registration Engine...</p>
             </div>
           }

@@ -632,7 +632,7 @@ export default function RegistrationForm({
           onClick={() => setRegistrationMode('INFORMALZ')}
           className={`flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 ${
             registrationMode === 'INFORMALZ'
-              ? 'bg-purple-600 text-white shadow-sm'
+              ? 'bg-slate-900 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -679,14 +679,14 @@ export default function RegistrationForm({
         {/* 🎯 MODE 1: INFORMALZ MULTI-EVENT WITH DAY PASS PRICING */}
         {/* ========================================================================= */}
         {registrationMode === 'INFORMALZ' && (
-          <section className="bg-white rounded-3xl p-6 sm:p-8 border border-purple-200 shadow-sm space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-purple-100">
+          <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">
                     Informalz Day Pass Engine
                   </span>
-                  <span className="text-xs font-bold text-purple-900 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200">
+                  <span className="text-xs font-bold text-slate-900 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200">
                     Day 1: ₹150 • Day 2: ₹150 • Both Days: ₹250
                   </span>
                 </div>
@@ -706,8 +706,8 @@ export default function RegistrationForm({
                   onClick={() => setInformalTab('ALL')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                     informalTab === 'ALL'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   All ({informalzEvents.length})
@@ -717,8 +717,8 @@ export default function RegistrationForm({
                   onClick={() => setInformalTab('DAY_1')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                     informalTab === 'DAY_1'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   Day 1 ({informalzDay1.length})
@@ -728,8 +728,8 @@ export default function RegistrationForm({
                   onClick={() => setInformalTab('DAY_2')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                     informalTab === 'DAY_2'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   Day 2 ({informalzDay2.length})
@@ -744,14 +744,14 @@ export default function RegistrationForm({
                 <button
                   type="button"
                   onClick={selectDay1Only}
-                  className="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100"
+                  className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200"
                 >
                   Day 1 Pass (₹150)
                 </button>
                 <button
                   type="button"
                   onClick={selectDay2Only}
-                  className="px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100"
+                  className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200"
                 >
                   Day 2 Pass (₹150)
                 </button>
@@ -784,7 +784,7 @@ export default function RegistrationForm({
                     onClick={() => toggleInformalEvent(evt.id)}
                     className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-150 flex flex-col justify-between ${
                       isChecked
-                        ? 'border-purple-600 bg-purple-50/40 shadow-sm ring-2 ring-purple-600/20'
+                        ? 'border-slate-900 bg-slate-50 shadow-xs ring-1 ring-slate-900/10'
                         : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
@@ -793,15 +793,15 @@ export default function RegistrationForm({
                         <span
                           className={`font-bold text-[11px] px-2 py-0.5 rounded-md border ${
                             isDay2
-                              ? 'text-purple-700 bg-purple-50 border-purple-200'
-                              : 'text-blue-700 bg-blue-50 border-blue-200'
+                              ? 'text-slate-800 bg-slate-100 border-slate-200'
+                              : 'text-slate-700 bg-slate-50 border-slate-200'
                           }`}
                         >
                           {isDay2 ? 'Day 2 (Oct 31)' : 'Day 1 (Oct 30)'}
                         </span>
                         <div className="flex items-center gap-1.5">
                           {isChecked ? (
-                            <CheckSquare className="w-5 h-5 text-purple-600" />
+                            <CheckSquare className="w-5 h-5 text-slate-900" />
                           ) : (
                             <Square className="w-5 h-5 text-slate-300" />
                           )}
@@ -824,7 +824,7 @@ export default function RegistrationForm({
                         <MapPin className="w-3 h-3 text-slate-400" />
                         {evt.venue || 'Campus Arena'}
                       </span>
-                      <span className="font-semibold text-purple-700">
+                      <span className="font-semibold text-slate-700">
                         {evt.eventType}
                       </span>
                     </div>
@@ -834,9 +834,9 @@ export default function RegistrationForm({
             </div>
 
             {/* Informalz Dynamic Pricing Banner */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900 to-indigo-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+            <div className="p-4 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs border border-slate-800">
               <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-200 block">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
                   Active Pass Selection
                 </span>
                 <h4 className="text-base font-bold text-white">
@@ -844,7 +844,7 @@ export default function RegistrationForm({
                 </h4>
               </div>
               <div className="text-left sm:text-right">
-                <span className="text-[11px] text-purple-200 block">Total Pass Fee</span>
+                <span className="text-[11px] text-slate-400 block">Total Pass Fee</span>
                 <span className="text-2xl font-black text-amber-300">
                   ₹{informalzPricing.amount}
                 </span>
@@ -953,11 +953,11 @@ export default function RegistrationForm({
 
             {/* Stage Track Upload Notice if required */}
             {currentEvent?.requiresTrackUpload && (
-              <div className="p-5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3">
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Music className="w-4 h-4 text-purple-700" />
-                    <h4 className="text-sm font-bold text-purple-950">
+                    <Music className="w-4 h-4 text-slate-800" />
+                    <h4 className="text-sm font-bold text-slate-900">
                       Performance Soundtrack & Backstage Media
                     </h4>
                   </div>
@@ -965,7 +965,7 @@ export default function RegistrationForm({
                     href={STAGE_GOOGLE_DRIVE_FOLDER}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-purple-700 underline"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-slate-800 underline hover:text-slate-950"
                   >
                     <span>Upload to Drive</span>
                     <ExternalLink className="w-3 h-3" />
@@ -986,7 +986,7 @@ export default function RegistrationForm({
                       value={trackUploadUrl}
                       onChange={(e) => setTrackUploadUrl(e.target.value)}
                       placeholder="https://drive.google.com/..."
-                      className="w-full px-3 py-2 rounded-xl border border-purple-200 text-xs bg-white focus:border-purple-600"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:border-slate-800"
                     />
                   </div>
                   <div>
@@ -1002,7 +1002,7 @@ export default function RegistrationForm({
                       value={trackNotes}
                       onChange={(e) => setTrackNotes(e.target.value)}
                       placeholder="e.g. Start on stage entry"
-                      className="w-full px-3 py-2 rounded-xl border border-purple-200 text-xs bg-white focus:border-purple-600"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:border-slate-800"
                     />
                   </div>
                 </div>
@@ -1400,16 +1400,10 @@ export default function RegistrationForm({
         {/* ========================================================================= */}
         {/* 💳 PAYMENT & PASS SUBMISSION CARD */}
         {/* ========================================================================= */}
-        <section
-          className={`rounded-3xl p-6 sm:p-8 shadow-xl text-white ${
-            registrationMode === 'INFORMALZ'
-              ? 'bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950'
-              : 'bg-slate-900'
-          }`}
-        >
+        <section className="rounded-3xl p-6 sm:p-8 shadow-xs text-white bg-slate-900 border border-slate-800">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-white/10">
             <div>
-              <span className="text-xs font-semibold tracking-wider uppercase text-blue-300">
+              <span className="text-xs font-semibold tracking-wider uppercase text-slate-400">
                 {registrationMode === 'INFORMALZ'
                   ? 'Informalz Pass Summary'
                   : 'Competition Pass Summary'}
