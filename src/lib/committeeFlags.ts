@@ -168,6 +168,23 @@ export function getCommitteeEditFlags(): CommitteeEditPermissions {
   return memoryEditFlags!;
 }
 
+export function isGlobalDataEditEnabled(): boolean {
+  const flags = getCommitteeEditFlags();
+  return flags['__GLOBAL_DATA_EDIT_ENABLED__'] !== false;
+}
+
+export function setGlobalDataEditEnabled(enabled: boolean): CommitteeEditPermissions {
+  const flags = getCommitteeEditFlags();
+  flags['__GLOBAL_DATA_EDIT_ENABLED__'] = enabled;
+  try {
+    fs.writeFileSync(EDIT_FLAGS_CACHE_FILE, JSON.stringify(flags, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('[CommitteeEditFlags] Failed to persist:', err);
+  }
+  memoryEditFlags = flags;
+  return flags;
+}
+
 export function setCommitteeEditFlag(committeeId: string, enabled: boolean): CommitteeEditPermissions {
   const flags = getCommitteeEditFlags();
   flags[committeeId] = enabled;
@@ -181,7 +198,10 @@ export function setCommitteeEditFlag(committeeId: string, enabled: boolean): Com
 }
 
 export function canCommitteeEditParticipants(committeeId: string): boolean {
+  // Super Admin (CS&IT) retains unconditional universal edit permissions
   if (committeeId === 'SUPER_ADMIN') return true;
+  // If global master lock is turned OFF, no other committee can edit
+  if (!isGlobalDataEditEnabled()) return false;
   const flags = getCommitteeEditFlags();
   return flags[committeeId] === true;
 }

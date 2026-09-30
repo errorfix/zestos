@@ -9,6 +9,8 @@ import {
   resetCommitteeFlagsToDefault,
   getCommitteeEditFlags,
   setCommitteeEditFlag,
+  isGlobalDataEditEnabled,
+  setGlobalDataEditEnabled,
   COMMITTEE_METAS,
   ALL_EVENT_CATEGORIES,
   EventCategoryKey,
@@ -31,11 +33,13 @@ export async function GET() {
 
     const flags = getCommitteeFlags();
     const editFlags = getCommitteeEditFlags();
+    const isGlobalEditEnabled = isGlobalDataEditEnabled();
 
     return NextResponse.json({
       success: true,
       flags,
       editFlags,
+      isGlobalEditEnabled,
       committees: COMMITTEE_METAS,
       categories: ALL_EVENT_CATEGORIES,
     });
@@ -102,6 +106,36 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Committee flags updated successfully',
         flags: updated,
+      });
+    }
+
+    // Toggle global data edit master switch
+    if (body.action === 'TOGGLE_GLOBAL_EDIT_LOCK') {
+      const { enabled } = body;
+      if (typeof enabled !== 'boolean') {
+        return NextResponse.json(
+          { success: false, error: 'enabled boolean is required.' },
+          { status: 400 }
+        );
+      }
+      const updatedEdits = setGlobalDataEditEnabled(enabled);
+      await createAuditLog({
+        targetId: 'GLOBAL_DATA_EDIT_MASTER_LOCK',
+        action: 'TOGGLE_GLOBAL_DATA_EDIT_LOCK',
+        targetType: 'COMMITTEE_FLAG',
+        operatorName: operator?.operatorName || 'Super Admin Desk',
+        operatorRollNo: operator?.operatorRollNo || 'SUPER_ADMIN',
+        operatorType: operator?.operatorType || 'STUDENT',
+        committeeRoleId: 'SUPER_ADMIN',
+        changes: {
+          globalDataEditEnabled: enabled,
+        },
+      });
+      return NextResponse.json({
+        success: true,
+        message: `Global Committee Data Edit Lock set to ${enabled ? 'UNLOCKED (EDITS PERMITTED)' : 'LOCKED (EDITS BLOCKED ACROSS ALL COMMITTEES)'}`,
+        isGlobalEditEnabled: enabled,
+        editFlags: updatedEdits,
       });
     }
 

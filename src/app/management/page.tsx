@@ -3,6 +3,7 @@ import ManagementDashboardView from '@/components/ManagementDashboardView';
 import { getAdminMetrics, getEvents, getStageMetrics } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getRoleById } from '@/lib/auth';
+import UniversalCommitteeActions from '@/components/UniversalCommitteeActions';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -84,6 +85,9 @@ export default async function ManagementPage() {
             </form>
           </div>
         </div>
+
+        {/* Universal Committee Quick Action Modules */}
+        <UniversalCommitteeActions showInfra={true} />
 
         {/* Management Observatory Main Dashboard Component */}
         <ManagementDashboardView

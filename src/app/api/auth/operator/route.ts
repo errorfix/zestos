@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { operatorName, operatorRollNo, operatorType } = body;
+    const { operatorName, operatorRollNo, operatorType, password } = body;
 
     if (!operatorName || typeof operatorName !== 'string' || !operatorName.trim()) {
       return NextResponse.json(
@@ -32,10 +32,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!password || typeof password !== 'string') {
+      return NextResponse.json(
+        { success: false, error: 'Verification password is required.' },
+        { status: 400 }
+      );
+    }
+
+    const isFaculty = operatorType === 'FACULTY';
+    const expectedPassword = isFaculty
+      ? (process.env.OPERATOR_FACULTY_PASSWORD || 'Faculty@Zest26_Auth99')
+      : (process.env.OPERATOR_STUDENT_PASSWORD || 'Student@Zest26_OpPass');
+
+    if (password.trim() !== expectedPassword.trim()) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: isFaculty
+            ? 'Incorrect Faculty In-Charge verification password.'
+            : 'Incorrect Student Operator verification password.',
+        },
+        { status: 401 }
+      );
+    }
+
     const session: OperatorSession = {
       operatorName: operatorName.trim(),
       operatorRollNo: operatorRollNo.trim().toUpperCase(),
-      operatorType: operatorType === 'FACULTY' ? 'FACULTY' : 'STUDENT',
+      operatorType: isFaculty ? 'FACULTY' : 'STUDENT',
       timestamp: Date.now(),
     };
 

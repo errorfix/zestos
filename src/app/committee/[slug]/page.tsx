@@ -3,9 +3,11 @@ import Navbar from '@/components/Navbar';
 import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
 import StageRegistrationsManager from '@/components/StageRegistrationsManager';
 import CommitteeDailyTracker from '@/components/CommitteeDailyTracker';
+import { OperatorDeskBadge } from '@/components/OperatorIdentityModal';
 import { notFound, redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getRoleById } from '@/lib/auth';
+import UniversalCommitteeActions from '@/components/UniversalCommitteeActions';
 import { getCommitteeBySlug, getAllowedCategoriesForCommittee } from '@/lib/committeeFlags';
 import { getAllRegistrations, getEvents } from '@/lib/db';
 import Link from 'next/link';
@@ -26,6 +28,10 @@ import {
   ShieldCheck,
   Tag,
   Radio,
+  FolderOpen,
+  CheckSquare,
+  HelpCircle,
+  AlertTriangle,
 } from 'lucide-react';
 
 export const revalidate = 0;
@@ -157,24 +163,34 @@ export default async function CommitteePortalPage({ params }: PageProps) {
               </span>
             </div>
 
-            <Link
-              href="/checkin"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#1a73e8] hover:bg-[#1557b0] text-white transition-colors shadow-xs"
-            >
-              <Camera className="w-3.5 h-3.5" />
-              <span>Participant Check-In</span>
-            </Link>
+            <div className="flex items-center gap-2">
+              <OperatorDeskBadge />
 
-            <a
-              href="/api/auth/logout"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 transition-colors"
-              title="Sign Out"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Sign Out</span>
-            </a>
+              <Link
+                href="/checkin"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#1a73e8] hover:bg-[#1557b0] text-white transition-colors shadow-xs"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>Participant Check-In</span>
+              </Link>
+
+              <a
+                href="/api/auth/logout"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">Sign Out</span>
+              </a>
+            </div>
           </div>
         </div>
+
+        {/* Universal Committee Quick Action Modules */}
+        <UniversalCommitteeActions
+          committeeSlug={committee.slug}
+          showInfra={committee.slug === 'infra'}
+        />
 
         {/* Dynamic SuperAdmin Flags Notice Banner */}
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">

@@ -160,3 +160,100 @@ model DailyTrackingItem {
   @@index([head])
   @@index([status])
 }
+
+model CommitteeAttendance {
+  id             String   @id @default(cuid())
+  committeeId    String   // e.g. DANCE_COMMITTEE, MUSIC_COMMITTEE, INFRA_COMMITTEE
+  date           String   // YYYY-MM-DD
+  rollNumber     String   // varchar 20 student roll number
+  isPresent      Boolean  @default(false)
+  facultyName    String?  // Name of faculty in-charge who submitted
+  facultyRollNo  String?  // Faculty Employee ID
+  createdAt      DateTime @default(now())
+
+  @@unique([committeeId, date, rollNumber])
+  @@index([committeeId, date])
+  @@index([rollNumber])
+}
+
+model CommitteeAttendancePublish {
+  id            String   @id @default(cuid())
+  committeeId   String   // e.g. DANCE_COMMITTEE
+  date          String   // YYYY-MM-DD
+  publishedAt   DateTime @default(now())
+  facultyName   String
+  facultyRollNo String
+  totalPresent  Int      @default(0)
+  totalAbsent   Int      @default(0)
+
+  @@unique([committeeId, date])
+  @@index([committeeId])
+  @@index([date])
+}
+
+model SupportTicket {
+  id             String   @id @default(cuid())
+  committeeId    String   // Originating committee ID
+  committeeName  String   // Human-readable committee name
+  concern        String   // Detailed issue / concern paragraph
+  status         String   @default("UNSOLVED") // UNSOLVED, SOLVED
+  operatorName   String?
+  operatorRollNo String?
+  operatorType   String?  @default("STUDENT") // STUDENT or FACULTY
+  resolvedBy     String?  // Operator / Admin who marked solved
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([committeeId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Complaint {
+  id             String   @id @default(cuid())
+  committeeId    String   // Originating committee ID
+  committeeName  String   // Human-readable committee name
+  topic          String   // Brief subject / sentence
+  explanation    String   // Detailed explanation paragraph
+  status         String   @default("UNSOLVED") // UNSOLVED, SOLVED
+  operatorName   String?
+  operatorRollNo String?
+  operatorType   String?  @default("STUDENT") // STUDENT or FACULTY
+  resolvedBy     String?  // Grievance / CS&IT member who resolved
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([committeeId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model InfraVendor {
+  id             String   @id @default(cuid())
+  name           String   // Vendor Agency / Company Name
+  purpose        String   // Equipment / Service Purpose (e.g. Stage Sound, Generator, Barricades)
+  remarks        String?  // Specifications, payment notes, delivery timing
+  contactPhone   String?
+  amountPaise    Int?     // Contract amount in paise if applicable
+  status         String   @default("ACTIVE") // ACTIVE, PENDING, COMPLETED, CANCELLED
+  operatorName   String?
+  operatorRollNo String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model CommitteeRosterMember {
+  id          String   @id @default(cuid())
+  committeeId String   // Committee slug / ID
+  rollNumber  String   // varchar 20 roll number
+  studentName String?  // Optional student name
+  createdAt   DateTime @default(now())
+
+  @@unique([committeeId, rollNumber])
+  @@index([committeeId])
+}
+
+

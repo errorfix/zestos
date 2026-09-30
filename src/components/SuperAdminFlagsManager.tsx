@@ -29,6 +29,7 @@ import {
 export default function SuperAdminFlagsManager() {
   const [flags, setFlags] = useState<CommitteeFlagsStore>({});
   const [editFlags, setEditFlags] = useState<Record<string, boolean>>({});
+  const [isGlobalEditEnabled, setIsGlobalEditEnabled] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -52,6 +53,9 @@ export default function SuperAdminFlagsManager() {
       if (data.success && data.flags) {
         setFlags(data.flags);
         if (data.editFlags) setEditFlags(data.editFlags);
+        if (typeof data.isGlobalEditEnabled === 'boolean') {
+          setIsGlobalEditEnabled(data.isGlobalEditEnabled);
+        }
       }
     } catch (err) {
       console.error('Failed to load committee flags:', err);
@@ -207,6 +211,33 @@ export default function SuperAdminFlagsManager() {
     }
   };
 
+  const handleToggleGlobalMasterLock = async () => {
+    const newVal = !isGlobalEditEnabled;
+    setIsGlobalEditEnabled(newVal);
+    try {
+      const res = await fetch('/api/super-admin/flags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'TOGGLE_GLOBAL_EDIT_LOCK',
+          enabled: newVal,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to update global edit lock');
+      }
+      showToast(
+        newVal
+          ? '🔓 Global Master Lock UNLOCKED: Granular committee edit permissions are now active.'
+          : '🔒 Global Master Lock LOCKED: ALL committees (except Super Admin) are restricted to read-only!'
+      );
+    } catch (err) {
+      setIsGlobalEditEnabled(!newVal);
+      showToast(`Error: ${(err as Error).message}`);
+    }
+  };
+
   const getCommitteeIcon = (slug: string) => {
     switch (slug) {
       case 'music':
@@ -297,6 +328,63 @@ export default function SuperAdminFlagsManager() {
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset to Defaults</span>
           </button>
+        </div>
+      </div>
+
+      {/* 🔒 Master Global Data Edit Lock (Priority Control) */}
+      <div className={`p-6 rounded-3xl border transition-all shadow-xs ${
+        isGlobalEditEnabled 
+          ? 'bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-white border-emerald-300'
+          : 'bg-gradient-to-r from-rose-50/90 via-red-50/60 to-white border-rose-300'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1 max-w-2xl">
+            <div className="flex items-center gap-2">
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                isGlobalEditEnabled
+                  ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                  : 'bg-rose-100 text-rose-900 border-rose-300'
+              }`}>
+                {isGlobalEditEnabled ? 'Master State: Unlocked' : 'Master State: Locked'}
+              </span>
+              <span className="text-xs font-semibold text-slate-500">
+                Top-Level Data Authority
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-black text-slate-900">
+              Global Committee Data Modification Master Lock
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Decides if attendee roster data and participant fields can be edited by any committee across the festival.
+              When <strong>Locked (OFF)</strong>, all committee panels are immediately forced to Read-Only regardless of their individual toggles.
+              When <strong>Unlocked (ON)</strong>, individual committee edit permissions apply.
+              <span className="block mt-1 text-[11px] font-bold text-amber-800">
+                ⭐ Super Admin (CS&amp;IT Committee) retains unconditional universal edit access at all times.
+              </span>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="text-xs font-bold text-slate-700">
+              {isGlobalEditEnabled ? 'Edits Permitted' : 'All Committees Locked'}
+            </span>
+            <button
+              type="button"
+              onClick={handleToggleGlobalMasterLock}
+              className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                isGlobalEditEnabled ? 'bg-emerald-600' : 'bg-rose-600'
+              }`}
+              role="switch"
+              aria-checked={isGlobalEditEnabled}
+            >
+              <span
+                aria-hidden="true"
+                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                  isGlobalEditEnabled ? 'translate-x-7' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
         </div>
       </div>
 

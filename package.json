@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "stress-test": "tsx scripts/stress-test.ts"
+    "stress-test": "tsx scripts/stress-test.ts",
+    "cleanup-stress": "tsx scripts/cleanup-stress-test.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

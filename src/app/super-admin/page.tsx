@@ -3,6 +3,8 @@ import SuperAdminView from '@/components/SuperAdminView';
 import { getAdminMetrics, getEvents, getStageMetrics } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';
+import { OperatorDeskBadge } from '@/components/OperatorIdentityModal';
+import UniversalCommitteeActions from '@/components/UniversalCommitteeActions';
 import Link from 'next/link';
 import {
   Banknote,
@@ -14,8 +16,8 @@ import {
 export const revalidate = 0;
 
 export const metadata = {
-  title: 'Super Admin Panel • FestOS v2.0',
-  description: "Master control panel for Lingaya's Vidyapeeth Campus Events.",
+  title: 'Super Admin Panel (CS&IT Committee) • FestOS v2.0',
+  description: "Master control panel for Lingaya's Vidyapeeth Campus Events handled by CS&IT Committee.",
 };
 
 export default async function SuperAdminPage() {
@@ -37,29 +39,25 @@ export default async function SuperAdminPage() {
         {/* Top Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
                 Super Admin Console
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-900 border border-blue-300">
+                CS&amp;IT Committee Core
               </span>
               <span className="text-xs text-slate-500 font-medium">Full Access</span>
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              Master Control Panel
+              Master Festival Control Panel
             </h1>
-            <p className="text-sm text-slate-600 mt-1">
-              Create, edit, and manage all events. Full oversight of registrations, revenue, and gate operations across committees.
+            <p className="text-sm text-slate-600 mt-1 max-w-2xl">
+              Handled by CS&amp;IT Committee. Universal oversight of registrations, revenue, gate check-in, vendor contracts, complaints tribunal, and committee flags.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            <div className="hidden sm:flex flex-col items-end pr-2 text-right">
-              <span className="text-xs font-bold text-slate-900">
-                {session?.roleLabel || 'Super Admin'}
-              </span>
-              <span className="text-[10px] text-amber-700 font-semibold flex items-center gap-1">
-                <Crown className="w-3 h-3 text-amber-500" /> Elevated Privileges
-              </span>
-            </div>
+            <OperatorDeskBadge />
 
             <Link
               href="/onspot"
@@ -87,6 +85,9 @@ export default async function SuperAdminPage() {
             </a>
           </div>
         </div>
+
+        {/* Universal CS&IT Operations Quick Action Bar */}
+        <UniversalCommitteeActions showInfra={true} />
 
         {/* Dynamic Super Admin View with Isolated Committee Switcher */}
         <SuperAdminView

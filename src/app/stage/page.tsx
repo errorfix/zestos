@@ -4,6 +4,7 @@ import CommitteeDailyTracker from '@/components/CommitteeDailyTracker';
 import { getStageMetrics, getEvents } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';
+import UniversalCommitteeActions from '@/components/UniversalCommitteeActions';
 import Link from 'next/link';
 import {
   Mic2,
@@ -97,6 +98,9 @@ export default async function StageCommitteePage() {
             </a>
           </div>
         </div>
+
+        {/* Universal Committee Quick Action Modules */}
+        <UniversalCommitteeActions committeeSlug="stage" />
 
         {/* Real-time Metric Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

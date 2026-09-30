@@ -4,6 +4,7 @@ import RniDashboardView from '@/components/RniDashboardView';
 import { getAdminMetrics, getEvents } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';
+import UniversalCommitteeActions from '@/components/UniversalCommitteeActions';
 import Link from 'next/link';
 import {
   Users,
@@ -92,6 +93,9 @@ export default async function AdminPage() {
             </a>
           </div>
         </div>
+
+        {/* Universal Committee Quick Action Modules */}
+        <UniversalCommitteeActions committeeSlug="rni" />
 
         {/* Real-time Metric Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

@@ -11,6 +11,7 @@ import SuperAdminDailyTracking from '@/components/SuperAdminDailyTracking';
 import SponsorshipManager from '@/components/SponsorshipManager';
 import CollegeDelegationsView from '@/components/CollegeDelegationsView';
 import CollegePricingExceptionsManager from '@/components/CollegePricingExceptionsManager';
+import InfraVendorManager from '@/components/InfraVendorManager';
 import { InitialEventData } from '@/lib/mockEvents';
 import {
   Users,
@@ -36,6 +37,7 @@ import {
   Building2,
   Tag,
   Handshake,
+  Truck,
 } from 'lucide-react';
 
 interface MetricsData {
@@ -69,6 +71,7 @@ export type SuperAdminWorkspaceTab =
   | 'FLAGS'
   | 'DAILY_TRACKING'
   | 'SPONSORSHIP'
+  | 'INFRA_VENDORS'
   | 'AUDIT_LOGS'
   | 'COLLEGE_DELEGATIONS'
   | 'COLLEGE_PRICING'
@@ -521,6 +524,34 @@ export default function SuperAdminView({
               </div>
             </button>
 
+            {/* Vendor Logistics & Equipment */}
+            <button
+              type="button"
+              onClick={() => setActiveCommittee('INFRA_VENDORS')}
+              className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${activeCommittee === 'INFRA_VENDORS'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-900 shadow-xs'
+                }`}
+            >
+              <div className="flex items-center justify-between gap-1 mb-2">
+                <Truck className={`w-4 h-4 ${activeCommittee === 'INFRA_VENDORS' ? 'text-white' : 'text-slate-700'}`} />
+                <span className={`text-[10px] font-bold ${activeCommittee === 'INFRA_VENDORS' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Infra
+                </span>
+              </div>
+              <div>
+                <h4 className="text-sm font-bold">Vendor Logistics</h4>
+                <p className={`text-[11px] mt-0.5 ${activeCommittee === 'INFRA_VENDORS' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  Contracts &amp; equipment
+                </p>
+              </div>
+              <div className={`mt-2.5 pt-2 border-t text-[10px] font-bold flex justify-between ${activeCommittee === 'INFRA_VENDORS' ? 'border-slate-800 text-slate-300' : 'border-slate-100 text-slate-500'
+                }`}>
+                <span>{activeCommittee === 'INFRA_VENDORS' ? '● Viewing' : 'Switch'}</span>
+                <span>/committee/infra</span>
+              </div>
+            </button>
+
             {/* 7. College Delegations Drilldown */}
             <button
               type="button"
@@ -771,6 +802,15 @@ export default function SuperAdminView({
             </Link>
           </div>
           <SponsorshipManager allowEdit={true} isSuperAdmin={true} />
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 🚚 SECTION: INFRASTRUCTURE VENDOR CONTRACTS & LOGISTICS */}
+      {/* ========================================================================= */}
+      {activeCommittee === 'INFRA_VENDORS' && (
+        <div className="space-y-8 animate-in fade-in-50 duration-200">
+          <InfraVendorManager />
         </div>
       )}
 

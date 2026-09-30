@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, User, IdCard, CheckCircle2, UserCheck, AlertCircle, RefreshCw } from 'lucide-react';
+import { ShieldCheck, User, IdCard, CheckCircle2, UserCheck, AlertCircle, RefreshCw, Lock, Eye, EyeOff, Calendar } from 'lucide-react';
 
 export interface OperatorIdentity {
   operatorName: string;
@@ -61,6 +61,8 @@ export default function OperatorIdentityModal({
   const [operatorType, setOperatorType] = useState<'STUDENT' | 'FACULTY'>('STUDENT');
   const [name, setName] = useState('');
   const [rollNo, setRollNo] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,6 +98,10 @@ export default function OperatorIdentityModal({
       );
       return;
     }
+    if (!password) {
+      setError(`Please enter the ${operatorType === 'STUDENT' ? 'Student Desk' : 'Faculty In-Charge'} verification password.`);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -108,6 +114,7 @@ export default function OperatorIdentityModal({
           operatorName: cleanName,
           operatorRollNo: cleanRollNo,
           operatorType,
+          password,
         }),
       });
 
@@ -117,6 +124,7 @@ export default function OperatorIdentityModal({
       }
 
       setLocalOperator(data.operator);
+      setPassword('');
       setIsOpen(false);
       if (onClose) onClose();
     } catch (err) {
@@ -129,7 +137,7 @@ export default function OperatorIdentityModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden p-6 sm:p-7 space-y-5">
         {/* Header Icon & Title */}
         <div className="flex items-start gap-4">
@@ -234,6 +242,43 @@ export default function OperatorIdentityModal({
             <p className="text-[11px] text-slate-500 mt-1">
               This identifier will be permanently tied to every data mutation made in this session.
             </p>
+          </div>
+
+          {/* Verification Password */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                {operatorType === 'STUDENT' ? 'Student Desk Password' : 'Faculty In-Charge Password'}
+              </label>
+              <span className="text-[10px] font-semibold text-slate-400">
+                Verified against .env
+              </span>
+            </div>
+            <div className="relative">
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={operatorType === 'STUDENT' ? 'Enter student desk password' : 'Enter faculty verification password'}
+                className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none p-1"
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* 7-Day Session Validity Notice */}
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2 text-[11px] font-semibold text-slate-600">
+            <Calendar className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>Identity session persists securely on this device for <strong>7 days</strong>.</span>
           </div>
 
           {/* Submit Action */}
