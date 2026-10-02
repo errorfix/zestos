@@ -64,11 +64,13 @@ export async function GET(request: NextRequest) {
 
     const isCSIT = session.roleId === 'SUPER_ADMIN';
     const isHAM = session.roleId === 'MANAGEMENT';
+    const isAttendanceComm = session.roleId === 'ATTENDANCE_COMMITTEE';
 
-    // HAM is strictly READ-ONLY observatory. CSIT is editable.
+    // HAM is strictly READ-ONLY observatory. CSIT and Attendance Committee can edit sealed dates.
+    // All other committees can mark, manage roster, and push unsealed dates.
     const operator = getOperatorFromRequest(request);
-    const isFaculty = isCSIT || (!isHAM && operator?.operatorType === 'FACULTY');
-    const canMark = isCSIT;
+    const canEdit = isCSIT || isAttendanceComm;
+    const canMark = !isHAM;
 
     const matchedComm = getCommitteeBySlug(committeeId) || getCommitteeById(committeeId);
     const committeeIds = committeeId === 'all' ? [] : (matchedComm ? [matchedComm.slug, matchedComm.id] : [committeeId]);
@@ -180,7 +182,7 @@ export async function GET(request: NextRequest) {
       publishInfo,
       latestPublishedDate: latestPublish?.date || null,
       publishHistory,
-      canMark: isCSIT || (session.roleId === 'ATTENDANCE_COMMITTEE'),
+      canMark: !isHAM,
       canEdit: isCSIT || (session.roleId === 'ATTENDANCE_COMMITTEE'),
       isHAM,
       operatorType: operator?.operatorType || (isCSIT || session.roleId === 'ATTENDANCE_COMMITTEE' ? 'FACULTY' : isHAM ? 'FACULTY' : 'STUDENT'),
@@ -263,19 +265,83 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ─── ACTION 2: PUSH ATTENDANCE DATA (FACULTY OR ASSESSMENT HUB ONLY) ─────
-    if (action === 'PUSH_ATTENDANCE') {
-      const isFaculty = canEdit || operator?.operatorType === 'FACULTY';
-      if (!isFaculty) {
+    // ─── ACTION 1B: REMOVE ROLL NUMBER FROM ROSTER ───────────────────────────
+    if (action === 'REMOVE_ROLL_NUMBER') {
+      if (!rollNumber || typeof rollNumber !== 'string' || !rollNumber.trim()) {
         return NextResponse.json(
-          {
-            success: false,
-            error: 'Permission Denied: Only Faculty Staff In-Charge, CS&IT Administration, or Attendance Committee can officially push and seal attendance records.',
-          },
-          { status: 403 }
+          { success: false, error: 'Student Roll Number is required.' },
+          { status: 400 }
         );
       }
 
+      const cleanRollNo = rollNumber.trim().toUpperCase();
+
+      // If a specific date is passed and it's sealed, only CS&IT / Attendance Committee can alter it
+      if (date && typeof date === 'string') {
+        const existingPublish = await prisma.committeeAttendancePublish.findUnique({
+          where: {
+            committeeId_date: {
+              committeeId,
+              date,
+            },
+          },
+        });
+        if (existingPublish && !canEdit) {
+          return NextResponse.json(
+            { success: false, error: `Attendance for date ${date} is already sealed. Contact CS&IT to modify.` },
+            { status: 403 }
+          );
+        }
+      }
+
+      // 1. Remove from official roster table
+      await prisma.committeeRosterMember.deleteMany({
+        where: {
+          committeeId,
+          rollNumber: cleanRollNo,
+        },
+      });
+
+      // 2. Remove any attendance records for unsealed dates so they don't get re-synthesized
+      const sealedPublishes = await prisma.committeeAttendancePublish.findMany({
+        where: { committeeId },
+        select: { date: true },
+      });
+      const sealedDates = sealedPublishes.map((p) => p.date);
+
+      if (canEdit) {
+        // Super Admin / Attendance Committee can remove attendance records directly
+        await prisma.committeeAttendance.deleteMany({
+          where: {
+            committeeId,
+            rollNumber: cleanRollNo,
+            ...(date ? { date } : {}),
+          },
+        });
+      } else {
+        // Regular committee removes attendance for unsealed dates only
+        const whereClause: { committeeId: string; rollNumber: string; date?: any } = {
+          committeeId,
+          rollNumber: cleanRollNo,
+        };
+        if (date && !sealedDates.includes(date)) {
+          whereClause.date = date;
+        } else if (sealedDates.length > 0) {
+          whereClause.date = { notIn: sealedDates };
+        }
+        await prisma.committeeAttendance.deleteMany({
+          where: whereClause,
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Roll number ${cleanRollNo} removed from roster.`,
+      });
+    }
+
+    // ─── ACTION 2: PUSH ATTENDANCE DATA ──────────────────────────────────────
+    if (action === 'PUSH_ATTENDANCE') {
       if (!date || typeof date !== 'string') {
         return NextResponse.json(
           { success: false, error: 'Attendance date (YYYY-MM-DD) is required.' },

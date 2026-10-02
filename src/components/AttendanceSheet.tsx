@@ -15,6 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
+  UserPlus,
+  Trash2,
 } from 'lucide-react';
 import { getLocalOperator } from '@/components/OperatorIdentityModal';
 import { getCommitteeBySlug, getCommitteeById } from '@/lib/committeeConstants';
@@ -96,6 +98,12 @@ export default function AttendanceSheet({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Add / Remove Roster Member state
+  const [newRollNo, setNewRollNo] = useState<string>('');
+  const [newStudentName, setNewStudentName] = useState<string>('');
+  const [addingMember, setAddingMember] = useState<boolean>(false);
+  const [removingRollNo, setRemovingRollNo] = useState<string | null>(null);
 
   // Pagination & Search state (25 - 150)
   const [pageSize, setPageSize] = useState<number>(50);
@@ -208,6 +216,92 @@ export default function AttendanceSheet({
     setPresenceMap(newMap);
   };
 
+  const handleAddRollNumber = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!newRollNo.trim()) return;
+    if (!canMark && !canEdit) return;
+
+    setAddingMember(true);
+    try {
+      const localOp = getLocalOperator();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (localOp) {
+        headers['x-operator-name'] = localOp.operatorName;
+        headers['x-operator-roll'] = localOp.operatorRollNo;
+        headers['x-operator-type'] = localOp.operatorType;
+      }
+
+      const res = await fetch('/api/attendance', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          action: 'ADD_ROLL_NUMBER',
+          committee: committeeSlug,
+          rollNumber: newRollNo.trim(),
+          studentName: newStudentName.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to add student to roster');
+      }
+
+      showToast(`✓ ${data.message || `Roll ${newRollNo.trim().toUpperCase()} added to roster`}`);
+      setNewRollNo('');
+      setNewStudentName('');
+      fetchAttendance();
+    } catch (err) {
+      alert(`Error: ${(err as Error).message}`);
+    } finally {
+      setAddingMember(false);
+    }
+  };
+
+  const handleRemoveRollNumber = async (rollNo: string) => {
+    if (!canMark && !canEdit) return;
+    if (publishInfo && !canEdit) {
+      alert(`Attendance for ${selectedDate} has already been sealed. Only CS&IT or Attendance Committee can alter roster on sealed dates.`);
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to remove roll number "${rollNo}" from ${committeeName || committeeSlug}'s roster?`)) {
+      return;
+    }
+
+    setRemovingRollNo(rollNo);
+    try {
+      const localOp = getLocalOperator();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (localOp) {
+        headers['x-operator-name'] = localOp.operatorName;
+        headers['x-operator-roll'] = localOp.operatorRollNo;
+        headers['x-operator-type'] = localOp.operatorType;
+      }
+
+      const res = await fetch('/api/attendance', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          action: 'REMOVE_ROLL_NUMBER',
+          committee: committeeSlug,
+          rollNumber: rollNo,
+          date: isAllTime ? undefined : selectedDate,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to remove student from roster');
+      }
+
+      showToast(`✓ ${data.message || `Roll ${rollNo} removed from roster`}`);
+      fetchAttendance();
+    } catch (err) {
+      alert(`Error: ${(err as Error).message}`);
+    } finally {
+      setRemovingRollNo(null);
+    }
+  };
+
   const handleToggleAllTimeEntry = async (record: AttendanceRecord) => {
     if (!canEdit || isReadOnly) return;
     const nextStatus = !record.isPresent;
@@ -261,17 +355,17 @@ export default function AttendanceSheet({
     }
 
     if (!canMark && !canEdit) {
-      alert('Only Faculty Staff In-Charge or CS&IT Super Admin can officially push attendance records.');
+      alert('You do not have permission to push attendance records.');
       return;
     }
 
     if (roster.length === 0) {
-      alert('Cannot push attendance with an empty volunteer roster.');
+      alert('Cannot push attendance with an empty volunteer roster. Add students to the roster first.');
       return;
     }
 
     if (publishInfo && !canEdit) {
-      alert(`Attendance for ${selectedDate} has already been pushed and sealed. You cannot overwrite a finalized date.`);
+      alert(`Attendance for ${selectedDate} has already been pushed and sealed. Only CS&IT and Attendance Committee can modify sealed dates.`);
       return;
     }
 
@@ -279,8 +373,8 @@ export default function AttendanceSheet({
     const absentCount = roster.length - presentCount;
 
     const confirmMsg = publishInfo
-      ? `Attendance for ${selectedDate} was sealed on ${new Date(publishInfo.publishedAt).toLocaleDateString('en-IN')}.\n\nAs CS&IT Super Admin, confirm updating and overwriting stored attendance records for ${selectedDate}?\n\n• Committee: ${committeeName || committeeSlug}\n• Present: ${presentCount}\n• Absent: ${absentCount}`
-      : `Confirm submission of final attendance for ${selectedDate}?\n\n• Committee: ${committeeName || committeeSlug}\n• Present: ${presentCount}\n• Absent: ${absentCount}\n• Sealed By: ${operatorName || 'Faculty In-Charge'}`;
+      ? `Attendance for ${selectedDate} was sealed on ${new Date(publishInfo.publishedAt).toLocaleDateString('en-IN')}.\n\nAs Editor Authority (CS&IT / Attendance Committee), confirm updating stored attendance records for ${selectedDate}?\n\n• Committee: ${committeeName || committeeSlug}\n• Present: ${presentCount}\n• Absent: ${absentCount}`
+      : `Confirm submission of attendance for ${selectedDate}?\n\n• Committee: ${committeeName || committeeSlug}\n• Present: ${presentCount}\n• Absent: ${absentCount}\n\nNote: Once submitted, attendance becomes sealed.`;
     if (!confirm(confirmMsg)) return;
 
     setSubmitting(true);
@@ -415,6 +509,12 @@ export default function AttendanceSheet({
                   Sealed &amp; Published
                 </span>
               )}
+              {canEdit && (
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-900 border border-purple-300 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-purple-700" />
+                  Editor Authority
+                </span>
+              )}
               {!canMark && (
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
                   <Lock className="w-3 h-3 text-amber-700" />
@@ -428,9 +528,11 @@ export default function AttendanceSheet({
             <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
               {isAllTime
                 ? 'Comprehensive institutional record of student volunteer presence across all recorded dates and committees.'
+                : canEdit
+                ? 'Full Editor Authority (CS&IT & Attendance Committee): Manage volunteer rosters, push attendance, and modify previously sealed attendance records.'
                 : canMark
-                ? 'Mark student roll numbers present or absent for duty. Only Faculty Staff In-Charge or CS&IT Administration can push and seal attendance records.'
-                : 'Higher Authority Observatory: View-only inspection mode. Attendance modifications and publishing are exclusive to CS&IT Committee.'}
+                ? 'Committee Operations: Add or remove students from your roster and push daily attendance. Note: Once pushed, attendance becomes sealed.'
+                : 'Higher Authority Observatory: View-only inspection mode. Attendance modifications and publishing are exclusive to operating committees and CS&IT.'}
             </p>
           </div>
 
@@ -459,9 +561,9 @@ export default function AttendanceSheet({
 
             {!isAllTime && (
               publishInfo && !canEdit ? (
-                <div className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                <div className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
                   <Lock className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Pushed on {new Date(publishInfo.publishedAt).toLocaleDateString('en-IN')}</span>
+                  <span>Pushed &amp; Sealed ({new Date(publishInfo.publishedAt).toLocaleDateString('en-IN')})</span>
                 </div>
               ) : (canMark || canEdit) && !isReadOnly ? (
                 <div className="flex items-center gap-2">
@@ -480,7 +582,7 @@ export default function AttendanceSheet({
                         ? 'bg-indigo-600 hover:bg-indigo-700'
                         : 'bg-emerald-600 hover:bg-emerald-700'
                     }`}
-                    title={publishInfo ? "Update attendance for this date (CS&IT Super Admin)" : "Push attendance to central system"}
+                    title={publishInfo ? "Update attendance for this date (CS&IT / Attendance Committee Exclusive)" : "Push attendance to central system"}
                   >
                     {submitting ? (
                       <>
@@ -498,21 +600,34 @@ export default function AttendanceSheet({
               ) : (
                 <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
                   <Lock className="w-3.5 h-3.5 text-slate-500" />
-                  <span>View Only (CS&amp;IT Exclusive)</span>
+                  <span>View Only (Observatory)</span>
                 </div>
               )
             )}
           </div>
         </div>
 
-        {/* Status Alert Banner */}
-        {!canMark && !canEdit && !isAllTime && (
+        {/* Sealed Date Informational Banner for regular committees */}
+        {!isAllTime && publishInfo && !canEdit && (
+          <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-2xl flex items-center gap-3 text-xs text-blue-900 font-semibold">
+            <Lock className="w-4 h-4 text-blue-600 shrink-0" />
+            <div>
+              <span>Attendance for {selectedDate} was pushed and sealed on {new Date(publishInfo.publishedAt).toLocaleDateString('en-IN')}.</span>
+              <span className="block text-[11px] text-blue-700 font-normal mt-0.5">
+                Previously sealed attendance is locked. Editor authority to modify sealed records is exclusive to CS&amp;IT Super Admin and Attendance Committee.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Higher Authority Observatory Banner */}
+        {!canMark && !isAllTime && (
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3 text-xs text-amber-800 font-semibold">
             <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
             <div>
-              <span>Attendance marking and publishing is <strong>restricted to Faculty Staff In-Charge</strong>.</span>
+              <span className="font-bold">Higher Authority Observatory Mode</span>
               <span className="block text-[11px] text-amber-700 font-normal mt-0.5">
-                Current active operator is logged in as Student Desk ({operatorName || 'Student'}). To mark attendance, switch desk operator to a Faculty profile using the desk header badge.
+                Attendance records are view-only. Modifications and publishing are handled directly by the respective committees and CS&amp;IT Administration.
               </span>
             </div>
           </div>
@@ -551,6 +666,63 @@ export default function AttendanceSheet({
         </div>
       </div>
 
+      {/* Add Student to Roster Form (Available for unsealed dates or CS&IT / Attendance Committee) */}
+      {!isAllTime && !isReadOnly && canMark && (!publishInfo || canEdit) && (
+        <form
+          onSubmit={handleAddRollNumber}
+          className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-violet-50 text-violet-700 flex items-center justify-center shrink-0 border border-violet-100">
+              <UserPlus className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900">Add Student to Committee Roster</h4>
+              <p className="text-[11px] text-slate-500">
+                Register volunteer roll numbers for {committeeSlug === 'all' ? 'this committee' : (committeeName || committeeSlug)}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 flex-1 max-w-xl">
+            <input
+              type="text"
+              value={newRollNo}
+              onChange={(e) => setNewRollNo(e.target.value.toUpperCase())}
+              placeholder="Roll Number (e.g. 23BTECH001)"
+              maxLength={20}
+              disabled={addingMember}
+              className="w-full sm:w-1/2 px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+            />
+            <input
+              type="text"
+              value={newStudentName}
+              onChange={(e) => setNewStudentName(e.target.value)}
+              placeholder="Student Name (Optional)"
+              disabled={addingMember}
+              className="w-full sm:w-1/2 px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+            />
+            <button
+              type="submit"
+              disabled={addingMember || !newRollNo.trim()}
+              className="shrink-0 inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+            >
+              {addingMember ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Adding...</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add to Roster</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      )}
+
       {/* Attendance Table Container with Gmail-style 25-150 Pagination */}
       {loading ? (
         <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center shadow-xs">
@@ -566,6 +738,8 @@ export default function AttendanceSheet({
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
             {isAllTime
               ? 'No historical attendance records have been registered for this filter selection yet.'
+              : canMark && (!publishInfo || canEdit)
+              ? 'No volunteer records found for this committee on the selected date. Use the "Add Student to Committee Roster" form above to register students.'
               : 'No volunteer records found for this committee on the selected date.'}
           </p>
         </div>
@@ -668,6 +842,9 @@ export default function AttendanceSheet({
                   <th className="py-3 px-4">Committee</th>
                   {isAllTime && <th className="py-3 px-4">Faculty In-Charge</th>}
                   <th className="py-3 px-4 text-right">Attendance State</th>
+                  {!isAllTime && !isReadOnly && canMark && (!publishInfo || canEdit) && (
+                    <th className="py-3 px-4 w-12 text-center">Remove</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -700,7 +877,7 @@ export default function AttendanceSheet({
                                   ? 'bg-emerald-100 hover:bg-rose-100 text-emerald-900 hover:text-rose-900 border border-emerald-300 hover:border-rose-300'
                                   : 'bg-rose-100 hover:bg-emerald-100 text-rose-900 hover:text-emerald-900 border border-rose-200 hover:border-emerald-300'
                               }`}
-                              title="Click to toggle Present / Absent (CS&IT Super Admin)"
+                              title="Click to toggle Present / Absent (CS&IT / Attendance Committee)"
                             >
                               <span>{record.isPresent ? '✓ PRESENT' : '✗ ABSENT'}</span>
                               <span className="text-[9px] opacity-60 font-normal">toggle</span>
@@ -765,6 +942,23 @@ export default function AttendanceSheet({
                           {isPresent ? 'PRESENT' : 'ABSENT'}
                         </span>
                       </td>
+                      {!isAllTime && !isReadOnly && canMark && (!publishInfo || canEdit) && (
+                        <td className="py-3 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveRollNumber(member.rollNumber)}
+                            disabled={removingRollNo === member.rollNumber}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                            title={`Remove ${member.rollNumber} from roster`}
+                          >
+                            {removingRollNo === member.rollNumber ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin text-rose-500" />
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
