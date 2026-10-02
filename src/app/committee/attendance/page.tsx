@@ -101,7 +101,12 @@ export default async function CommitteeAttendancePage({ searchParams }: PageProp
         </div>
 
         {/* Embedded Attendance Sheet Component */}
-        <AttendanceSheet committeeSlug={activeSlug} committeeName={activeName} />
+        <AttendanceSheet
+          committeeSlug={activeSlug}
+          committeeName={activeName}
+          canEdit={isCSIT || isAttendanceComm}
+          isReadOnly={isControls}
+        />
       </main>
     </div>
   );

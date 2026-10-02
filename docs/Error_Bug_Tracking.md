@@ -27,6 +27,7 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 | **ERR-019** | 2026-10-02 23:15 | Assessment Hub & Attendance Permissions (`/management`, `/super-admin`) | CSIT exclusive edit permissions vs HAM read-only observatory; official volunteer rosters for all committees & all-time multi-committee view | **RESOLVED** |
 | **ERR-020** | 2026-10-02 23:20 | Document Vault & File System (`src/lib/documents.ts`, `DocumentStorage.tsx`) | Added folder creation, breadcrumb folder navigation, move files between folders, and folder deletion | **RESOLVED** |
 | **ERR-021** | 2026-10-02 23:55 | Assessment Hub & CS&IT Override (`/api/attendance`, `MayIHelpYou`, `ComplaintsInbox`) | CS&IT override capability for pushed attendance; suppression of creation forms in Internal Assessment Hub | **RESOLVED** |
+| **ERR-022** | 2026-10-03 00:05 | Attendance Committee (`/committee/attendance-ops`, `/api/attendance`) | Added dedicated Attendance Tracking Card to Attendance Committee dashboard & enabled full edit permissions | **RESOLVED** |
 
 
 ---
@@ -372,6 +373,23 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
   1. Updated `AttendanceSheet.tsx` and `/api/attendance/route.ts` to allow CS&IT (`canEdit`) to manipulate attendance records regardless of whether the date was already pushed/sealed. Checkboxes remain enabled, row-click toggling remains active, Mark All buttons are available, and the push button displays "Update Attendance (Sealed [date])".
   2. Added `action: 'TOGGLE_ENTRY'` to `/api/attendance/route.ts` and interactive status toggle buttons on each row in All-Time mode so CS&IT can manipulate individual attendance records across dates and committees.
   3. Added `allowSubmission?: boolean` prop to `MayIHelpYou.tsx` and `ComplaintsInbox.tsx`, passing `allowSubmission={false}` in `InternalAssessmentModal.tsx` so the hub strictly displays tickets/complaints, search/filters, and case resolution controls without creation forms.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-022: Attendance Committee Dedicated Tracking Card & Cross-Committee Edit Permissions
+- **Component**: `src/app/committee/[slug]/page.tsx`, `src/components/AttendanceTrackingCard.tsx`, `src/app/api/attendance/route.ts`, `src/app/committee/attendance/page.tsx`
+- **Symptom**:
+  1. Operators logging into the Attendance Committee workspace (`/committee/attendance-ops`) had no dedicated attendance tracking card on their primary dashboard.
+  2. While CS&IT was authorized to edit attendance records, Attendance Committee (`ATTENDANCE_COMMITTEE`) was blocked from editing cross-committee attendance (`canEdit` was false, preventing them from modifying sealed records or toggling all-time entries).
+- **Root Cause Analysis**:
+  1. `src/app/committee/[slug]/page.tsx` was a generic template focused on competitive events registrations rather than operational roll call duties for the Attendance Ops committee.
+  2. `resolveCommitteeScope` and `POST` actions in `/api/attendance/route.ts` strictly checked `isCSIT = session.roleId === 'SUPER_ADMIN'` for `canEdit` rather than also checking `session.roleId === 'ATTENDANCE_COMMITTEE'`.
+- **Resolution**:
+  1. Created [`src/components/AttendanceTrackingCard.tsx`](file:///d:/1111111/VS-Code-Projects/GithubCloneRepos/zestos/src/components/AttendanceTrackingCard.tsx) with a committee dropdown switcher (All Committees + 17 individual committees), live edit authority badge, direct fullscreen link, and embedded interactive `AttendanceSheet`.
+  2. Integrated `<AttendanceTrackingCard canEdit={true} initialCommitteeSlug="all" />` into the Attendance Committee dashboard (`/committee/attendance-ops`).
+  3. Updated `src/app/api/attendance/route.ts` so `ATTENDANCE_COMMITTEE` has `canEdit: true`, `canMark: true`, and authorization to push, update sealed dates, and toggle entries across committees.
+  4. Updated `src/app/committee/attendance/page.tsx` to pass `canEdit={isCSIT || isAttendanceComm}` to `AttendanceSheet`.
 - **Status**: **RESOLVED**
 
 ---

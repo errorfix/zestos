@@ -17,30 +17,30 @@ function resolveCommitteeScope(session: { roleId: string }, requestedParam?: str
   const isHAM = session.roleId === 'MANAGEMENT';
   const isAttendanceComm = session.roleId === 'ATTENDANCE_COMMITTEE';
 
-  // CS&IT (Super Admin) is the ONLY administrative body that can edit cross-committee attendance.
+  // CS&IT (Super Admin) and Attendance Committee can edit attendance.
   // Higher Authority Management (HAM) is strictly read-only observatory.
-  const canEdit = isCSIT;
+  const canEdit = isCSIT || isAttendanceComm;
   const isUniversalViewer = isCSIT || isHAM || isAttendanceComm;
 
   if (requestedParam === 'all') {
-    return { slug: 'all', name: 'Master Campus View (All Committees)', isUniversalViewer: true, canEdit: isCSIT };
+    return { slug: 'all', name: 'Master Campus View (All Committees)', isUniversalViewer: true, canEdit };
   }
 
   if (requestedParam) {
     const match = getCommitteeBySlug(requestedParam) || getCommitteeById(requestedParam);
     if (match) {
-      return { slug: match.slug, name: match.name, isUniversalViewer: true, canEdit: isCSIT };
+      return { slug: match.slug, name: match.name, isUniversalViewer: true, canEdit };
     }
   }
 
   if (isUniversalViewer && !requestedParam) {
-    return { slug: 'all', name: 'Master Campus View (All Committees)', isUniversalViewer: true, canEdit: isCSIT };
+    return { slug: 'all', name: 'Master Campus View (All Committees)', isUniversalViewer: true, canEdit };
   }
 
   const comm = getCommitteeById(session.roleId);
   const slug = comm ? comm.slug : 'general';
   const name = comm ? comm.name : 'Committee Desk';
-  return { slug, name, isUniversalViewer: false, canEdit: isCSIT || session.roleId === 'ATTENDANCE_COMMITTEE' };
+  return { slug, name, isUniversalViewer: false, canEdit };
 }
 
 export async function GET(request: NextRequest) {
@@ -205,10 +205,10 @@ export async function GET(request: NextRequest) {
       latestPublishedDate: latestPublish?.date || null,
       publishHistory,
       canMark: isCSIT || (session.roleId === 'ATTENDANCE_COMMITTEE'),
-      canEdit: isCSIT,
+      canEdit: isCSIT || (session.roleId === 'ATTENDANCE_COMMITTEE'),
       isHAM,
-      operatorType: operator?.operatorType || (isCSIT ? 'FACULTY' : isHAM ? 'FACULTY' : 'STUDENT'),
-      operatorName: operator?.operatorName || (isHAM ? 'Higher Authority Management' : isCSIT ? 'CS&IT Administration' : null),
+      operatorType: operator?.operatorType || (isCSIT || session.roleId === 'ATTENDANCE_COMMITTEE' ? 'FACULTY' : isHAM ? 'FACULTY' : 'STUDENT'),
+      operatorName: operator?.operatorName || (isHAM ? 'Higher Authority Management' : isCSIT ? 'CS&IT Administration' : session.roleId === 'ATTENDANCE_COMMITTEE' ? 'Attendance Ops Committee' : null),
       isUniversalViewer: scope.isUniversalViewer,
       committees: COMMITTEE_METAS.map((c) => ({ id: c.id, slug: c.slug, name: c.name, badge: c.badge })),
     });
@@ -249,6 +249,8 @@ export async function POST(request: NextRequest) {
     const committeeId = scope.slug;
     const operator = getOperatorFromRequest(request);
     const isCSIT = session.roleId === 'SUPER_ADMIN';
+    const isAttendanceComm = session.roleId === 'ATTENDANCE_COMMITTEE';
+    const canEdit = isCSIT || isAttendanceComm;
 
     // ─── ACTION 1: ADD ROLL NUMBER TO ROSTER ─────────────────────────────────
     if (action === 'ADD_ROLL_NUMBER') {
@@ -287,12 +289,12 @@ export async function POST(request: NextRequest) {
 
     // ─── ACTION 2: PUSH ATTENDANCE DATA (FACULTY OR ASSESSMENT HUB ONLY) ─────
     if (action === 'PUSH_ATTENDANCE') {
-      const isFaculty = isCSIT || operator?.operatorType === 'FACULTY';
+      const isFaculty = canEdit || operator?.operatorType === 'FACULTY';
       if (!isFaculty) {
         return NextResponse.json(
           {
             success: false,
-            error: 'Permission Denied: Only Faculty Staff In-Charge or CS&IT Administration can officially push and seal attendance records.',
+            error: 'Permission Denied: Only Faculty Staff In-Charge, CS&IT Administration, or Attendance Committee can officially push and seal attendance records.',
           },
           { status: 403 }
         );
@@ -322,7 +324,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      if (existingPublish && !isCSIT) {
+      if (existingPublish && !canEdit) {
         return NextResponse.json(
           {
             success: false,
@@ -335,8 +337,8 @@ export async function POST(request: NextRequest) {
       let totalPresent = 0;
       let totalAbsent = 0;
 
-      const actorName = operator?.operatorName || (session.roleId === 'MANAGEMENT' ? 'Higher Authority Management' : session.roleId === 'SUPER_ADMIN' ? 'CS&IT Administration' : 'Faculty Desk');
-      const actorRollNo = operator?.operatorRollNo || (session.roleId === 'MANAGEMENT' ? 'MANAGEMENT-DESK' : session.roleId === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'FACULTY');
+      const actorName = operator?.operatorName || (session.roleId === 'MANAGEMENT' ? 'Higher Authority Management' : session.roleId === 'SUPER_ADMIN' ? 'CS&IT Administration' : session.roleId === 'ATTENDANCE_COMMITTEE' ? 'Attendance Ops Committee' : 'Faculty Desk');
+      const actorRollNo = operator?.operatorRollNo || (session.roleId === 'MANAGEMENT' ? 'MANAGEMENT-DESK' : session.roleId === 'SUPER_ADMIN' ? 'SUPERADMIN' : session.roleId === 'ATTENDANCE_COMMITTEE' ? 'ATTENDANCE-OPS' : 'FACULTY');
 
       // Upsert each attendance entry in transaction
       await prisma.$transaction(
@@ -401,13 +403,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ─── ACTION 3: TOGGLE / UPDATE SINGLE ATTENDANCE RECORD (CS&IT) ──────────
+    // ─── ACTION 3: TOGGLE / UPDATE SINGLE ATTENDANCE RECORD (CS&IT & ATTENDANCE COMM) ──
     if (action === 'TOGGLE_ENTRY' || action === 'UPDATE_ENTRY') {
-      if (!isCSIT) {
+      if (!canEdit) {
         return NextResponse.json(
           {
             success: false,
-            error: 'Permission Denied: Only CS&IT Administration can directly manipulate individual attendance entries.',
+            error: 'Permission Denied: Only CS&IT Administration and Attendance Committee can directly manipulate individual attendance entries.',
           },
           { status: 403 }
         );
@@ -424,8 +426,8 @@ export async function POST(request: NextRequest) {
       const targetCommitteeId = targetComm || committeeId;
       const cleanRoll = String(targetRoll).trim().toUpperCase();
 
-      const actorName = operator?.operatorName || 'CS&IT Administration';
-      const actorRollNo = operator?.operatorRollNo || 'SUPERADMIN';
+      const actorName = operator?.operatorName || (isAttendanceComm ? 'Attendance Ops Committee' : 'CS&IT Administration');
+      const actorRollNo = operator?.operatorRollNo || (isAttendanceComm ? 'ATTENDANCE-OPS' : 'SUPERADMIN');
 
       const updated = await prisma.committeeAttendance.upsert({
         where: {

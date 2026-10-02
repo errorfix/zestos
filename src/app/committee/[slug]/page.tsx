@@ -8,6 +8,7 @@ import { notFound, redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getRoleById } from '@/lib/auth';
 import UniversalCommitteeActions from '@/components/UniversalCommitteeActions';
+import AttendanceTrackingCard from '@/components/AttendanceTrackingCard';
 import { getCommitteeBySlug, getAllowedCategoriesForCommittee } from '@/lib/committeeFlags';
 import { getAllRegistrations, getEvents } from '@/lib/db';
 import Link from 'next/link';
@@ -181,6 +182,11 @@ export default async function CommitteePortalPage({ params }: PageProps) {
         <UniversalCommitteeActions
           committeeSlug={committee.slug}
         />
+
+        {/* Dedicated Attendance Tracking Card for Attendance Committee */}
+        {committee.slug === 'attendance-ops' && (
+          <AttendanceTrackingCard canEdit={true} initialCommitteeSlug="all" />
+        )}
 
         {/* Dynamic SuperAdmin Flags Notice Banner */}
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
