@@ -27,7 +27,9 @@ import {
   Check,
   X,
   Tag,
+  ZoomIn,
 } from 'lucide-react';
+import ParticipantImageViewerModal from '@/components/ParticipantImageViewerModal';
 
 interface InspectedAttendee {
   ticketCode: string;
@@ -80,6 +82,11 @@ export default function CheckInScanner() {
   // Verification & Audit History
   const [history, setHistory] = useState<CheckInLogItem[]>([]);
   const [isProcessing, startTransition] = useTransition();
+  const [viewingPhoto, setViewingPhoto] = useState<{
+    url: string;
+    name: string;
+    subtitle?: string;
+  } | null>(null);
 
   // Play audio chime for gatekeepers using Web Audio API
   const playSound = useCallback((type: 'success' | 'warning' | 'error') => {
@@ -618,14 +625,30 @@ export default function CheckInScanner() {
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
               {/* Photo Display */}
               <div className="relative shrink-0">
-                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-slate-100 flex items-center justify-center">
+                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-slate-100 flex items-center justify-center relative group">
                   {inspectedAttendee.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={inspectedAttendee.photoUrl}
-                      alt={inspectedAttendee.attendeeName}
-                      className="w-full h-full object-cover"
-                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setViewingPhoto({
+                          url: inspectedAttendee.photoUrl!,
+                          name: inspectedAttendee.attendeeName,
+                          subtitle: `${inspectedAttendee.eventTitle} • Pass #${inspectedAttendee.ticketCode}`,
+                        })
+                      }
+                      className="w-full h-full cursor-pointer relative focus:outline-none"
+                      title="Click to view and zoom photo"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={inspectedAttendee.photoUrl}
+                        alt={inspectedAttendee.attendeeName}
+                        className="w-full h-full object-cover"
+                      />
+                      <span className="absolute inset-0 bg-black/0 group-hover:bg-black/25 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100">
+                        <ZoomIn className="w-6 h-6 text-white drop-shadow" />
+                      </span>
+                    </button>
                   ) : (
                     <User className="w-12 h-12 text-slate-400" />
                   )}
@@ -829,6 +852,15 @@ export default function CheckInScanner() {
           )}
         </div>
       </div>
+
+      {/* ── High-Z Participant Image Viewer Modal ─────────────────────────────── */}
+      <ParticipantImageViewerModal
+        isOpen={!!viewingPhoto}
+        onClose={() => setViewingPhoto(null)}
+        imageUrl={viewingPhoto?.url || null}
+        participantName={viewingPhoto?.name}
+        subtitle={viewingPhoto?.subtitle}
+      />
     </div>
   );
 }

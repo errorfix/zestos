@@ -108,7 +108,7 @@ export default function EventCatalogSection({ initialEvents }: EventCatalogSecti
                   <strong className="font-bold text-blue-900">₹150</strong> — Choose any number of events held <strong className="font-bold">only on Day 2</strong>.
                 </li>
                 <li>
-                  <strong className="font-bold text-blue-900">₹250</strong> — Choose events held on <strong className="font-bold">both days</strong> or a combination spanning both days.
+                  <strong className="font-bold text-blue-900">₹300</strong> — Choose any number of events held on <strong className="font-bold">both days</strong> or a combination spanning both days.
                 </li>
               </ul>
             </div>

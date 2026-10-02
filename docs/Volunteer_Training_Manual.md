@@ -47,7 +47,7 @@ No matter which desk you are assigned to, **you are the face of the festival**. 
 ## 5. Informalz Committee (`/informalz`)
 **Overview:** You run the casual, fun events and mini-games that aren't strictly competitive.
 **Your Gig:**
-*   **Issue Day Passes:** Participants buy a Day 1 (₹150), Day 2 (₹150), or Both Days (₹250) pass. Issue these just like On-Spot registrations.
+*   **Issue Day Passes:** Participants buy a Day 1 (₹150), Day 2 (₹150), or Both Days (₹300) pass. Issue these just like On-Spot registrations.
 *   **Track Participation:** Verify a participant's Day Pass at the entrance of your specific mini-game (e.g., Ring Toss, Dartboard).
 *   **Enforce Rules:** Ensure participants only play the games covered by their specific pass (a Day 1 pass cannot play Day 2 games).
 

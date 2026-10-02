@@ -74,15 +74,14 @@ export default async function ManagementPage() {
               </span>
             </div>
 
-            <form action="/api/auth/logout" method="POST">
-              <button
-                type="submit"
-                className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors flex items-center gap-1.5 shadow-xs"
-              >
-                <LogOut className="w-3.5 h-3.5 text-rose-500" />
-                <span>Log Out</span>
-              </button>
-            </form>
+            <a
+              href="/api/auth/logout"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors flex items-center gap-1.5 shadow-xs"
+              title="Log Out"
+            >
+              <LogOut className="w-3.5 h-3.5 text-rose-500" />
+              <span>Log Out</span>
+            </a>
           </div>
         </div>
 

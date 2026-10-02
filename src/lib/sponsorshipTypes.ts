@@ -28,12 +28,8 @@ export interface SponsorshipDeal {
   contactPhone: string;
   sponsorshipKind: SponsorshipKind;
   dealStatus: DealStatus;
-  pitchedAmountInr: number;
-  committedAmountInr: number;
-  receivedAmountInr: number;
   deliverablesSummary: string;
   mouDocumentUrl?: string | null;
-  paymentProofUrl?: string | null;
   operatorName: string;
   operatorRollNo: string;
   operatorType?: 'STUDENT' | 'FACULTY' | null;
@@ -49,9 +45,7 @@ export interface SponsorshipStatsResponse {
   pitchesSent: number;
   inNegotiation: number;
   dealsClosed: number;
-  fundsPledgedInr: number;
-  fundsReceivedInr: number;
-  collectionPercentage: number;
+  mouSigned: number;
   deals: SponsorshipDeal[];
   topPartners: SponsorshipDeal[];
 }
@@ -75,6 +69,6 @@ export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
   IN_NEGOTIATION: 'In Negotiation',
   VERBALLY_COMMITTED: 'Verbally Committed',
   MOU_SIGNED: 'MoU Signed',
-  PAYMENT_RECEIVED: 'Payment / Goods Received',
+  PAYMENT_RECEIVED: 'Partnership Confirmed',
   REJECTED: 'Declined / Dropped',
 };

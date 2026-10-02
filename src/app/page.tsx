@@ -81,7 +81,7 @@ export default async function HomePage() {
           {/* Minimal Top Action Buttons */}
           <div className="flex flex-col xs:flex-row items-stretch xs:items-center justify-center gap-2.5 sm:gap-3 mb-6 sm:mb-8 max-w-xs xs:max-w-none mx-auto">
             <Link
-              href="/register"
+              href="/registration"
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-all"
             >
               <Sparkles className="w-4 h-4 text-amber-400" />
@@ -90,7 +90,7 @@ export default async function HomePage() {
             </Link>
 
             <Link
-              href="/register?category=informalz"
+              href="/registration/individual?category=informalz"
               className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 transition-colors"
             >
               <span>Entry Pass Day 1 / Day 2</span>
@@ -297,7 +297,7 @@ export default async function HomePage() {
 
             <div className="flex items-center gap-3 shrink-0">
               <Link
-                href="/register"
+                href="/registration/individual"
                 className="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-colors"
               >
                 Register for Arena
@@ -327,10 +327,10 @@ export default async function HomePage() {
             </div>
 
             <Link
-              href="/register?category=informalz"
+              href="/registration/individual?category=informalz"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition-colors self-start sm:self-auto"
             >
-              <span>Entry Pass Day 1 / Day 2 (₹150 / ₹250)</span>
+              <span>Entry Pass Day 1 / Day 2 (₹150 / ₹300)</span>
             </Link>
           </div>
 
@@ -354,7 +354,7 @@ export default async function HomePage() {
 
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Link
-                href="/register"
+                href="/registration"
                 className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-all"
               >
                 <Sparkles className="w-4 h-4 text-amber-400" />
@@ -363,7 +363,7 @@ export default async function HomePage() {
               </Link>
 
               <Link
-                href="/register?category=informalz"
+                href="/registration/individual?category=informalz"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs sm:text-sm font-semibold bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 transition-colors"
               >
                 <span>Entry Pass Day 1 / Day 2</span>
@@ -399,7 +399,7 @@ export default async function HomePage() {
             <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-1.5">
               <h3 className="font-bold text-slate-900 text-sm">How does the Entry Pass Day 1 / Day 2 work?</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Enjoy campus viewing, fun stalls, and informal games! Selecting Day 1 pass is ₹150, Day 2 pass is ₹150, or choose Both Days pass for ₹250 flat with full Star Night concert access.
+                Enjoy campus viewing, fun stalls, and informal games! Selecting Day 1 pass is ₹150, Day 2 pass is ₹150, or choose Both Days pass for ₹300 flat with full Star Night concert access.
               </p>
             </div>
 
@@ -595,10 +595,10 @@ export default async function HomePage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-600">
-              <Link href="/register" className="hover:text-slate-900 transition-colors">
+              <Link href="/registration" className="hover:text-slate-900 transition-colors">
                 Registration
               </Link>
-              <Link href="/register?category=informalz" className="hover:text-slate-900 transition-colors">
+              <Link href="/registration/individual?category=informalz" className="hover:text-slate-900 transition-colors">
                 Entry Pass Day 1 / Day 2
               </Link>
               <a href="#venue" className="hover:text-slate-900 transition-colors">

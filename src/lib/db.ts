@@ -591,7 +591,7 @@ export async function createOnSpotRegistration({
       ? amount
       : event.hasDayOptions
       ? dayOption === 'BOTH_DAYS'
-        ? 25000
+        ? 30000
         : 15000
       : (event.onSpotFeeAmount != null ? event.onSpotFeeAmount : event.feeAmount);
 
@@ -1472,7 +1472,7 @@ export async function getAdminMetrics(options?: {
       if (reg.amount != null && reg.amount > 0) {
         effectiveFee = reg.amount;
       } else if (reg.dayOption === 'BOTH_DAYS') {
-        effectiveFee = 25000; // ₹250 Both Days Pass
+        effectiveFee = 30000; // ₹300 Both Days Pass
       } else if (
         reg.dayOption === 'DAY_1' ||
         reg.dayOption === 'DAY_2' ||

@@ -48,7 +48,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     // If Super Admin notes / verification are being modified
     if ((body.superAdminNotes !== undefined || body.superAdminVerified !== undefined) && session.roleId !== 'SUPER_ADMIN') {
       return NextResponse.json(
-        { success: false, error: 'Forbidden: Only Super Admin can verify sponsorship receipts.' },
+        { success: false, error: 'Forbidden: Only Super Admin can verify sponsorship deals.' },
         { status: 403 }
       );
     }

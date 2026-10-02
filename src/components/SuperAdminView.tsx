@@ -707,7 +707,7 @@ export default function SuperAdminView({
             </span>
             <span className="text-[11px] text-slate-500 font-medium block mt-1">
               {activeCommittee === 'INFORMALZ'
-                ? 'Day Passes (₹150 / ₹250)'
+                ? 'Day Passes (₹150 / ₹300)'
                 : activeCommittee === 'STAGE'
                   ? 'Audio links attached'
                   : 'Razorpay + Desk Cash'}
@@ -1223,7 +1223,7 @@ export default function SuperAdminView({
               defaultCategory="Informalz"
               apiEndpoint="/api/super-admin/events"
               title="Informalz Committee Events (Day Pass System)"
-              subtitle="Full CRUD on informal, social, and gaming activities covered under the ₹150 / ₹250 Day Pass."
+              subtitle="Full CRUD on informal, social, and gaming activities covered under the ₹150 / ₹300 Day Pass."
             />
           </section>
 

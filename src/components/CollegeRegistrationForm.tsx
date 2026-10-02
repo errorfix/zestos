@@ -76,6 +76,8 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
   const [leaderName, setLeaderName] = useState('');
   const [leaderEmail, setLeaderEmail] = useState('');
   const [leaderPhone, setLeaderPhone] = useState('');
+  const [leaderPhotoUrl, setLeaderPhotoUrl] = useState('');
+  const [leaderPhotoCompressing, setLeaderPhotoCompressing] = useState(false);
 
   // Cart of Event Squads
   const [cartSquads, setCartSquads] = useState<CartSquad[]>([]);
@@ -211,6 +213,28 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
       .finally(() => setIsCalculating(false));
   }, [instituteName, cartSquads]);
 
+  const displayError = (msg: string) => {
+    setErrorMsg(msg);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Leader photo upload handler
+  const handleLeaderPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLeaderPhotoCompressing(true);
+    setErrorMsg(null);
+    try {
+      const compressedDataUrl = await compressAndStripExif(file, { maxWidth: 480, maxHeight: 600, quality: 0.82 });
+      setLeaderPhotoUrl(compressedDataUrl);
+    } catch (err) {
+      displayError((err as Error).message || 'Failed to compress contingent leader photo.');
+    } finally {
+      setLeaderPhotoCompressing(false);
+    }
+  };
+
   // Photo upload handler
   const handlePhotoUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -224,7 +248,7 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
         return copy;
       });
     } catch (err) {
-      alert((err as Error).message || 'Failed to compress photo.');
+      displayError((err as Error).message || 'Failed to compress photo.');
     }
   };
 
@@ -233,12 +257,12 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
     setErrorMsg(null);
 
     if (!instituteName.trim()) {
-      setErrorMsg('Please select or specify your Institution Name first.');
+      displayError('Please select or specify your Institution Name first.');
       return;
     }
 
     if (!activeEvent) {
-      setErrorMsg('Please select a competition or activity.');
+      displayError('Please select a competition or activity.');
       return;
     }
 
@@ -248,11 +272,11 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
     const maxSize = isTeam ? Math.max(minSize, activeEvent.maxTeamSize || 10) : 1;
 
     if (currentParticipants.length < minSize) {
-      setErrorMsg(`"${activeEvent.title}" requires at least ${minSize} participant(s).`);
+      displayError(`"${activeEvent.title}" requires at least ${minSize} participant(s).`);
       return;
     }
     if (currentParticipants.length > maxSize) {
-      setErrorMsg(`"${activeEvent.title}" allows a maximum of ${maxSize} participant(s).`);
+      displayError(`"${activeEvent.title}" allows a maximum of ${maxSize} participant(s).`);
       return;
     }
 
@@ -260,12 +284,16 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
       const p = currentParticipants[i];
       if (!p.fullName.trim()) {
         const roleLabel = isTeam ? (i === 0 ? 'Team Leader' : `Member #${i + 1}`) : 'Participant';
-        setErrorMsg(`${roleLabel} is missing a Full Legal Name.`);
+        displayError(`${roleLabel} is missing a Full Legal Name.`);
         return;
       }
       const cleanPhone = p.phone.trim().replace(/\s+/g, '');
       if (cleanPhone.length < 10) {
-        setErrorMsg(`Participant "${p.fullName}" must have a valid 10-digit personal contact number.`);
+        displayError(`Participant "${p.fullName}" must have a valid 10-digit personal contact number.`);
+        return;
+      }
+      if (!p.photoUrl) {
+        displayError('Upload pictures of contingent/participant(s)');
         return;
       }
     }
@@ -296,16 +324,30 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
     setErrorMsg(null);
 
     if (!instituteName.trim()) {
-      setErrorMsg('Please select your College / University.');
+      displayError('Please select your College / University.');
       return;
     }
     if (!leaderName.trim() || !leaderEmail.trim() || !leaderPhone.trim()) {
-      setErrorMsg('Please complete the Delegation Coordinator contact details.');
+      displayError('Please complete the Delegation Coordinator contact details.');
+      return;
+    }
+    if (!leaderPhotoUrl) {
+      displayError('Upload pictures of contingent/participant(s)');
       return;
     }
     if (cartSquads.length === 0) {
-      setErrorMsg('Please add at least one Event Squad to the contingent cart before checking out.');
+      displayError('Please add at least one Event Squad to the contingent cart before checking out.');
       return;
+    }
+
+    // Ensure all participants in cart squads have photos
+    for (const squad of cartSquads) {
+      for (const p of squad.participants) {
+        if (!p.photoUrl) {
+          displayError('Upload pictures of contingent/participant(s)');
+          return;
+        }
+      }
     }
 
     startTransition(async () => {
@@ -315,6 +357,7 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
           leaderName: leaderName.trim(),
           leaderEmail: leaderEmail.trim(),
           leaderPhone: leaderPhone.trim(),
+          leaderPhotoUrl,
           squads: cartSquads.map((s) => ({
             eventId: s.eventId,
             participants: s.participants.map((p) => ({
@@ -567,53 +610,118 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
         </div>
 
         {/* Delegation Coordinator Fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Contingent Leader Name <span className="text-rose-500">*</span>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 pt-1 items-start">
+          {/* Contingent Leader Photo Upload (3 cols) */}
+          <div className="md:col-span-3">
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+              <span>Leader Picture <span className="text-rose-500">*</span></span>
+              {leaderPhotoUrl && (
+                <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Attached
+                </span>
+              )}
             </label>
-            <input
-              type="text"
-              required
-              value={leaderName}
-              onChange={(e) => setLeaderName(e.target.value)}
-              placeholder="e.g. Dr. Priya Verma / Rohit Sharma"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-800/10"
-            />
+
+            {leaderPhotoUrl ? (
+              <div className="relative p-2.5 rounded-2xl border-2 border-emerald-300 bg-emerald-50/30 flex items-center gap-3">
+                <img
+                  src={leaderPhotoUrl}
+                  alt="Contingent Leader"
+                  className="w-14 h-14 rounded-xl object-cover border border-emerald-200 shrink-0 shadow-2xs"
+                />
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-bold text-slate-900 block truncate">Photo Uploaded</span>
+                  <label className="cursor-pointer text-[11px] font-semibold text-[#1a73e8] hover:underline block mt-0.5">
+                    Change Picture
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLeaderPhotoUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setLeaderPhotoUrl('')}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                  title="Remove picture"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <label className="cursor-pointer p-3.5 rounded-2xl border-2 border-dashed border-slate-300 hover:border-slate-800 bg-slate-50 hover:bg-white transition flex flex-col items-center justify-center gap-1.5 text-center group">
+                <div className="w-8 h-8 rounded-full bg-white border border-slate-200 group-hover:border-slate-400 flex items-center justify-center text-slate-600 shadow-2xs transition">
+                  {leaderPhotoCompressing ? (
+                    <div className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Camera className="w-4 h-4 text-slate-700" />
+                  )}
+                </div>
+                <span className="text-xs font-bold text-slate-800">
+                  {leaderPhotoCompressing ? 'Compressing...' : 'Upload Leader Picture *'}
+                </span>
+                <span className="text-[10px] text-slate-400">Gate Pass & Badge ID</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLeaderPhotoUpload}
+                  className="hidden"
+                />
+              </label>
+            )}
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Official Email Address <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+          {/* 3 Text Inputs: Name, Email, Phone (9 cols) */}
+          <div className="md:col-span-9 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Contingent Leader Name <span className="text-rose-500">*</span>
+              </label>
               <input
-                type="email"
+                type="text"
                 required
-                value={leaderEmail}
-                onChange={(e) => setLeaderEmail(e.target.value)}
-                placeholder="coordinator@college.edu"
-                className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-800/10"
+                value={leaderName}
+                onChange={(e) => setLeaderName(e.target.value)}
+                placeholder="e.g. Dr. Priya Verma / Rohit Sharma"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-800/10"
               />
             </div>
-          </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Contact Mobile Number <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              <input
-                type="tel"
-                required
-                maxLength={10}
-                value={leaderPhone}
-                onChange={(e) => setLeaderPhone(e.target.value.replace(/\D/g, ''))}
-                placeholder="10-digit mobile"
-                className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-800/10"
-              />
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Official Email Address <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <input
+                  type="email"
+                  required
+                  value={leaderEmail}
+                  onChange={(e) => setLeaderEmail(e.target.value)}
+                  placeholder="coordinator@college.edu"
+                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-800/10"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Contact Mobile Number <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <input
+                  type="tel"
+                  required
+                  maxLength={10}
+                  value={leaderPhone}
+                  onChange={(e) => setLeaderPhone(e.target.value.replace(/\D/g, ''))}
+                  placeholder="10-digit mobile"
+                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-800/10"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -807,8 +915,18 @@ export default function CollegeRegistrationForm({ events: initialEvents }: Colle
 
               {/* Photo Upload & Delete Action */}
               <div className="sm:col-span-2 flex items-center justify-end gap-2">
-                <label className="cursor-pointer p-2 rounded-xl bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-300 transition shadow-2xs">
-                  <Camera className={`w-3.5 h-3.5 ${p.photoUrl ? 'text-emerald-600' : ''}`} />
+                <label
+                  title={p.photoUrl ? 'Photo uploaded (click to replace)' : 'Upload participant photo *'}
+                  className={`cursor-pointer px-2.5 py-1.5 rounded-xl border transition shadow-2xs flex items-center gap-1.5 ${
+                    p.photoUrl
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                      : 'bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border-slate-300'
+                  }`}
+                >
+                  <Camera className={`w-3.5 h-3.5 ${p.photoUrl ? 'text-emerald-600' : 'text-slate-500'}`} />
+                  <span className="text-[10px] font-bold">
+                    {p.photoUrl ? 'Photo ✓' : 'Photo *'}
+                  </span>
                   <input
                     type="file"
                     accept="image/*"

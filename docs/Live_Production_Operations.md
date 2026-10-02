@@ -34,7 +34,7 @@ Committee personnel log in directly at `https://lingayaszest.tech/login`. The sy
 | :--- | :--- | :--- | :--- |
 | **Super Admin** | `SUPER_ADMIN_PASSWORD` | `/super-admin` | Universal oversight, Boolean Access Flags matrix, event editing, and full audit logs. |
 | **Registration & Invitation (R&I)** | `RI_COMMITTEE_PASSWORD` | `/admin` | Attendee rosters for competitive events, gate check-in, on-spot walk-ins. |
-| **Informalz Committee** | `INFORMALZ_COMMITTEE_PASSWORD` | `/informalz` | Day 1 / Day 2 Informalz passes (₹150/₹250), game rosters, pass check-ins. |
+| **Informalz Committee** | `INFORMALZ_COMMITTEE_PASSWORD` | `/informalz` | Day 1 / Day 2 Informalz passes (₹150/₹300), game rosters, pass check-ins. |
 | **Stage & AV Committee** | `STAGE_COMMITTEE_PASSWORD` | `/stage` | Track audio link uploads, sound cues, performer check-in. |
 | **Cultural Music Committee** | `MUSIC_COMMITTEE_PASSWORD` | `/committee/music` | Music band battles, vocal solo rosters, and sound tracks. |
 | **Cultural Dance Committee** | `DANCE_COMMITTEE_PASSWORD` | `/committee/dance` | Step Up dance, duet, group choreography rosters & audio tracks. |

@@ -168,7 +168,7 @@ export default function RegistrationForm({
   // 🎯 LIVE INFORMALZ TIERED DAY PASS PRICING
   // Day 1 events only = ₹150
   // Day 2 events only = ₹150
-  // Both Days events = ₹250
+  // Both Days events = ₹300
   // ─────────────────────────────────────────────────────────────────────────
   const calculateInformalzPricing = () => {
     if (selectedInformalIds.length === 0) {
@@ -188,7 +188,7 @@ export default function RegistrationForm({
 
     if (hasDay1 && hasDay2) {
       return {
-        amount: 250,
+        amount: 300,
         tier: 'BOTH_DAYS',
         label: 'Both Days All-Access Pass (Oct 30 & Oct 31)',
       };
@@ -542,7 +542,7 @@ export default function RegistrationForm({
       return;
     }
     if (!photoUrl) {
-      displayError('Please upload a clear participant photo for your official gate badge ID.');
+      displayError('Upload pictures of contingent/participant(s)');
       return;
     }
 
@@ -577,14 +577,14 @@ export default function RegistrationForm({
         return;
       }
       if (!teamMembers[i]?.photoUrl) {
-        displayError(`Photo is required for Team Member #${i + 2} (${teamMembers[i].fullName}) to print on their pass.`);
+        displayError('Upload pictures of contingent/participant(s)');
         return;
       }
     }
 
     for (let i = requiredAdditional; i < teamMembers.length; i++) {
       if (teamMembers[i]?.fullName.trim() && !teamMembers[i]?.photoUrl) {
-        displayError(`Please upload a photo for Team Member #${i + 2} (${teamMembers[i].fullName}) for their pass.`);
+        displayError('Upload pictures of contingent/participant(s)');
         return;
       }
     }
@@ -639,9 +639,6 @@ export default function RegistrationForm({
         >
           <PartyPopper className="w-4 h-4 text-amber-300" />
           <span>Informalz Day Passes</span>
-          <span className="text-[10px] bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full font-extrabold">
-            ₹150 / ₹250
-          </span>
         </button>
       </div>
 
@@ -688,7 +685,7 @@ export default function RegistrationForm({
                     Informalz Day Pass Engine
                   </span>
                   <span className="text-xs font-bold text-slate-900 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200">
-                    Day 1: ₹150 • Day 2: ₹150 • Both Days: ₹250
+                    Day 1: ₹150 • Day 2: ₹150 • Both Days: ₹300
                   </span>
                 </div>
                 <h2 className="text-2xl font-bold text-slate-900">
@@ -696,7 +693,7 @@ export default function RegistrationForm({
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
                   Select as many games as you wish! Selecting any event on Day 1 charges <strong>₹150</strong>.
-                  Selecting on Day 2 charges <strong>₹150</strong>. Selecting games across both days charges <strong>₹250</strong> flat.
+                  Selecting on Day 2 charges <strong>₹150</strong>. Selecting games across both days charges <strong>₹300</strong> flat.
                 </p>
               </div>
 
@@ -761,7 +758,7 @@ export default function RegistrationForm({
                   onClick={selectAllInformal}
                   className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100"
                 >
-                  Both Days All-Access (₹250)
+                  Both Days All-Access (₹300)
                 </button>
                 <button
                   type="button"

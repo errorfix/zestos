@@ -92,7 +92,7 @@ export default function Navbar() {
         {/* Top Registration Button (Desktop) */}
         <div className="hidden sm:flex items-center gap-3">
           <Link
-            href="/register"
+            href="/registration"
             className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-all hover:shadow focus-visible:ring-2 focus-visible:ring-slate-900 shrink-0"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -104,7 +104,7 @@ export default function Navbar() {
         {/* Mobile Menu & Quick Register Toggle */}
         <div className="flex sm:hidden items-center gap-1.5 shrink-0">
           <Link
-            href="/register"
+            href="/registration"
             className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white shadow-2xs"
           >
             Register
@@ -158,7 +158,7 @@ export default function Navbar() {
           </Link>
           <div className="pt-2">
             <Link
-              href="/register"
+              href="/registration"
               onClick={() => setMobileMenuOpen(false)}
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-900 text-white shadow-xs"
             >

@@ -15,7 +15,7 @@ export interface InitialEventData {
   maxCapacity?: number;
   status: 'OPEN' | 'CLOSED';
   requiresTrackUpload: boolean;
-  hasDayOptions: boolean; // For ₹150 / Day or ₹250 / Both Days
+  hasDayOptions: boolean; // For ₹150 / Day or ₹300 / Both Days
   onSpotFeeAmount?: number; // Optional walk-in desk price in paise (if null/undefined, defaults to feeAmount)
 }
 
@@ -272,13 +272,13 @@ export const SEED_EVENTS: InitialEventData[] = [
     hasDayOptions: false,
   },
 
-  // ================= 🎯 INFORMALZ EVENTS — ₹150 / ₹250 DAY PASS =================
+  // ================= 🎯 INFORMALZ EVENTS — ₹150 / ₹300 DAY PASS =================
   {
     id: 'evt_warriors_pull',
     title: "Warrior's Pull",
     category: 'Informalz',
     eventType: 'Team',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 4,
     maxTeamSize: 8,
     description:
@@ -294,7 +294,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: 'Strong Arm Showdown',
     category: 'Informalz',
     eventType: 'Individual',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 1,
     maxTeamSize: 1,
     description:
@@ -310,7 +310,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: 'The Big Reveal',
     category: 'Informalz',
     eventType: 'Individual',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 1,
     maxTeamSize: 1,
     description:
@@ -326,7 +326,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: 'Pass the Hoop',
     category: 'Informalz',
     eventType: 'Team',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 4,
     maxTeamSize: 6,
     description:
@@ -342,7 +342,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: 'Sky Float',
     category: 'Informalz',
     eventType: 'Individual',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 1,
     maxTeamSize: 1,
     description: 'A fun coordination challenge combining balloon control with cup stacking.',
@@ -357,7 +357,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: 'Rise & Push',
     category: 'Informalz',
     eventType: 'Individual',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 1,
     maxTeamSize: 1,
     description:
@@ -373,7 +373,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: 'Dark Navigator',
     category: 'Informalz',
     eventType: 'Team',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 2,
     maxTeamSize: 2,
     description:
@@ -389,7 +389,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: 'Lift League',
     category: 'Informalz',
     eventType: 'Individual',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 1,
     maxTeamSize: 1,
     description: 'An individual strength challenge focused on deadlift performance and valid repetitions.',
@@ -404,7 +404,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: 'Musical Chair',
     category: 'Informalz',
     eventType: 'Individual',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 1,
     maxTeamSize: 1,
     description: 'A classic elimination game involving music, movement and lightning-fast reactions.',
@@ -419,7 +419,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: "Professor's Got Talent",
     category: 'Informalz',
     eventType: 'Individual',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 1,
     maxTeamSize: 1,
     description:
@@ -435,7 +435,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: 'Chest of Champions',
     category: 'Informalz',
     eventType: 'Individual',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 1,
     maxTeamSize: 1,
     description:
@@ -451,7 +451,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: 'Spray Nation',
     category: 'Informalz',
     eventType: 'Team',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 2,
     maxTeamSize: 4,
     description:
@@ -467,7 +467,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: 'Match Made On Campus',
     category: 'Informalz',
     eventType: 'Team',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 2,
     maxTeamSize: 2,
     description:
@@ -483,7 +483,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: "Bull's Eye Blitz",
     category: 'Informalz',
     eventType: 'Individual',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 1,
     maxTeamSize: 1,
     description:
@@ -499,7 +499,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: 'Smash Showdown',
     category: 'Informalz',
     eventType: 'Team',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 2,
     maxTeamSize: 4,
     description:
@@ -515,7 +515,7 @@ export const SEED_EVENTS: InitialEventData[] = [
     title: 'Emoji Flicks',
     category: 'Informalz',
     eventType: 'Individual',
-    feeAmount: 15000, // ₹150 Day Pass (or ₹250 Both Days)
+    feeAmount: 15000, // ₹150 Day Pass (or ₹300 Both Days)
     minTeamSize: 1,
     maxTeamSize: 1,
     description:

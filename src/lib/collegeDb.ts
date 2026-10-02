@@ -222,6 +222,7 @@ export async function createInstituteRegistration(params: {
   leaderName: string;
   leaderEmail: string;
   leaderPhone: string;
+  leaderPhotoUrl?: string;
   squads: SquadInput[];
   razorpayOrderId?: string;
   paymentMethod?: string;
@@ -236,6 +237,7 @@ export async function createInstituteRegistration(params: {
       leaderName: params.leaderName.trim(),
       leaderEmail: params.leaderEmail.trim().toLowerCase(),
       leaderPhone: params.leaderPhone.trim(),
+      leaderPhotoUrl: params.leaderPhotoUrl || null,
       totalAmount: pricing.finalAmountPaise,
       paymentStatus: 'PENDING',
       paymentMethod: params.paymentMethod || 'ONLINE_RAZORPAY',
@@ -477,6 +479,7 @@ export async function getGroupedCollegeDelegations() {
           leaderName: r.leaderName,
           leaderEmail: r.leaderEmail,
           leaderPhone: r.leaderPhone,
+          leaderPhotoUrl: r.leaderPhotoUrl,
           totalAmountInr: Math.round(r.totalAmount / 100),
           paymentStatus: r.paymentStatus,
           paymentMethod: r.paymentMethod,

@@ -84,7 +84,7 @@ export async function POST(req: Request) {
       // 🎯 INFORMALZ DAY PASS PRICING MODEL
       // Selecting 1 or multiple events on Day 1 = ₹150
       // Selecting 1 or multiple events on Day 2 = ₹150
-      // Selecting events spanning BOTH Day 1 and Day 2 = ₹250
+      // Selecting events spanning BOTH Day 1 and Day 2 = ₹300
       // ─────────────────────────────────────────────────────────────────────────
       let hasDay1 = false;
       let hasDay2 = false;
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
       }
 
       if (incomingDayOption === 'BOTH_DAYS' || (hasDay1 && hasDay2)) {
-        calculatedFeePaise = 25000; // ₹250 for Both Days Pass
+        calculatedFeePaise = 30000; // ₹300 for Both Days Pass
         resolvedDayOption = 'BOTH_DAYS';
         combinedEventTitle = `Informalz All-Access Both Days Pass (${validEvents.length} Games)`;
       } else if (incomingDayOption === 'DAY_2' || hasDay2) {

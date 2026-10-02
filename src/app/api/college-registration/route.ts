@@ -8,6 +8,7 @@ const contingentCheckoutSchema = z.object({
   leaderName: z.string().min(2, 'Team Leader Name is required'),
   leaderEmail: z.string().email('Valid Email address is required'),
   leaderPhone: z.string().min(10, 'Valid 10-digit mobile number is required'),
+  leaderPhotoUrl: z.string().optional(),
   squads: z
     .array(
       z.object({
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { instituteName, leaderName, leaderEmail, leaderPhone, squads } = parsed.data;
+    const { instituteName, leaderName, leaderEmail, leaderPhone, leaderPhotoUrl, squads } = parsed.data;
 
     // Calculate exact pricing
     const pricing = await calculateContingentPricing(instituteName, squads);
@@ -69,6 +70,7 @@ export async function POST(req: Request) {
       leaderName,
       leaderEmail,
       leaderPhone,
+      leaderPhotoUrl,
       squads,
       razorpayOrderId: razorpayOrder.id,
       paymentMethod: 'ONLINE_RAZORPAY',

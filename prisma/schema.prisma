@@ -102,6 +102,7 @@ model InstituteRegistration {
   leaderName        String
   leaderEmail       String
   leaderPhone       String
+  leaderPhotoUrl    String?
   totalAmount       Int                    // Paid in paise (inclusive of ₹1,000 floor)
   paymentStatus     String                 @default("PENDING") // PENDING, PAID, FAILED
   paymentMethod     String?                @default("ONLINE_RAZORPAY")
@@ -234,7 +235,6 @@ model InfraVendor {
   purpose        String   // Equipment / Service Purpose (e.g. Stage Sound, Generator, Barricades)
   remarks        String?  // Specifications, payment notes, delivery timing
   contactPhone   String?
-  amountPaise    Int?     // Contract amount in paise if applicable
   status         String   @default("ACTIVE") // ACTIVE, PENDING, COMPLETED, CANCELLED
   operatorName   String?
   operatorRollNo String?

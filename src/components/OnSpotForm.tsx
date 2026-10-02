@@ -151,7 +151,7 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
   const isFreeEvent = currentEvent?.feeAmount === 0 && !currentEvent?.hasDayOptions;
   const calculatedFee = currentEvent?.hasDayOptions
     ? dayOption === 'BOTH_DAYS'
-      ? 250
+      ? 300
       : 150
     : currentEvent
     ? (currentEvent.onSpotFeeAmount != null ? currentEvent.onSpotFeeAmount : currentEvent.feeAmount) / 100
@@ -509,7 +509,7 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
               >
                 {events.map((evt) => {
                   const onSpotPrice = evt.hasDayOptions
-                    ? '₹150/₹250'
+                    ? '₹150/₹300'
                     : evt.feeAmount === 0
                     ? 'FREE'
                     : `₹${(evt.onSpotFeeAmount != null ? evt.onSpotFeeAmount : evt.feeAmount) / 100}`;
@@ -600,7 +600,7 @@ export default function OnSpotForm({ events }: OnSpotFormProps) {
                       <span className="text-xs text-slate-500">Full 2-Day Fest Festival Pass</span>
                     </div>
                   </div>
-                  <span className="text-base font-bold text-[#1a73e8]">₹250</span>
+                  <span className="text-base font-bold text-[#1a73e8]">₹300</span>
                 </div>
               </div>
             </div>

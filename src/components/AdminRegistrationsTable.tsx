@@ -32,7 +32,9 @@ import {
   ChevronLeft,
   ChevronRight,
   FileSpreadsheet,
+  ZoomIn,
 } from 'lucide-react';
+import ParticipantImageViewerModal from '@/components/ParticipantImageViewerModal';
 
 interface RegistrationRow {
   id: string;
@@ -87,6 +89,13 @@ export default function AdminRegistrationsTable({
   const [copiedSummary, setCopiedSummary] = useState<boolean>(false);
   const [canEdit, setCanEdit] = useState<boolean>(false);
   const [editingReg, setEditingReg] = useState<RegistrationRow | null>(null);
+
+  // ─── PARTICIPANT IMAGE VIEWER MODAL STATE ───────────────────────────────────
+  const [viewingPhoto, setViewingPhoto] = useState<{
+    url: string;
+    name: string;
+    subtitle?: string;
+  } | null>(null);
 
   // ─── GMAIL-STYLE PAGINATION STATE (Min: 25, Max: 150) ──────────────────────
   const [pageSize, setPageSize] = useState<number>(50);
@@ -468,19 +477,27 @@ export default function AdminRegistrationsTable({
                   <td className="py-3.5 px-3">
                     <div className="flex items-start gap-2.5">
                       {reg.photoUrl ? (
-                        <a
-                          href={reg.photoUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="Click to view full photo"
-                          className="shrink-0 relative group"
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setViewingPhoto({
+                              url: reg.photoUrl!,
+                              name: reg.leadName,
+                              subtitle: `${reg.eventTitle} • ${reg.college || 'Individual Entry'}`,
+                            })
+                          }
+                          title="Click to view full photo with zoom"
+                          className="shrink-0 relative group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8] rounded-lg"
                         >
                           <img
                             src={reg.photoUrl}
                             alt={reg.leadName}
                             className="w-10 h-12 object-cover rounded-lg border border-slate-200 shadow-xs group-hover:ring-2 group-hover:ring-[#1a73e8] transition-all"
                           />
-                        </a>
+                          <span className="absolute inset-0 bg-black/0 group-hover:bg-black/25 rounded-lg flex items-center justify-center transition-all opacity-0 group-hover:opacity-100">
+                            <ZoomIn className="w-3.5 h-3.5 text-white drop-shadow" />
+                          </span>
+                        </button>
                       ) : (
                         <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-400">
                           <User className="w-5 h-5" />
@@ -750,19 +767,27 @@ export default function AdminRegistrationsTable({
               {/* Attendee Profile Section */}
               <div className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
                 {selectedReg.photoUrl ? (
-                  <a
-                    href={selectedReg.photoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Click to view full photo"
-                    className="shrink-0 group"
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setViewingPhoto({
+                        url: selectedReg.photoUrl!,
+                        name: selectedReg.leadName,
+                        subtitle: `${selectedReg.eventTitle} • ${selectedReg.college || 'Individual Entry'}`,
+                      })
+                    }
+                    title="Click to view full photo with zoom"
+                    className="shrink-0 group relative cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8] rounded-xl"
                   >
                     <img
                       src={selectedReg.photoUrl}
                       alt={selectedReg.leadName}
                       className="w-20 h-24 object-cover rounded-xl border border-slate-300 shadow-sm group-hover:ring-2 group-hover:ring-[#1a73e8] transition-all"
                     />
-                  </a>
+                    <span className="absolute inset-0 bg-black/0 group-hover:bg-black/30 rounded-xl flex items-center justify-center transition-all opacity-0 group-hover:opacity-100">
+                      <ZoomIn className="w-5 h-5 text-white drop-shadow" />
+                    </span>
+                  </button>
                 ) : (
                   <div className="w-20 h-24 rounded-xl bg-slate-200 flex items-center justify-center text-slate-400 shrink-0">
                     <User className="w-8 h-8" />
@@ -1014,9 +1039,33 @@ export default function AdminRegistrationsTable({
                   {selectedReg.tickets.map((t) => (
                     <div key={t.ticketCode} className="p-3 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0">
-                          <Ticket className="w-4 h-4" />
-                        </div>
+                        {t.photoUrl ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setViewingPhoto({
+                                url: t.photoUrl!,
+                                name: t.fullName,
+                                subtitle: `Pass #${t.ticketCode} • ${t.college || selectedReg.college || 'Attendee'}`,
+                              })
+                            }
+                            className="relative group shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8] rounded-lg"
+                            title="Click to view pass photo"
+                          >
+                            <img
+                              src={t.photoUrl}
+                              alt={t.fullName}
+                              className="w-8 h-8 rounded-lg object-cover border border-slate-200"
+                            />
+                            <span className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 rounded-lg flex items-center justify-center transition-opacity">
+                              <ZoomIn className="w-3 h-3 text-white" />
+                            </span>
+                          </button>
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0">
+                            <Ticket className="w-4 h-4" />
+                          </div>
+                        )}
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="font-mono font-bold text-slate-900 text-xs">
@@ -1358,6 +1407,15 @@ Pass Codes: ${selectedReg.tickets.map((t) => t.ticketCode).join(', ')}`;
           </div>
         </div>
       )}
+
+      {/* ── High-Z Participant Image Viewer Modal (Stacked on top of details modal) ─ */}
+      <ParticipantImageViewerModal
+        isOpen={!!viewingPhoto}
+        onClose={() => setViewingPhoto(null)}
+        imageUrl={viewingPhoto?.url || null}
+        participantName={viewingPhoto?.name}
+        subtitle={viewingPhoto?.subtitle}
+      />
     </div>
   );
 }

@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, purpose, remarks, contactPhone, amountRupees, status } = body;
+    const { name, purpose, remarks, contactPhone, status } = body;
 
     if (!name || typeof name !== 'string' || !name.trim()) {
       return NextResponse.json({ success: false, error: 'Vendor agency/name is required.' }, { status: 400 });
@@ -68,7 +68,6 @@ export async function POST(request: NextRequest) {
         purpose: purpose.trim(),
         remarks: remarks?.trim() || null,
         contactPhone: contactPhone?.trim() || null,
-        amountPaise: amountRupees ? Math.round(Number(amountRupees) * 100) : null,
         status: status || 'ACTIVE',
         operatorName: operator?.operatorName || 'Infra Desk',
         operatorRollNo: operator?.operatorRollNo || 'INFRA',
@@ -103,7 +102,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, name, purpose, remarks, contactPhone, amountRupees, status } = body;
+    const { id, name, purpose, remarks, contactPhone, status } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Vendor ID required.' }, { status: 400 });
@@ -116,7 +115,6 @@ export async function PATCH(request: NextRequest) {
         purpose: purpose?.trim() || undefined,
         remarks: remarks !== undefined ? remarks?.trim() : undefined,
         contactPhone: contactPhone !== undefined ? contactPhone?.trim() : undefined,
-        amountPaise: amountRupees !== undefined ? (amountRupees ? Math.round(Number(amountRupees) * 100) : null) : undefined,
         status: status || undefined,
       },
     });

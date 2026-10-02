@@ -156,6 +156,10 @@ export default function EditCartSquadModal({
         setErrorMsg(`Participant "${p.fullName}" must have a valid 10-digit personal contact number.`);
         return;
       }
+      if (!p.photoUrl) {
+        setErrorMsg('Upload pictures of contingent/participant(s)');
+        return;
+      }
     }
 
     // Ensure leader flag is consistent
@@ -286,14 +290,17 @@ export default function EditCartSquadModal({
                 {/* Photo Upload & Delete Actions */}
                 <div className="sm:col-span-2 flex items-center justify-end gap-1.5">
                   <label
-                    title={p.photoUrl ? 'Photo uploaded (click to replace)' : 'Upload ID photo'}
-                    className={`cursor-pointer p-2 rounded-xl bg-white border transition shadow-2xs flex items-center justify-center ${
+                    title={p.photoUrl ? 'Photo uploaded (click to replace)' : 'Upload participant photo *'}
+                    className={`cursor-pointer px-2.5 py-1.5 rounded-xl border transition shadow-2xs flex items-center gap-1.5 ${
                       p.photoUrl
-                        ? 'border-emerald-300 bg-emerald-50/50 text-emerald-600'
-                        : 'border-slate-300 text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                        ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                        : 'border-slate-300 text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100'
                     }`}
                   >
-                    <Camera className="w-3.5 h-3.5" />
+                    <Camera className={`w-3.5 h-3.5 ${p.photoUrl ? 'text-emerald-600' : 'text-slate-500'}`} />
+                    <span className="text-[10px] font-bold">
+                      {p.photoUrl ? 'Photo ✓' : 'Photo *'}
+                    </span>
                     <input
                       type="file"
                       accept="image/*"

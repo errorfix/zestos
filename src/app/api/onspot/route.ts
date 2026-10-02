@@ -89,7 +89,7 @@ export async function POST(req: Request) {
 
     let calculatedFeePaise = event.onSpotFeeAmount != null ? event.onSpotFeeAmount : event.feeAmount;
     if (event.hasDayOptions) {
-      calculatedFeePaise = dayOption === 'BOTH_DAYS' ? 25000 : 15000;
+      calculatedFeePaise = dayOption === 'BOTH_DAYS' ? 30000 : 15000;
     }
 
     let result: { registrationId: string; tickets: Array<{ ticketCode: string; securityHash: string }> };

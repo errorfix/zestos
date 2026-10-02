@@ -162,8 +162,8 @@ export default function EventCard({ event }: EventCardProps) {
         <Link
           href={
             event.category.toLowerCase() === 'informalz'
-              ? `/register?category=informalz&event=${event.id}`
-              : `/register?event=${event.id}`
+              ? `/registration/individual?category=informalz&event=${event.id}`
+              : `/registration/individual?event=${event.id}`
           }
           className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold bg-white border border-slate-300 text-slate-800 hover:bg-[#1a73e8] hover:text-white hover:border-[#1a73e8] shadow-xs transition-all focus-visible:ring-2 focus-visible:ring-[#1a73e8]"
         >

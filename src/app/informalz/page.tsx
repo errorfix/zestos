@@ -52,7 +52,7 @@ export default async function InformalzAdminPage() {
                 <PartyPopper className="w-3 h-3 text-purple-600" />
                 Informalz Committee Console
               </span>
-              <span className="text-xs text-slate-500 font-medium">Day Passes (₹150 / ₹250)</span>
+              <span className="text-xs text-slate-500 font-medium">Day Passes (₹150 / ₹300)</span>
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
               Informalz & Fun Events Hub
@@ -122,7 +122,7 @@ export default async function InformalzAdminPage() {
               ₹{metrics.totalRevenueInr.toLocaleString('en-IN')}
             </span>
             <span className="text-[11px] text-slate-400 font-medium block mt-1">
-              ₹150 (Day 1/2) • ₹250 (Both Days)
+              ₹150 (Day 1/2) • ₹300 (Both Days)
             </span>
           </div>
 
@@ -164,7 +164,7 @@ export default async function InformalzAdminPage() {
             <h2 className="text-xl font-bold text-slate-900">Informalz Events Catalog</h2>
             <span className="ml-auto px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3 text-purple-600" />
-              Day Passes (₹150 / ₹250)
+              Day Passes (₹150 / ₹300)
             </span>
           </div>
 

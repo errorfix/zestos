@@ -15,12 +15,14 @@ import {
   Clock,
   ShieldCheck,
   CreditCard,
-  QrCode,
-  Image as ImageIcon,
   Layers,
   Sparkles,
   RefreshCw,
+  ZoomIn,
+  QrCode,
+  Image as ImageIcon,
 } from 'lucide-react';
+import ParticipantImageViewerModal from '@/components/ParticipantImageViewerModal';
 
 interface Participant {
   id: string;
@@ -47,6 +49,7 @@ interface CollegeRegistrationItem {
   leaderName: string;
   leaderEmail: string;
   leaderPhone: string;
+  leaderPhotoUrl?: string | null;
   totalAmountInr: number;
   paymentStatus: string;
   paymentMethod: string | null;
@@ -70,6 +73,11 @@ export default function CollegeDelegationsView() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
+  const [viewingPhoto, setViewingPhoto] = useState<{
+    url: string;
+    name: string;
+    subtitle?: string;
+  } | null>(null);
 
   const fetchDelegations = () => {
     setIsLoading(true);
@@ -235,9 +243,30 @@ export default function CollegeDelegationsView() {
                 {/* Team Leader & Order Summary Bar */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
-                      <Crown className="w-5 h-5" />
-                    </div>
+                    {reg.leaderPhotoUrl ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setViewingPhoto({
+                            url: reg.leaderPhotoUrl!,
+                            name: `${reg.leaderName} (Contingent Leader)`,
+                            subtitle: `${activeCollegeData?.instituteName || reg.leaderPhone}`,
+                          })
+                        }
+                        className="w-10 h-10 rounded-xl overflow-hidden border border-amber-300 relative group cursor-pointer shrink-0 shadow-2xs hover:ring-2 hover:ring-amber-400 transition"
+                        title="Click to view leader picture"
+                      >
+                        <img
+                          src={reg.leaderPhotoUrl}
+                          alt={reg.leaderName}
+                          className="w-full h-full object-cover group-hover:scale-110 transition duration-150"
+                        />
+                      </button>
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
+                        <Crown className="w-5 h-5" />
+                      </div>
+                    )}
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-slate-900">{reg.leaderName}</span>
@@ -331,12 +360,28 @@ export default function CollegeDelegationsView() {
                                   <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg bg-slate-200 overflow-hidden shrink-0 flex items-center justify-center text-slate-500 border border-slate-200">
                                       {p.photoUrl ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img
-                                          src={p.photoUrl}
-                                          alt={p.fullName}
-                                          className="w-full h-full object-cover"
-                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            setViewingPhoto({
+                                              url: p.photoUrl!,
+                                              name: p.fullName,
+                                              subtitle: `${evRoster.eventTitle} • ${activeCollegeData?.instituteName || 'College Contingent'}`,
+                                            })
+                                          }
+                                          className="w-full h-full relative group cursor-pointer focus:outline-none"
+                                          title="Click to view participant photo"
+                                        >
+                                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                                          <img
+                                            src={p.photoUrl}
+                                            alt={p.fullName}
+                                            className="w-full h-full object-cover"
+                                          />
+                                          <span className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                            <ZoomIn className="w-3 h-3 text-white" />
+                                          </span>
+                                        </button>
                                       ) : (
                                         <ImageIcon className="w-4 h-4" />
                                       )}
@@ -383,6 +428,15 @@ export default function CollegeDelegationsView() {
           </div>
         </div>
       ) : null}
+
+      {/* ── High-Z Participant Image Viewer Modal ─────────────────────────────── */}
+      <ParticipantImageViewerModal
+        isOpen={!!viewingPhoto}
+        onClose={() => setViewingPhoto(null)}
+        imageUrl={viewingPhoto?.url || null}
+        participantName={viewingPhoto?.name}
+        subtitle={viewingPhoto?.subtitle}
+      />
     </div>
   );
 }

@@ -9,10 +9,7 @@ import {
   RefreshCw,
   CheckCircle2,
   Phone,
-  IndianRupee,
   Search,
-  Building,
-  Check,
   X,
 } from 'lucide-react';
 
@@ -22,7 +19,6 @@ interface Vendor {
   purpose: string;
   remarks?: string | null;
   contactPhone?: string | null;
-  amountPaise?: number | null;
   status: 'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED';
   createdAt: string;
 }
@@ -41,7 +37,6 @@ export default function InfraVendorManager() {
   const [purpose, setPurpose] = useState('');
   const [remarks, setRemarks] = useState('');
   const [contactPhone, setContactPhone] = useState('');
-  const [amountRupees, setAmountRupees] = useState('');
   const [status, setStatus] = useState<'ACTIVE' | 'PENDING' | 'COMPLETED' | 'CANCELLED'>('ACTIVE');
   const [submitting, setSubmitting] = useState(false);
 
@@ -75,7 +70,6 @@ export default function InfraVendorManager() {
     setPurpose('');
     setRemarks('');
     setContactPhone('');
-    setAmountRupees('');
     setStatus('ACTIVE');
     setShowModal(true);
   };
@@ -86,7 +80,6 @@ export default function InfraVendorManager() {
     setPurpose(v.purpose);
     setRemarks(v.remarks || '');
     setContactPhone(v.contactPhone || '');
-    setAmountRupees(v.amountPaise ? (v.amountPaise / 100).toString() : '');
     setStatus(v.status);
     setShowModal(true);
   };
@@ -106,7 +99,6 @@ export default function InfraVendorManager() {
         purpose,
         remarks,
         contactPhone,
-        amountRupees: amountRupees ? Number(amountRupees) : undefined,
         status,
       };
 
@@ -161,8 +153,6 @@ export default function InfraVendorManager() {
     const matchesStatus = statusFilter === 'ALL' || v.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
-
-  const totalExpenditure = vendors.reduce((acc, v) => acc + (v.amountPaise || 0), 0) / 100;
 
   return (
     <div className="space-y-6">
@@ -225,9 +215,9 @@ export default function InfraVendorManager() {
           </span>
         </div>
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl shadow-2xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 block">Estimated Expenditure</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 block">Completed</span>
           <span className="text-xl font-black text-blue-900">
-            ₹{totalExpenditure.toLocaleString('en-IN')}
+            {vendors.filter((v) => v.status === 'COMPLETED').length}
           </span>
         </div>
       </div>
@@ -287,7 +277,6 @@ export default function InfraVendorManager() {
                   <th className="py-3.5 px-4">Vendor Agency</th>
                   <th className="py-3.5 px-4">Purpose / Deliverable</th>
                   <th className="py-3.5 px-4">Remarks / Specs</th>
-                  <th className="py-3.5 px-4">Contract Amount</th>
                   <th className="py-3.5 px-4">Status</th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
@@ -309,9 +298,6 @@ export default function InfraVendorManager() {
                     </td>
                     <td className="py-3.5 px-4 text-slate-600 max-w-xs truncate">
                       {v.remarks || '—'}
-                    </td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900">
-                      {v.amountPaise ? `₹${(v.amountPaise / 100).toLocaleString('en-IN')}` : '—'}
                     </td>
                     <td className="py-3.5 px-4">
                       <span
@@ -402,32 +388,17 @@ export default function InfraVendorManager() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Contact Phone Number
-                  </label>
-                  <input
-                    type="text"
-                    value={contactPhone}
-                    onChange={(e) => setContactPhone(e.target.value)}
-                    placeholder="e.g. +91 98765 43210"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Contract Amount (₹ INR)
-                  </label>
-                  <input
-                    type="number"
-                    value={amountRupees}
-                    onChange={(e) => setAmountRupees(e.target.value)}
-                    placeholder="e.g. 75000"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Contact Phone Number
+                </label>
+                <input
+                  type="text"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  placeholder="e.g. +91 98765 43210"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white"
+                />
               </div>
 
               <div>

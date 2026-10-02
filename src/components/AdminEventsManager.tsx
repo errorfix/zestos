@@ -211,7 +211,7 @@ export default function AdminEventsManager({
                 <div className="text-right">
                   {evt.category.toLowerCase() === 'informalz' ? (
                     <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-200 block">
-                      Day Pass (₹150 / ₹250)
+                      Day Pass (₹150 / ₹300)
                     </span>
                   ) : (
                     <>

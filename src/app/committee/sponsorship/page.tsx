@@ -10,7 +10,6 @@ import {
   Building2,
   Handshake,
   LogOut,
-  IndianRupee,
   ShieldCheck,
   Briefcase,
   Sliders,
@@ -22,7 +21,7 @@ export const revalidate = 0;
 
 export const metadata = {
   title: 'Sponsorship & Brand Partnerships • FestOS v2.0',
-  description: "Corporate sponsorship deal flow, brand pitching, MoUs, and funds collection console for Lingaya's Vidyapeeth FestOS.",
+  description: "Corporate sponsorship deal flow, brand pitching, MoUs, and deliverables console for Lingaya's Vidyapeeth FestOS.",
 };
 
 export default async function SponsorshipCommitteePage() {
@@ -71,7 +70,7 @@ export default async function SponsorshipCommitteePage() {
               Sponsorship &amp; Corporate Partnerships Hub
             </h1>
             <p className="text-sm text-slate-600 mt-1 max-w-2xl">
-              Track company outreach, pitch deck submissions, verbal commitments, signed MoUs, and verified sponsorship payments.
+              Track company outreach, pitch deck submissions, verbal commitments, signed MoUs, and partnership deliverables.
             </p>
           </div>
 

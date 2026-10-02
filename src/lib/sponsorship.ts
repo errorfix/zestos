@@ -25,17 +25,13 @@ function getInitialSeedDeals(): SponsorshipDeal[] {
       contactPhone: '+91 98110 44221',
       sponsorshipKind: 'IN_KIND_BEVERAGES',
       dealStatus: 'PAYMENT_RECEIVED',
-      pitchedAmountInr: 300000,
-      committedAmountInr: 250000,
-      receivedAmountInr: 250000,
       deliverablesSummary: '1,500 cans of chilled Red Bull for performers & VIPs, 2 branded DJ canopies in main arena, logo on tickets.',
       mouDocumentUrl: 'https://drive.google.com',
-      paymentProofUrl: 'https://drive.google.com',
       operatorName: 'Aman Singhal',
       operatorRollNo: '22BBA088',
       operatorType: 'STUDENT',
       remarks: 'Product delivery scheduled on Day 1 at 7:00 AM at Gate 2 loading dock.',
-      superAdminNotes: 'Verified receipt voucher with finance accounts.',
+      superAdminNotes: 'Verified deliverables with estate & hospitality team.',
       superAdminVerified: true,
       createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
       updatedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
@@ -49,16 +45,12 @@ function getInitialSeedDeals(): SponsorshipDeal[] {
       contactPhone: '+91 99201 88344',
       sponsorshipKind: 'PRIZE_POOL_PARTNER',
       dealStatus: 'MOU_SIGNED',
-      pitchedAmountInr: 200000,
-      committedAmountInr: 175000,
-      receivedAmountInr: 100000,
       deliverablesSummary: '50 boAt Airdopes & Smartwatches for Battle of the Bands & Gaming winners, banner on stage podium.',
       mouDocumentUrl: 'https://drive.google.com',
-      paymentProofUrl: null,
       operatorName: 'Megha Gupta',
       operatorRollNo: '23BCS104',
       operatorType: 'STUDENT',
-      remarks: 'First installment of 1 Lakh received; balance 75k + prize hampers arriving on festival eve.',
+      remarks: 'Prize hampers and branded merchandises arriving on festival eve.',
       superAdminNotes: 'MoU signed by Dean of Student Affairs.',
       superAdminVerified: true,
       createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
@@ -73,17 +65,13 @@ function getInitialSeedDeals(): SponsorshipDeal[] {
       contactPhone: '+91 97188 55431',
       sponsorshipKind: 'STALL_CANOPY',
       dealStatus: 'PAYMENT_RECEIVED',
-      pitchedAmountInr: 150000,
-      committedAmountInr: 150000,
-      receivedAmountInr: 150000,
       deliverablesSummary: '2 food court stall spaces (20x10ft) near student center, food coupons for volunteer core.',
       mouDocumentUrl: 'https://drive.google.com',
-      paymentProofUrl: 'https://drive.google.com',
       operatorName: 'Kavita Rathore',
       operatorRollNo: 'FAC-MGMT-014',
       operatorType: 'FACULTY',
       remarks: 'Stall layout confirmed with campus estate department.',
-      superAdminNotes: 'Full payment received in university account.',
+      superAdminNotes: 'Stall allocations verified.',
       superAdminVerified: true,
       createdAt: new Date(Date.now() - 86400000 * 7).toISOString(),
       updatedAt: new Date(Date.now() - 3600000 * 8).toISOString(),
@@ -97,12 +85,8 @@ function getInitialSeedDeals(): SponsorshipDeal[] {
       contactPhone: '+91 98109 23112',
       sponsorshipKind: 'ASSOCIATE_SPONSOR',
       dealStatus: 'IN_NEGOTIATION',
-      pitchedAmountInr: 250000,
-      committedAmountInr: 200000,
-      receivedAmountInr: 0,
       deliverablesSummary: 'Logo on main festival poster, tech track naming rights, digital flyers in all attendee registration emails.',
       mouDocumentUrl: null,
-      paymentProofUrl: null,
       operatorName: 'Aman Singhal',
       operatorRollNo: '22BBA088',
       operatorType: 'STUDENT',
@@ -121,12 +105,8 @@ function getInitialSeedDeals(): SponsorshipDeal[] {
       contactPhone: '+91 99870 12345',
       sponsorshipKind: 'MEDIA_STREAMING',
       dealStatus: 'VERBALLY_COMMITTED',
-      pitchedAmountInr: 100000,
-      committedAmountInr: 80000,
-      receivedAmountInr: 0,
       deliverablesSummary: 'Official platform partner, banner listing on national unstop portal reaching 500k college students.',
       mouDocumentUrl: null,
-      paymentProofUrl: null,
       operatorName: 'Megha Gupta',
       operatorRollNo: '23BCS104',
       operatorType: 'STUDENT',
@@ -145,12 +125,8 @@ function getInitialSeedDeals(): SponsorshipDeal[] {
       contactPhone: '+91 98200 44556',
       sponsorshipKind: 'TITLE_SPONSOR',
       dealStatus: 'PITCH_SENT',
-      pitchedAmountInr: 800000,
-      committedAmountInr: 0,
-      receivedAmountInr: 0,
       deliverablesSummary: 'Festival title naming: "Lingaya\'s Zest powered by Monster Energy", mega stage branding.',
       mouDocumentUrl: null,
-      paymentProofUrl: null,
       operatorName: 'Dr. R. K. Vashisht',
       operatorRollNo: 'FAC-DIR-001',
       operatorType: 'FACULTY',
@@ -254,12 +230,8 @@ export interface CreateSponsorshipInput {
   contactPhone: string;
   sponsorshipKind: SponsorshipKind;
   dealStatus?: DealStatus;
-  pitchedAmountInr?: number;
-  committedAmountInr?: number;
-  receivedAmountInr?: number;
   deliverablesSummary: string;
   mouDocumentUrl?: string | null;
-  paymentProofUrl?: string | null;
   operatorName: string;
   operatorRollNo: string;
   operatorType?: 'STUDENT' | 'FACULTY';
@@ -280,12 +252,8 @@ export async function createSponsorshipDeal(
     contactPhone: input.contactPhone.trim(),
     sponsorshipKind: input.sponsorshipKind,
     dealStatus: input.dealStatus || 'REACHED_OUT',
-    pitchedAmountInr: Number(input.pitchedAmountInr) || 0,
-    committedAmountInr: Number(input.committedAmountInr) || 0,
-    receivedAmountInr: Number(input.receivedAmountInr) || 0,
     deliverablesSummary: input.deliverablesSummary.trim(),
     mouDocumentUrl: input.mouDocumentUrl ? input.mouDocumentUrl.trim() : null,
-    paymentProofUrl: input.paymentProofUrl ? input.paymentProofUrl.trim() : null,
     operatorName: input.operatorName.trim(),
     operatorRollNo: input.operatorRollNo.trim(),
     operatorType: input.operatorType || 'STUDENT',
@@ -309,7 +277,7 @@ export async function createSponsorshipDeal(
       operatorRollNo: newDeal.operatorRollNo,
       operatorType: newDeal.operatorType || 'STUDENT',
       committeeRoleId: operatorRoleId,
-      changes: `Created sponsorship lead for "${newDeal.companyName}" (${newDeal.sponsorshipKind}) - Pitched ₹${newDeal.pitchedAmountInr}`,
+      changes: `Created sponsorship lead for "${newDeal.companyName}" (${newDeal.sponsorshipKind})`,
     });
   } catch {
     // Non-fatal
@@ -326,12 +294,8 @@ export interface UpdateSponsorshipInput {
   contactPhone?: string;
   sponsorshipKind?: SponsorshipKind;
   dealStatus?: DealStatus;
-  pitchedAmountInr?: number;
-  committedAmountInr?: number;
-  receivedAmountInr?: number;
   deliverablesSummary?: string;
   mouDocumentUrl?: string | null;
-  paymentProofUrl?: string | null;
   remarks?: string | null;
   superAdminNotes?: string | null;
   superAdminVerified?: boolean;
@@ -362,15 +326,9 @@ export async function updateSponsorshipDeal(
     contactPhone: updates.contactPhone !== undefined ? updates.contactPhone.trim() : existing.contactPhone,
     sponsorshipKind: updates.sponsorshipKind !== undefined ? updates.sponsorshipKind : existing.sponsorshipKind,
     dealStatus: updates.dealStatus !== undefined ? updates.dealStatus : existing.dealStatus,
-    pitchedAmountInr: updates.pitchedAmountInr !== undefined ? Number(updates.pitchedAmountInr) : existing.pitchedAmountInr,
-    committedAmountInr:
-      updates.committedAmountInr !== undefined ? Number(updates.committedAmountInr) : existing.committedAmountInr,
-    receivedAmountInr:
-      updates.receivedAmountInr !== undefined ? Number(updates.receivedAmountInr) : existing.receivedAmountInr,
     deliverablesSummary:
       updates.deliverablesSummary !== undefined ? updates.deliverablesSummary.trim() : existing.deliverablesSummary,
     mouDocumentUrl: updates.mouDocumentUrl !== undefined ? updates.mouDocumentUrl : existing.mouDocumentUrl,
-    paymentProofUrl: updates.paymentProofUrl !== undefined ? updates.paymentProofUrl : existing.paymentProofUrl,
     remarks: updates.remarks !== undefined ? updates.remarks : existing.remarks,
     superAdminNotes: updates.superAdminNotes !== undefined ? updates.superAdminNotes : existing.superAdminNotes,
     superAdminVerified:
@@ -391,7 +349,7 @@ export async function updateSponsorshipDeal(
         operatorRollNo: operatorInfo.operatorRollNo,
         operatorType: operatorInfo.operatorType || 'STUDENT',
         committeeRoleId: operatorInfo.committeeRoleId,
-        changes: `Updated "${updated.companyName}" status to ${updated.dealStatus}, Received: ₹${updated.receivedAmountInr}`,
+        changes: `Updated "${updated.companyName}" status to ${updated.dealStatus}`,
       });
     } catch {
       // Non-fatal
@@ -449,24 +407,21 @@ export async function getSponsorshipStats(): Promise<SponsorshipStatsResponse> {
   const dealsClosed = list.filter(
     (i) => i.dealStatus === 'MOU_SIGNED' || i.dealStatus === 'PAYMENT_RECEIVED'
   ).length;
+  const mouSigned = list.filter(
+    (i) => i.dealStatus === 'MOU_SIGNED' || i.dealStatus === 'PAYMENT_RECEIVED'
+  ).length;
 
-  const fundsPledgedInr = list.reduce((sum, item) => sum + (item.committedAmountInr || item.pitchedAmountInr || 0), 0);
-  const fundsReceivedInr = list.reduce((sum, item) => sum + (item.receivedAmountInr || 0), 0);
-  const collectionPercentage = fundsPledgedInr > 0 ? Math.round((fundsReceivedInr / fundsPledgedInr) * 100) : 0;
-
-  // Top confirmed partners
+  // Top confirmed partners sorted by recency
   const topPartners = list
     .filter((i) => i.dealStatus === 'MOU_SIGNED' || i.dealStatus === 'PAYMENT_RECEIVED')
-    .sort((a, b) => (b.receivedAmountInr || b.committedAmountInr) - (a.receivedAmountInr || a.committedAmountInr));
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
   return {
     totalBrandsReached,
     pitchesSent,
     inNegotiation,
     dealsClosed,
-    fundsPledgedInr,
-    fundsReceivedInr,
-    collectionPercentage,
+    mouSigned,
     deals: list,
     topPartners,
   };
