@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getRoleById } from '@/lib/auth';
-import { updateSession } from '@/utils/supabase/middleware';
 
 // Routes requiring any authenticated committee/admin session
 const PROTECTED_PREFIXES = ['/admin', '/onspot', '/desk', '/checkin', '/super-admin', '/informalz', '/stage', '/committee', '/management'];
@@ -134,17 +133,6 @@ export async function proxy(request: NextRequest) {
       const nextUrl =
         request.nextUrl.searchParams.get('next') || role?.dashboard || '/admin';
       return NextResponse.redirect(new URL(nextUrl, request.url));
-    }
-  }
-
-  // 3. Delegate session refresh to Supabase ONLY for non-custom-auth routes
-  // (Our custom auth API routes handle their own responses and cookies)
-  const isAuthApi = pathname.startsWith('/api/auth');
-  if (!isAuthApi) {
-    try {
-      return await updateSession(request);
-    } catch {
-      return NextResponse.next();
     }
   }
 

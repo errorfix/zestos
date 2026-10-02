@@ -28,6 +28,7 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 | **ERR-020** | 2026-10-02 23:20 | Document Vault & File System (`src/lib/documents.ts`, `DocumentStorage.tsx`) | Added folder creation, breadcrumb folder navigation, move files between folders, and folder deletion | **RESOLVED** |
 | **ERR-021** | 2026-10-02 23:55 | Assessment Hub & CS&IT Override (`/api/attendance`, `MayIHelpYou`, `ComplaintsInbox`) | CS&IT override capability for pushed attendance; suppression of creation forms in Internal Assessment Hub | **RESOLVED** |
 | **ERR-022** | 2026-10-03 00:05 | Attendance Committee (`/committee/attendance-ops`, `/api/attendance`) | Added dedicated Attendance Tracking Card to Attendance Committee dashboard & enabled full edit permissions | **RESOLVED** |
+| **ERR-023** | 2026-10-03 01:05 | Core Architecture & Attendance (`committeeRosterData.ts`, `proxy.ts`, `.env`) | Purged all hardcoded mock volunteer test data & completely eliminated legacy Supabase references and packages | **RESOLVED** |
 
 
 ---
@@ -390,6 +391,26 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
   2. Integrated `<AttendanceTrackingCard canEdit={true} initialCommitteeSlug="all" />` into the Attendance Committee dashboard (`/committee/attendance-ops`).
   3. Updated `src/app/api/attendance/route.ts` so `ATTENDANCE_COMMITTEE` has `canEdit: true`, `canMark: true`, and authorization to push, update sealed dates, and toggle entries across committees.
   4. Updated `src/app/committee/attendance/page.tsx` to pass `canEdit={isCSIT || isAttendanceComm}` to `AttendanceSheet`.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-023: Mock Committee Volunteer Test Data & Deprecated Supabase References Purge
+- **Component**: `src/lib/committeeRosterData.ts`, `src/app/api/attendance/route.ts`, `src/proxy.ts`, `src/components/AuditLogsViewer.tsx`, `prisma/seed.ts`, `package.json`, `.env.example`
+- **Symptom**:
+  1. Attendance tracking displayed hardcoded sample college students (e.g., `Dhruv Rathee`, `Varun Dhawan`, `Aditya Chopra`, `Pooja Hegde`) in committee rosters and synthesized fake attendance history (`hist-`).
+  2. Multiple references to Supabase existed in middleware, UI badges, seed scripts, `.env`, and dependencies even though the system migrated to self-hosted PostgreSQL.
+- **Root Cause Analysis**:
+  1. `src/lib/committeeRosterData.ts` contained an initial mock roster map (`OFFICIAL_COMMITTEE_VOLUNTEERS`), and `/api/attendance/route.ts` automatically synthesized mock historical records when `allTime` was requested.
+  2. `src/proxy.ts` still imported and called `updateSession` from `src/utils/supabase/middleware.ts`, and `@supabase/ssr` / `@supabase/supabase-js` remained in `package.json`.
+- **Resolution**:
+  1. Emptied `OFFICIAL_COMMITTEE_VOLUNTEERS` in `committeeRosterData.ts` and updated `getDefaultRosterForCommittee` to return empty arrays, guaranteeing that only genuine database records are loaded.
+  2. Removed synthetic `hist-` generator in `src/app/api/attendance/route.ts` so all-time attendance is strictly backed by actual records from PostgreSQL.
+  3. Removed `updateSession` delegation and import from `src/proxy.ts`.
+  4. Deleted the obsolete `src/utils/supabase/` directory (`client.ts`, `middleware.ts`, `server.ts`).
+  5. Updated `AuditLogsViewer.tsx` badge to "PostgreSQL Database" and `prisma/seed.ts` logs to reference PostgreSQL.
+  6. Removed `@supabase/ssr` and `@supabase/supabase-js` from `package.json` and updated `package-lock.json` via clean `npm install`.
+  7. Removed Supabase fallback configuration and keys from `.env.example` and local `.env`.
 - **Status**: **RESOLVED**
 
 ---

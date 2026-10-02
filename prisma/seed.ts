@@ -4,7 +4,7 @@ import { SEED_EVENTS } from '../src/lib/mockEvents';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding ZEST 2K26 official events into Supabase database...');
+  console.log('Seeding ZEST 2K26 official events into PostgreSQL database...');
 
   for (const event of SEED_EVENTS) {
     const upserted = await prisma.event.upsert({
@@ -49,7 +49,7 @@ async function main() {
     console.log(`✓ Event configured: ${upserted.title} [${upserted.category}] - ${feeStr} (${upserted.eventType})`);
   }
 
-  console.log('✅ All 31 ZEST 2K26 events seeded successfully into Supabase!');
+  console.log('✅ All 31 ZEST 2K26 events seeded successfully into PostgreSQL!');
 }
 
 main()

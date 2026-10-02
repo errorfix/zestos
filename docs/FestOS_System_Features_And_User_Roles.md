@@ -32,7 +32,7 @@ FestOS v2.0 is built as a high-concurrency, offline-resilient, unified full-stac
 │        DATA & PERSISTENCE            │ │             THIRD-PARTY SERVICES              │
 │  PostgreSQL 16 Alpine (Docker Engine)│ │  Razorpay (Orders, Webhooks, Signature Check) │
 │  Prisma ORM 6.19 (Engine / Client)   │ │  Resend API (Transactional HTML Pass Emails)  │
-│  Connection Pooling & Cascading Keys │ │  Supabase (Managed Pooler - Fallback Option)  │
+│  Connection Pooling & Cascading Keys │ │  Self-Hosted PostgreSQL (Hostinger VPS)      │
 └──────────────────────────────────────┘ └───────────────────────────────────────────────┘
 ```
 

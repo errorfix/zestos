@@ -142,31 +142,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // In All-Time mode (especially with all committees), ensure every committee's
-    // volunteer roster is fully represented across festival dates
-    if (isAllTime) {
-      const recordedKeys = new Set(attendanceRecords.map((r) => `${r.committeeId}_${r.date}_${r.rollNumber}`));
-      const targetDates = ['2026-10-02', '2026-10-03'];
-
-      for (const member of roster) {
-        for (const d of targetDates) {
-          const key = `${member.committeeId}_${d}_${member.rollNumber}`;
-          if (!recordedKeys.has(key)) {
-            attendanceRecords.push({
-              id: `hist-${member.committeeId}-${d}-${member.rollNumber}`,
-              committeeId: member.committeeId,
-              date: d,
-              rollNumber: member.rollNumber,
-              isPresent: true,
-              facultyName: 'Staff In-Charge',
-              facultyRollNo: 'FACULTY-REF',
-              createdAt: new Date(`${d}T09:00:00.000Z`),
-            });
-            recordedKeys.add(key);
-          }
-        }
-      }
-    }
+    // Only real attendance records from the database are returned
 
     // 3. Fetch publish status
     const publishInfo = isAllTime

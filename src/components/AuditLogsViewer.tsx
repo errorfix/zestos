@@ -382,7 +382,7 @@ export default function AuditLogsViewer({
           <span className={`text-sm sm:text-base font-black ${isLiveStreamActive ? 'text-emerald-700' : 'text-slate-600'}`}>
             {isLiveStreamActive ? 'Connected (3.5s)' : 'Manual Mode'}
           </span>
-          <span className="text-[10px] text-slate-500 block mt-0.5">PostgreSQL Supabase</span>
+          <span className="text-[10px] text-slate-500 block mt-0.5">PostgreSQL Database</span>
         </div>
       </div>
 
