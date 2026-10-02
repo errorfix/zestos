@@ -7,13 +7,10 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';
 import { getCommitteeBySlug } from '@/lib/committeeConstants';
+import UniversalCommitteeActions from '@/components/UniversalCommitteeActions';
 import Link from 'next/link';
 import {
   Truck,
-  FolderOpen,
-  CheckSquare,
-  HelpCircle,
-  AlertTriangle,
   LogOut,
   Calendar,
 } from 'lucide-react';
@@ -88,45 +85,11 @@ export default async function InfraCommitteePage() {
           </div>
         </div>
 
-        {/* Quick Universal Committee Action Bar */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-          <span className="text-xs font-bold text-slate-600">
-            Quick Operations Modules:
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href="/committee/attendance?committee=infra"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-violet-50 hover:bg-violet-100 text-violet-800 border border-violet-200 transition-colors"
-            >
-              <CheckSquare className="w-3.5 h-3.5" />
-              <span>Attendance Sheet</span>
-            </Link>
-
-            <Link
-              href="/committee/doc-stor?committee=infra"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 transition-colors"
-            >
-              <FolderOpen className="w-3.5 h-3.5" />
-              <span>Document Vault</span>
-            </Link>
-
-            <Link
-              href="/committee/help"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition-colors"
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span>May I Help You</span>
-            </Link>
-
-            <Link
-              href="/committee/complaints"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 transition-colors"
-            >
-              <AlertTriangle className="w-3.5 h-3.5" />
-              <span>Complaints</span>
-            </Link>
-          </div>
-        </div>
+        {/* Quick Universal Committee Operations */}
+        <UniversalCommitteeActions
+          committeeSlug="infra"
+          committeeName="Infrastructure & Logistics Committee"
+        />
 
         {/* Vendor Manager Section */}
         <section className="space-y-4">

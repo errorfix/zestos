@@ -164,23 +164,51 @@ crontab -l
 
 ---
 
-## 6. How to Deploy Updates from GitHub to Live Server
+## 6. How to Deploy Updates & Manage Database Schemas
 
+### Standard Deployment Workflow (Code Updates)
 Whenever code changes are committed and pushed to GitHub (`main` branch), apply them on the live VPS with:
 
 ```bash
 cd /opt/festos && git pull origin main && docker compose build --no-cache festos-app && docker compose up -d festos-app
 ```
 
-### When Prisma Schema Changes (`prisma/schema.prisma` modified)
-If the update includes database schema modifications (new models, new columns, or index updates), apply the schema changes to the live PostgreSQL container immediately after starting the app:
+### When Environment Variables Change (`.env` modified)
+Docker Compose only injects updated `.env` values when the container is recreated. If you changed `.env` (e.g. updated `DATABASE_URL` to point to a new database):
 
 ```bash
-docker compose exec festos-app npx prisma db push
+docker compose up -d festos-app
+```
+
+### When Prisma Schema Changes or When Initializing a New Database
+If you modified `prisma/schema.prisma` or connected the application to a brand-new database instance, synchronize the database tables:
+
+```bash
+# Recommended: skip re-generating client (client is already pre-generated at build time)
+docker compose exec festos-app prisma db push --skip-generate
+```
+
+> [!IMPORTANT]
+> **Why `--skip-generate` is required:**
+> By default, `prisma db push` attempts to trigger `prisma generate` after applying the schema. In the production container, the runtime executes as the unprivileged, least-privilege user `nextjs` (UID 1001), while the global CLI is installed under `/usr/local/lib/node_modules/prisma` owned by `root`. Attempting to regenerate without `--skip-generate` throws:
+> `Error: Can't write to /usr/local/lib/node_modules/prisma please make sure you install "prisma" with the right permissions.`
+> 
+> Because the Prisma Client is already generated during Docker build time, re-generating it inside the runtime container is redundant. Adding `--skip-generate` applies all DDL changes to PostgreSQL immediately and cleanly without permission issues.
+> 
+> *Alternative (running as root):*
+> ```bash
+> docker compose exec -u root festos-app prisma db push
+> ```
+
+### Seeding Initial Data (For New Databases)
+If you created a new database, populate the default event catalogue, categories, and settings after pushing the schema:
+
+```bash
+docker compose exec festos-app prisma db seed
 ```
 
 > [!NOTE]
-> `npx prisma db push` synchronizes the live PostgreSQL database with `schema.prisma` safely without resetting existing tables. All registered participants, tickets, and audit logs are preserved in the persistent `postgres_data` volume.
+> `prisma db push --skip-generate` synchronizes the live PostgreSQL database with `schema.prisma` safely without resetting existing records or dropping intact tables. All registered participants, tickets, and audit logs are preserved in the persistent `postgres_data` volume.
 
 ---
 
@@ -339,7 +367,7 @@ Apply schema modifications and container updates on `/opt/festos`:
 cd /opt/festos && git pull origin main
 
 # 2. Synchronize PostgreSQL database schema safely (non-destructive)
-docker compose exec festos-app npx prisma db push
+docker compose exec festos-app prisma db push --skip-generate
 
 # 3. Rebuild and launch the application container
 docker compose build --no-cache festos-app && docker compose up -d festos-app
@@ -366,5 +394,22 @@ To reload updated passwords from `.env` on the VPS without a full image rebuild:
 cd /opt/festos && docker compose up -d festos-app
 ```
 This restarts `festos-app` with the active environment variables in ~3 seconds.
+
+---
+
+## 11. Universal Operations Hub Architecture (In-Page Modal vs. New Pages)
+
+### Why an In-Page Full-Screen Modal Was Chosen
+Instead of routing operators to external URLs (`/committee/attendance`, `/committee/doc-stor`, etc.) or opening separate browser tabs, shared operational tools open inside an in-page, 100% full-screen slide-up modal directly on the active committee dashboard.
+- **Strict Committee Privacy**: The modal automatically inherits the parent panel's `committeeSlug` and `committeeName`, eliminating unauthorized cross-committee viewing.
+- **Zero Edge Middleware Redirects**: URLs never leave `/committee/<slug>`, avoiding edge proxy bounces.
+- **Zero Browser Tab Sprawl**: Operators stay inside a single unified window without juggling multiple browser tabs during peak festival operations.
+
+### DOM De-Stressing & Performance Optimizations
+1. **Zero-DOM Footprint**: The modal is conditionally mounted; when closed, exactly zero DOM nodes exist in the tree.
+2. **On-Demand Code Splitting (`next/dynamic`)**: Heavy module components (`AttendanceSheet`, `DocumentStorage`, `MayIHelpYou`, `ComplaintsInbox`, `CommitteeDailyTracker`) are lazy-loaded with `ssr: false` only when clicked.
+3. **Complete Lifecycle Teardown**: Closing the modal immediately unmounts the active component, stopping network polling and garbage-collecting local state.
+4. **Hardware-Accelerated Animation**: The bottom slide-up uses GPU `transform: translateY` with `will-change: transform`, delivering 60 FPS transitions with zero browser layout reflows.
+
 
 
