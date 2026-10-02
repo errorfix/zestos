@@ -11,8 +11,6 @@ import {
   IndianRupee,
   Scan,
   Calendar,
-  Banknote,
-  Camera,
   LogOut,
   ShieldCheck,
   MapPin,
@@ -66,22 +64,6 @@ export default async function AdminPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Authenticated Staff
               </span>
             </div>
-
-            <Link
-              href="/onspot"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 transition-colors shadow-xs"
-            >
-              <Banknote className="w-3.5 h-3.5 text-blue-600" />
-              <span>On-Spot Desk</span>
-            </Link>
-
-            <Link
-              href="/checkin"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#1a73e8] hover:bg-[#1557b0] text-white transition-colors shadow-xs"
-            >
-              <Camera className="w-3.5 h-3.5" />
-              <span>Camera Gate Scanner</span>
-            </Link>
 
             <a
               href="/api/auth/logout"

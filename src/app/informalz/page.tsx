@@ -12,7 +12,6 @@ import {
   IndianRupee,
   Scan,
   Calendar,
-  Camera,
   LogOut,
   MapPin,
   Clock,
@@ -71,14 +70,6 @@ export default async function InformalzAdminPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-500" /> Authenticated Committee
               </span>
             </div>
-
-            <Link
-              href="/checkin"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white transition-colors shadow-xs"
-            >
-              <Camera className="w-3.5 h-3.5" />
-              <span>Gate Check-In</span>
-            </Link>
 
             <a
               href="/api/auth/logout"

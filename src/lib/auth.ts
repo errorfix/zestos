@@ -269,9 +269,12 @@ export function getRoleRegistry(): RoleDefinition[] {
   ];
 }
 
-/** Roles visible in the login dropdown */
+/** Roles visible in the login dropdown, sorted alphabetically */
 export function getVisibleRoles(): Pick<RoleDefinition, 'id' | 'label'>[] {
-  return getRoleRegistry().filter((r) => !r.hidden).map(({ id, label }) => ({ id, label }));
+  return getRoleRegistry()
+    .filter((r) => !r.hidden)
+    .map(({ id, label }) => ({ id, label }))
+    .sort((a, b) => a.label.localeCompare(b.label));
 }
 
 /** Lookup a role definition by id */

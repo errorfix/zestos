@@ -3,7 +3,7 @@ import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getRoleById } from '@/lib/a
 import { updateSession } from '@/utils/supabase/middleware';
 
 // Routes requiring any authenticated committee/admin session
-const PROTECTED_PREFIXES = ['/admin', '/onspot', '/desk', '/super-admin', '/informalz', '/stage', '/committee', '/management'];
+const PROTECTED_PREFIXES = ['/admin', '/onspot', '/desk', '/checkin', '/super-admin', '/informalz', '/stage', '/committee', '/management'];
 const PROTECTED_API_PREFIXES = ['/api/admin', '/api/onspot', '/api/checkin', '/api/super-admin', '/api/informalz', '/api/stage', '/api/committee'];
 
 // Routes restricted to SUPER_ADMIN role only

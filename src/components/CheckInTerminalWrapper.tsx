@@ -181,15 +181,14 @@ export default function CheckInTerminalWrapper({
           </span>
         </div>
 
-        <button
-          type="button"
-          onClick={handleLockTerminal}
+        <a
+          href="/api/auth/logout"
           className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors self-start sm:self-auto border border-red-200"
-          title="Securely lock gate terminal"
+          title="Sign out and return to login"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Lock Terminal</span>
-        </button>
+          <span>Sign Out</span>
+        </a>
       </div>
 
       {/* Camera Check-In Scanner Console */}

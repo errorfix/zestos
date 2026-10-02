@@ -45,12 +45,19 @@ interface PublishInfo {
 interface AttendanceSheetProps {
   committeeSlug?: string;
   committeeName?: string;
+  initialDate?: string;
 }
 
-export default function AttendanceSheet({ committeeSlug, committeeName }: AttendanceSheetProps) {
+export default function AttendanceSheet({ committeeSlug, committeeName, initialDate }: AttendanceSheetProps) {
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
+    initialDate || new Date().toISOString().split('T')[0]
   );
+
+  useEffect(() => {
+    if (initialDate && initialDate !== selectedDate) {
+      setSelectedDate(initialDate);
+    }
+  }, [initialDate]);
   const [roster, setRoster] = useState<RosterMember[]>([]);
   const [presenceMap, setPresenceMap] = useState<Record<string, boolean>>({});
   const [publishInfo, setPublishInfo] = useState<PublishInfo | null>(null);
@@ -221,6 +228,14 @@ export default function AttendanceSheet({ committeeSlug, committeeName }: Attend
       setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    const handleTriggerPush = () => {
+      handlePushAttendance();
+    };
+    window.addEventListener('festos_apply_attendance', handleTriggerPush);
+    return () => window.removeEventListener('festos_apply_attendance', handleTriggerPush);
+  }, [presenceMap, roster, selectedDate, committeeSlug, canMark, publishInfo, operatorName, committeeName]);
 
   const presentCount = Object.values(presenceMap).filter(Boolean).length;
   const absentCount = roster.length - presentCount;

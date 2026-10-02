@@ -5,10 +5,9 @@ import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken } from '@/lib/auth';
 import { OperatorDeskBadge } from '@/components/OperatorIdentityModal';
 import UniversalCommitteeActions from '@/components/UniversalCommitteeActions';
+import InternalAssessmentHub from '@/components/InternalAssessmentHub';
 import Link from 'next/link';
 import {
-  Banknote,
-  Camera,
   LogOut,
   Crown,
 } from 'lucide-react';
@@ -59,22 +58,6 @@ export default async function SuperAdminPage() {
           <div className="flex flex-wrap items-center gap-2.5">
             <OperatorDeskBadge />
 
-            <Link
-              href="/onspot"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors shadow-xs"
-            >
-              <Banknote className="w-3.5 h-3.5 text-slate-600" />
-              <span>On-Spot Desk</span>
-            </Link>
-
-            <Link
-              href="/checkin"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-colors shadow-xs"
-            >
-              <Camera className="w-3.5 h-3.5" />
-              <span>Camera Gate Scanner</span>
-            </Link>
-
             <a
               href="/api/auth/logout"
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 transition-colors"
@@ -88,6 +71,9 @@ export default async function SuperAdminPage() {
 
         {/* Universal CS&IT Operations Quick Action Bar */}
         <UniversalCommitteeActions showInfra={true} />
+
+        {/* Cross-Committee Internal Assessment Hub */}
+        <InternalAssessmentHub />
 
         {/* Dynamic Super Admin View with Isolated Committee Switcher */}
         <SuperAdminView

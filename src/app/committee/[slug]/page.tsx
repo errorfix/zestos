@@ -17,7 +17,6 @@ import {
   CheckCircle2,
   Calendar,
   LogOut,
-  Camera,
   Layers,
   Sparkles,
   Music,
@@ -165,14 +164,6 @@ export default async function CommitteePortalPage({ params }: PageProps) {
 
             <div className="flex items-center gap-2">
               <OperatorDeskBadge />
-
-              <Link
-                href="/checkin"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#1a73e8] hover:bg-[#1557b0] text-white transition-colors shadow-xs"
-              >
-                <Camera className="w-3.5 h-3.5" />
-                <span>Participant Check-In</span>
-              </Link>
 
               <a
                 href="/api/auth/logout"

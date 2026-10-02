@@ -47,9 +47,12 @@ function LoginForm() {
       })
       .then((data) => {
         if (data.roles) {
-          setRoles(data.roles);
-          if (data.roles.length === 1) {
-            setSelectedRole(data.roles[0].id);
+          const sorted = [...data.roles].sort((a: RoleOption, b: RoleOption) =>
+            a.label.localeCompare(b.label)
+          );
+          setRoles(sorted);
+          if (sorted.length === 1) {
+            setSelectedRole(sorted[0].id);
           }
         }
       })
