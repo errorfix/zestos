@@ -26,6 +26,7 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 | **ERR-018** | 2026-10-02 19:15 | Attendance & Assessment Hub (`/api/attendance`, `InternalAssessmentModal`) | Committee attendance not displaying; missing All-Time bypass & 25-150 range pagination across assessment modules | **RESOLVED** |
 | **ERR-019** | 2026-10-02 23:15 | Assessment Hub & Attendance Permissions (`/management`, `/super-admin`) | CSIT exclusive edit permissions vs HAM read-only observatory; official volunteer rosters for all committees & all-time multi-committee view | **RESOLVED** |
 | **ERR-020** | 2026-10-02 23:20 | Document Vault & File System (`src/lib/documents.ts`, `DocumentStorage.tsx`) | Added folder creation, breadcrumb folder navigation, move files between folders, and folder deletion | **RESOLVED** |
+| **ERR-021** | 2026-10-02 23:55 | Assessment Hub & CS&IT Override (`/api/attendance`, `MayIHelpYou`, `ComplaintsInbox`) | CS&IT override capability for pushed attendance; suppression of creation forms in Internal Assessment Hub | **RESOLVED** |
 
 
 ---
@@ -353,6 +354,24 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
   3. Updated `/api/documents/route.ts` to support `folder` query parameter, `CREATE_FOLDER` and `MOVE_FILE` actions, and folder-targeted uploads/deletions.
   4. Updated `/api/documents/raw/route.ts` to support streaming and downloading nested documents via `folder` query param.
   5. Enhanced `DocumentStorage.tsx` UI with breadcrumb folder navigation (`All Files > [Folder]`), folder grid tiles, "+ New Folder" modal, "Move File" modal, and folder deletion dialogs.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-021: CS&IT Pushed Attendance Override & Assessment Hub Form Suppression
+- **Component**: `src/app/api/attendance/route.ts`, `src/components/AttendanceSheet.tsx`, `src/components/InternalAssessmentModal.tsx`, `src/components/MayIHelpYou.tsx`, `src/components/ComplaintsInbox.tsx`
+- **Symptom**:
+  1. Once attendance was pushed/sealed for a date, the attendance interface locked out all users including CS&IT Super Admin (`publishInfo` disabled checkboxes, disabled row clicking, hid Mark All buttons, and blocked submissions with an alert).
+  2. CS&IT Super Admin could not toggle attendance records in All Time mode.
+  3. Inside the Internal Assessment Hub, "May I Help You" and "Complaints" modules rendered ticket creation and grievance submission forms, despite the hub being an assessment and case resolution console rather than a ticket creation interface.
+- **Root Cause Analysis**:
+  1. `AttendanceSheet.tsx` unconditionally treated `publishInfo !== null` as a universal lock, rather than checking `canEdit` (CS&IT Super Admin exclusive authority).
+  2. In `AttendanceSheet.tsx`, All-Time rows had no interactive toggle button for CS&IT, and the backend lacked a granular `TOGGLE_ENTRY` action.
+  3. `MayIHelpYou` and `ComplaintsInbox` lacked an `allowSubmission` prop to suppress creation forms when rendered within the Internal Assessment Hub.
+- **Resolution**:
+  1. Updated `AttendanceSheet.tsx` and `/api/attendance/route.ts` to allow CS&IT (`canEdit`) to manipulate attendance records regardless of whether the date was already pushed/sealed. Checkboxes remain enabled, row-click toggling remains active, Mark All buttons are available, and the push button displays "Update Attendance (Sealed [date])".
+  2. Added `action: 'TOGGLE_ENTRY'` to `/api/attendance/route.ts` and interactive status toggle buttons on each row in All-Time mode so CS&IT can manipulate individual attendance records across dates and committees.
+  3. Added `allowSubmission?: boolean` prop to `MayIHelpYou.tsx` and `ComplaintsInbox.tsx`, passing `allowSubmission={false}` in `InternalAssessmentModal.tsx` so the hub strictly displays tickets/complaints, search/filters, and case resolution controls without creation forms.
 - **Status**: **RESOLVED**
 
 ---

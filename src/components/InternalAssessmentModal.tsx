@@ -354,6 +354,7 @@ export default function InternalAssessmentModal({
             committeeName={effectiveCommitteeName}
             initialDate={selectedDate}
             isAllTime={isAllTime}
+            canEdit={canEditAttendance && !isReadOnly}
             isReadOnly={!canEditAttendance || isReadOnly}
           />
         )}
@@ -364,6 +365,7 @@ export default function InternalAssessmentModal({
             committeeSlug={selectedCommitteeSlug}
             selectedDate={selectedDate}
             isAllTime={isAllTime}
+            allowSubmission={false}
           />
         )}
 
@@ -373,6 +375,7 @@ export default function InternalAssessmentModal({
             committeeSlug={selectedCommitteeSlug}
             selectedDate={selectedDate}
             isAllTime={isAllTime}
+            allowSubmission={false}
           />
         )}
       </main>

@@ -54,6 +54,7 @@ interface AttendanceSheetProps {
   selectedDate?: string;
   isAllTime?: boolean;
   isReadOnly?: boolean;
+  canEdit?: boolean;
 }
 
 export default function AttendanceSheet({
@@ -63,6 +64,7 @@ export default function AttendanceSheet({
   selectedDate: propSelectedDate,
   isAllTime = false,
   isReadOnly = false,
+  canEdit: propCanEdit,
 }: AttendanceSheetProps) {
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     if (propSelectedDate) return propSelectedDate;
@@ -88,6 +90,7 @@ export default function AttendanceSheet({
   const [publishInfo, setPublishInfo] = useState<PublishInfo | null>(null);
   const [latestPublishedDate, setLatestPublishedDate] = useState<string | null>(null);
   const [canMark, setCanMark] = useState(false);
+  const [canEdit, setCanEdit] = useState<boolean>(Boolean(propCanEdit));
   const [operatorType, setOperatorType] = useState<'STUDENT' | 'FACULTY'>('STUDENT');
   const [operatorName, setOperatorName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -131,10 +134,12 @@ export default function AttendanceSheet({
         setLatestPublishedDate(data.latestPublishedDate || null);
 
         const isHamObservatory = Boolean(data.isHAM || isReadOnly);
-        const finalCanMark = !isHamObservatory && Boolean(data.canMark || (data.canEdit && localOp?.operatorType === 'FACULTY'));
+        const finalCanEdit = !isHamObservatory && Boolean(propCanEdit ?? data.canEdit);
+        const finalCanMark = !isHamObservatory && Boolean(data.canMark || finalCanEdit);
         setCanMark(finalCanMark);
+        setCanEdit(finalCanEdit);
         setOperatorType(localOp?.operatorType || data.operatorType || (finalCanMark ? 'FACULTY' : 'STUDENT'));
-        setOperatorName(localOp?.operatorName || data.operatorName || (finalCanMark ? 'Faculty In-Charge' : null));
+        setOperatorName(localOp?.operatorName || data.operatorName || (finalCanMark ? (finalCanEdit ? 'CS&IT Administration' : 'Faculty In-Charge') : null));
 
         // Populate presence map from existing records or default to false
         const map: Record<string, boolean> = {};
@@ -179,9 +184,11 @@ export default function AttendanceSheet({
   };
 
   const handleToggle = (rollNumber: string) => {
-    if (isAllTime) return; // All time is a master review mode
-    if (publishInfo) return;
-    if (!canMark) return;
+    if (isAllTime) return;
+    if (isReadOnly) return;
+    // CS&IT (canEdit) can manipulate even if attendance is already pushed/sealed
+    if (publishInfo && !canEdit) return;
+    if (!canMark && !canEdit) return;
 
     setPresenceMap((prev) => ({
       ...prev,
@@ -190,7 +197,10 @@ export default function AttendanceSheet({
   };
 
   const handleMarkAll = (val: boolean) => {
-    if (isAllTime || publishInfo || !canMark) return;
+    if (isAllTime || isReadOnly) return;
+    // CS&IT (canEdit) can mark all even if attendance is already pushed/sealed
+    if (publishInfo && !canEdit) return;
+    if (!canMark && !canEdit) return;
     const newMap: Record<string, boolean> = {};
     for (const m of roster) {
       newMap[m.rollNumber] = val;
@@ -198,23 +208,69 @@ export default function AttendanceSheet({
     setPresenceMap(newMap);
   };
 
+  const handleToggleAllTimeEntry = async (record: AttendanceRecord) => {
+    if (!canEdit || isReadOnly) return;
+    const nextStatus = !record.isPresent;
+
+    // Optimistically update local records
+    setAttendanceRecords((prev) =>
+      prev.map((r) =>
+        r.id === record.id ||
+        (r.rollNumber === record.rollNumber && r.date === record.date && r.committeeId === record.committeeId)
+          ? { ...r, isPresent: nextStatus }
+          : r
+      )
+    );
+
+    try {
+      const localOp = getLocalOperator();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (localOp) {
+        headers['x-operator-name'] = localOp.operatorName;
+        headers['x-operator-roll'] = localOp.operatorRollNo;
+        headers['x-operator-type'] = localOp.operatorType;
+      }
+      const res = await fetch('/api/attendance', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          action: 'TOGGLE_ENTRY',
+          committee: record.committeeId,
+          date: record.date,
+          rollNumber: record.rollNumber,
+          isPresent: nextStatus,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to update record');
+      }
+      showToast(`✓ ${record.rollNumber} (${record.date}) set to ${nextStatus ? 'PRESENT' : 'ABSENT'}`);
+    } catch (err) {
+      alert(`Error updating attendance record: ${(err as Error).message}`);
+      fetchAttendance();
+    }
+  };
+
   const handlePushAttendance = async () => {
+    if (isReadOnly) return;
+
     if (isAllTime) {
-      alert('Attendance cannot be pushed in "All Time" mode. Please select a specific date.');
+      alert('Attendance cannot be bulk-pushed in "All Time" mode. You can toggle individual records directly below or select a specific date.');
       return;
     }
 
-    if (!canMark) {
-      alert('Only Faculty Staff In-Charge can officially push and seal attendance records.');
+    if (!canMark && !canEdit) {
+      alert('Only Faculty Staff In-Charge or CS&IT Super Admin can officially push attendance records.');
       return;
     }
 
     if (roster.length === 0) {
-      alert('Cannot push attendance with an empty student roster. Please add student roll numbers first.');
+      alert('Cannot push attendance with an empty volunteer roster.');
       return;
     }
 
-    if (publishInfo) {
+    if (publishInfo && !canEdit) {
       alert(`Attendance for ${selectedDate} has already been pushed and sealed. You cannot overwrite a finalized date.`);
       return;
     }
@@ -222,7 +278,9 @@ export default function AttendanceSheet({
     const presentCount = Object.values(presenceMap).filter(Boolean).length;
     const absentCount = roster.length - presentCount;
 
-    const confirmMsg = `Confirm submission of final attendance for ${selectedDate}?\n\n• Committee: ${committeeName || committeeSlug}\n• Present: ${presentCount}\n• Absent: ${absentCount}\n• Sealed By: ${operatorName || 'Faculty In-Charge'}\n\nNote: Once pushed, this date cannot be re-pushed.`;
+    const confirmMsg = publishInfo
+      ? `Attendance for ${selectedDate} was sealed on ${new Date(publishInfo.publishedAt).toLocaleDateString('en-IN')}.\n\nAs CS&IT Super Admin, confirm updating and overwriting stored attendance records for ${selectedDate}?\n\n• Committee: ${committeeName || committeeSlug}\n• Present: ${presentCount}\n• Absent: ${absentCount}`
+      : `Confirm submission of final attendance for ${selectedDate}?\n\n• Committee: ${committeeName || committeeSlug}\n• Present: ${presentCount}\n• Absent: ${absentCount}\n• Sealed By: ${operatorName || 'Faculty In-Charge'}`;
     if (!confirm(confirmMsg)) return;
 
     setSubmitting(true);
@@ -271,7 +329,7 @@ export default function AttendanceSheet({
     };
     window.addEventListener('festos_apply_attendance', handleTriggerPush);
     return () => window.removeEventListener('festos_apply_attendance', handleTriggerPush);
-  }, [presenceMap, roster, selectedDate, committeeSlug, canMark, publishInfo, operatorName, committeeName, isAllTime]);
+  }, [presenceMap, roster, selectedDate, committeeSlug, canMark, canEdit, isReadOnly, publishInfo, operatorName, committeeName, isAllTime]);
 
   const presentCount = Object.values(presenceMap).filter(Boolean).length;
   const absentCount = roster.length - presentCount;
@@ -400,31 +458,43 @@ export default function AttendanceSheet({
             </a>
 
             {!isAllTime && (
-              publishInfo ? (
+              publishInfo && !canEdit ? (
                 <div className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                   <Lock className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Pushed on {new Date(publishInfo.publishedAt).toLocaleDateString('en-IN')}</span>
                 </div>
-              ) : canMark ? (
-                <button
-                  type="button"
-                  onClick={handlePushAttendance}
-                  disabled={submitting}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold text-white shadow-md transition-all bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
-                  title="Push attendance to central system"
-                >
-                  {submitting ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Publishing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <UploadCloud className="w-4 h-4" />
-                      <span>Push Attendance for {selectedDate}</span>
-                    </>
+              ) : (canMark || canEdit) && !isReadOnly ? (
+                <div className="flex items-center gap-2">
+                  {publishInfo && (
+                    <span className="hidden sm:inline-flex items-center gap-1 px-3 py-2 rounded-2xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                      <Lock className="w-3 h-3 text-amber-600" />
+                      <span>Sealed on {new Date(publishInfo.publishedAt).toLocaleDateString('en-IN')}</span>
+                    </span>
                   )}
-                </button>
+                  <button
+                    type="button"
+                    onClick={handlePushAttendance}
+                    disabled={submitting}
+                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold text-white shadow-md transition-all cursor-pointer ${
+                      publishInfo
+                        ? 'bg-indigo-600 hover:bg-indigo-700'
+                        : 'bg-emerald-600 hover:bg-emerald-700'
+                    }`}
+                    title={publishInfo ? "Update attendance for this date (CS&IT Super Admin)" : "Push attendance to central system"}
+                  >
+                    {submitting ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <UploadCloud className="w-4 h-4" />
+                        <span>{publishInfo ? `Update Attendance for ${selectedDate}` : `Push Attendance for ${selectedDate}`}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               ) : (
                 <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
                   <Lock className="w-3.5 h-3.5 text-slate-500" />
@@ -436,7 +506,7 @@ export default function AttendanceSheet({
         </div>
 
         {/* Status Alert Banner */}
-        {!canMark && !isAllTime && (
+        {!canMark && !canEdit && !isAllTime && (
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3 text-xs text-amber-800 font-semibold">
             <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
             <div>
@@ -517,8 +587,8 @@ export default function AttendanceSheet({
               </div>
             </div>
 
-            {/* Middle: Mark All buttons for non-published date mode */}
-            {!isAllTime && canMark && !publishInfo && (
+            {/* Middle: Mark All buttons for non-published date mode or CS&IT */}
+            {!isAllTime && (canMark || canEdit) && !isReadOnly && (!publishInfo || canEdit) && (
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -621,15 +691,31 @@ export default function AttendanceSheet({
                           {record.facultyName || 'Staff In-Charge'}
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                              record.isPresent
-                                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                                : 'bg-rose-100 text-rose-900 border border-rose-200'
-                            }`}
-                          >
-                            {record.isPresent ? 'PRESENT' : 'ABSENT'}
-                          </span>
+                          {canEdit && !isReadOnly ? (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleAllTimeEntry(record)}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold transition-all shadow-2xs cursor-pointer hover:scale-105 ${
+                                record.isPresent
+                                  ? 'bg-emerald-100 hover:bg-rose-100 text-emerald-900 hover:text-rose-900 border border-emerald-300 hover:border-rose-300'
+                                  : 'bg-rose-100 hover:bg-emerald-100 text-rose-900 hover:text-emerald-900 border border-rose-200 hover:border-emerald-300'
+                              }`}
+                              title="Click to toggle Present / Absent (CS&IT Super Admin)"
+                            >
+                              <span>{record.isPresent ? '✓ PRESENT' : '✗ ABSENT'}</span>
+                              <span className="text-[9px] opacity-60 font-normal">toggle</span>
+                            </button>
+                          ) : (
+                            <span
+                              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                record.isPresent
+                                  ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                                  : 'bg-rose-100 text-rose-900 border border-rose-200'
+                              }`}
+                            >
+                              {record.isPresent ? 'PRESENT' : 'ABSENT'}
+                            </span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -637,22 +723,23 @@ export default function AttendanceSheet({
 
                   const member = item as RosterMember;
                   const isPresent = Boolean(presenceMap[member.rollNumber]);
+                  const canManipulate = ((canMark && !publishInfo) || canEdit) && !isAllTime && !isReadOnly;
                   return (
                     <tr
                       key={member.id || idx}
-                      onClick={() => canMark && !publishInfo && !isAllTime && handleToggle(member.rollNumber)}
+                      onClick={() => canManipulate && handleToggle(member.rollNumber)}
                       className={`transition-colors ${
-                        canMark && !publishInfo && !isAllTime ? 'cursor-pointer hover:bg-slate-50' : ''
+                        canManipulate ? 'cursor-pointer hover:bg-slate-50' : ''
                       } ${isPresent ? 'bg-emerald-50/30' : ''}`}
                     >
                       <td className="py-3 px-4 text-center">
                         <input
                           type="checkbox"
                           checked={isPresent}
-                          disabled={!canMark || Boolean(publishInfo) || isAllTime}
-                          onChange={() => canMark && !publishInfo && !isAllTime && handleToggle(member.rollNumber)}
+                          disabled={!canManipulate}
+                          onChange={() => canManipulate && handleToggle(member.rollNumber)}
                           className={`w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 ${
-                            canMark && !publishInfo && !isAllTime ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+                            canManipulate ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
                           }`}
                         />
                       </td>

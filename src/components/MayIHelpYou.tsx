@@ -39,6 +39,7 @@ interface MayIHelpYouProps {
   selectedDate?: string;
   isAllTime?: boolean;
   isHub?: boolean;
+  allowSubmission?: boolean;
 }
 
 export default function MayIHelpYou({
@@ -47,6 +48,7 @@ export default function MayIHelpYou({
   selectedDate,
   isAllTime = false,
   isHub = false,
+  allowSubmission = true,
 }: MayIHelpYouProps = {}) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isResolver, setIsResolver] = useState(false);
@@ -217,79 +219,83 @@ export default function MayIHelpYou({
           Operational Assistance &amp; Urgent Dispatch Desk
         </h2>
         <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
-          {isResolver
+          {!allowSubmission
+            ? 'Master review queue of operational concerns and urgent requests raised across all festival committees. View ticket details and resolve active cases.'
+            : isResolver
             ? 'Real-time master queue of operational concerns, AV bottlenecks, and requests raised across all festival committees. You can also submit new requests for any desk from here.'
             : 'Facing an operational issue, volunteer shortage, electrical delay, or sound crisis? Submit your concern here. It routes immediately to the central CS&IT & Management war-room.'}
         </p>
       </div>
 
-      {/* Submission Form (Always available to submit for active committee) */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold text-slate-900">
-              Submit an Urgent Concern / Help Request
-            </h3>
-            <span className="text-[11px] text-slate-500 font-semibold">
-              (For: {effectiveDisplayName})
-            </span>
+      {/* Submission Form (Only rendered when submission is enabled) */}
+      {allowSubmission && (
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900">
+                Submit an Urgent Concern / Help Request
+              </h3>
+              <span className="text-[11px] text-slate-500 font-semibold">
+                (For: {effectiveDisplayName})
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowSubmitForm((p) => !p)}
+              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
+            >
+              {showSubmitForm ? (
+                <>
+                  <ChevronUp className="w-3.5 h-3.5" />
+                  <span>Hide Form</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Open Request Form</span>
+                </>
+              )}
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowSubmitForm((p) => !p)}
-            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
-          >
-            {showSubmitForm ? (
-              <>
-                <ChevronUp className="w-3.5 h-3.5" />
-                <span>Hide Form</span>
-              </>
-            ) : (
-              <>
-                <Plus className="w-3.5 h-3.5" />
-                <span>Open Request Form</span>
-              </>
-            )}
-          </button>
+          {showSubmitForm && (
+            <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+              <textarea
+                required
+                rows={4}
+                value={concern}
+                onChange={(e) => setConcern(e.target.value)}
+                placeholder="Describe the issue or assistance required in detail (e.g. stage microphone #3 not receiving signal, water supply delayed at green room, need additional security volunteers at North gate)..."
+                className="w-full p-4 bg-slate-50 border border-slate-300 rounded-2xl text-xs sm:text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white resize-y"
+              />
+
+              <div className="flex items-center justify-between pt-1">
+                <p className="text-[11px] text-slate-500">
+                  Dispatches straight to the central operations war-room and executive controllers.
+                </p>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-md transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {submitting ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Transmitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Send Help Request</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
-
-        {showSubmitForm && (
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-            <textarea
-              required
-              rows={4}
-              value={concern}
-              onChange={(e) => setConcern(e.target.value)}
-              placeholder="Describe the issue or assistance required in detail (e.g. stage microphone #3 not receiving signal, water supply delayed at green room, need additional security volunteers at North gate)..."
-              className="w-full p-4 bg-slate-50 border border-slate-300 rounded-2xl text-xs sm:text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white resize-y"
-            />
-
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-[11px] text-slate-500">
-                Dispatches straight to the central operations war-room and executive controllers.
-              </p>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-md transition-all cursor-pointer disabled:opacity-50"
-              >
-                {submitting ? (
-                  <>
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Transmitting...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Send Help Request</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
+      )}
 
       {/* Tickets List Container with 25-150 Pagination */}
       <div className="space-y-4">

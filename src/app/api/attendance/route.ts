@@ -247,6 +247,8 @@ export async function POST(request: NextRequest) {
 
     const scope = resolveCommitteeScope(session, requestedCommittee);
     const committeeId = scope.slug;
+    const operator = getOperatorFromRequest(request);
+    const isCSIT = session.roleId === 'SUPER_ADMIN';
 
     // ─── ACTION 1: ADD ROLL NUMBER TO ROSTER ─────────────────────────────────
     if (action === 'ADD_ROLL_NUMBER') {
@@ -285,9 +287,6 @@ export async function POST(request: NextRequest) {
 
     // ─── ACTION 2: PUSH ATTENDANCE DATA (FACULTY OR ASSESSMENT HUB ONLY) ─────
     if (action === 'PUSH_ATTENDANCE') {
-      const operator = getOperatorFromRequest(request);
-      const isCSIT = session.roleId === 'SUPER_ADMIN';
-
       const isFaculty = isCSIT || operator?.operatorType === 'FACULTY';
       if (!isFaculty) {
         return NextResponse.json(
@@ -399,6 +398,62 @@ export async function POST(request: NextRequest) {
         success: true,
         message: `Attendance for ${date} successfully published and sealed. Total Present: ${totalPresent}, Total Absent: ${totalAbsent}.`,
         publishRecord,
+      });
+    }
+
+    // ─── ACTION 3: TOGGLE / UPDATE SINGLE ATTENDANCE RECORD (CS&IT) ──────────
+    if (action === 'TOGGLE_ENTRY' || action === 'UPDATE_ENTRY') {
+      if (!isCSIT) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Permission Denied: Only CS&IT Administration can directly manipulate individual attendance entries.',
+          },
+          { status: 403 }
+        );
+      }
+
+      const { rollNumber: targetRoll, date: targetDate, isPresent: targetPresent, committee: targetComm } = body;
+      if (!targetRoll || !targetDate) {
+        return NextResponse.json(
+          { success: false, error: 'rollNumber and date are required.' },
+          { status: 400 }
+        );
+      }
+
+      const targetCommitteeId = targetComm || committeeId;
+      const cleanRoll = String(targetRoll).trim().toUpperCase();
+
+      const actorName = operator?.operatorName || 'CS&IT Administration';
+      const actorRollNo = operator?.operatorRollNo || 'SUPERADMIN';
+
+      const updated = await prisma.committeeAttendance.upsert({
+        where: {
+          committeeId_date_rollNumber: {
+            committeeId: targetCommitteeId,
+            date: targetDate,
+            rollNumber: cleanRoll,
+          },
+        },
+        create: {
+          committeeId: targetCommitteeId,
+          date: targetDate,
+          rollNumber: cleanRoll,
+          isPresent: Boolean(targetPresent),
+          facultyName: actorName,
+          facultyRollNo: actorRollNo,
+        },
+        update: {
+          isPresent: Boolean(targetPresent),
+          facultyName: actorName,
+          facultyRollNo: actorRollNo,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Attendance for ${cleanRoll} on ${targetDate} updated to ${targetPresent ? 'PRESENT' : 'ABSENT'}.`,
+        record: updated,
       });
     }
 
