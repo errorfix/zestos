@@ -33,221 +33,7 @@ function getTodayString(): string {
  * immediately display realistic operational data across all committees.
  */
 function getInitialSeedData(): DailyTrackingItem[] {
-  const today = getTodayString();
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-
-  return [
-    {
-      id: 'dt-music-01',
-      committeeId: 'MUSIC_COMMITTEE',
-      committeeName: 'Cultural Music Committee',
-      date: today,
-      head: 'Logistics & Infrastructure',
-      subhead: 'Audio & Sound Equipment',
-      title: 'Acoustic Soundcheck & Drum Kit Rental',
-      workDescription: 'Finalized agreement with Apex Sound Hire for live drum set, 6 Shure SM58 mics, and monitor foldbacks for Battle of the Bands.',
-      status: 'COMPLETED',
-      progressPercentage: 100,
-      blockers: null,
-      operatorName: 'Aryan Verma',
-      operatorRollNo: '23BCS041',
-      operatorType: 'STUDENT',
-      attachmentsUrl: 'https://drive.google.com',
-      superAdminRemarks: 'Approved. Coordinate with Stage Committee for load-in timings.',
-      superAdminReviewed: true,
-      createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-      updatedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    },
-    {
-      id: 'dt-music-02',
-      committeeId: 'MUSIC_COMMITTEE',
-      committeeName: 'Cultural Music Committee',
-      date: today,
-      head: 'Hospitality & Protocol',
-      subhead: 'Judges Hospitality & Escorts',
-      title: 'External Music Jury Confirmation',
-      workDescription: 'Contacted 2 external judges from Delhi Music Academy. Awaiting signed confirmation letters.',
-      status: 'IN_PROGRESS',
-      progressPercentage: 65,
-      blockers: 'Awaiting faculty dean approval for judge honorarium voucher.',
-      operatorName: 'Dr. Neha Sharma',
-      operatorRollNo: 'FAC-ENG-108',
-      operatorType: 'FACULTY',
-      attachmentsUrl: null,
-      superAdminRemarks: null,
-      superAdminReviewed: false,
-      createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-      updatedAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-    },
-    {
-      id: 'dt-dance-01',
-      committeeId: 'DANCE_COMMITTEE',
-      committeeName: 'Cultural Dance Committee',
-      date: today,
-      head: 'Logistics & Infrastructure',
-      subhead: 'Stage Setup & Barricades',
-      title: 'Wooden Flooring Check for Western Dance',
-      workDescription: 'Inspected main auditorium stage wooden flooring. Need non-slip resin tape along the front rim to prevent accidents.',
-      status: 'BLOCKED',
-      progressPercentage: 40,
-      blockers: 'Maintenance team has not provided non-slip grip tape yet.',
-      operatorName: 'Simran Kaur',
-      operatorRollNo: '22BBA019',
-      operatorType: 'STUDENT',
-      attachmentsUrl: null,
-      superAdminRemarks: 'Urgent: Maintenance supervisor contacted for same-day delivery.',
-      superAdminReviewed: true,
-      createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-      updatedAt: new Date(Date.now() - 3600000 * 1).toISOString(),
-    },
-    {
-      id: 'dt-stage-01',
-      committeeId: 'STAGE_COMMITTEE',
-      committeeName: 'Stage Committee',
-      date: today,
-      head: 'Event Rules & Execution',
-      subhead: 'Anchor Scripts & Stage Cue Sheets',
-      title: 'Stage Audio Cues & Drive Tracks Audit',
-      workDescription: 'Verified 24 audio tracks submitted through Google Drive. Re-contacted 3 teams whose Drive access permissions were restricted.',
-      status: 'IN_PROGRESS',
-      progressPercentage: 80,
-      blockers: '3 teams yet to grant public read permission to audio files.',
-      operatorName: 'Rohan Mehra',
-      operatorRollNo: '21BME092',
-      operatorType: 'STUDENT',
-      attachmentsUrl: 'https://drive.google.com',
-      superAdminRemarks: null,
-      superAdminReviewed: false,
-      createdAt: new Date(Date.now() - 3600000 * 6).toISOString(),
-      updatedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    },
-    {
-      id: 'dt-reg-01',
-      committeeId: 'REGISTRATION_COMMITTEE',
-      committeeName: 'Registration & Invitation Committee',
-      date: today,
-      head: 'Security, Gate & Discipline',
-      subhead: 'Gate Queuing & Barcode Scanner Desks',
-      title: 'On-Spot Cash Desks & QR Scanner Handhelds',
-      workDescription: 'Configured 4 camera tablets and verified receipt printer thermal rolls at Gate 1 and Gate 2.',
-      status: 'COMPLETED',
-      progressPercentage: 100,
-      blockers: null,
-      operatorName: 'Prof. S. K. Gupta',
-      operatorRollNo: 'FAC-CS-022',
-      operatorType: 'FACULTY',
-      attachmentsUrl: null,
-      superAdminRemarks: 'Excellent setup.',
-      superAdminReviewed: true,
-      createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
-      updatedAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-    },
-    {
-      id: 'dt-fashion-01',
-      committeeId: 'FASHION_COMMITTEE',
-      committeeName: 'Cultural Fashion Committee',
-      date: today,
-      head: 'Media, PR & Creative',
-      subhead: 'Banners, Standees & Backdrop Printing',
-      title: 'Runway Lighting Truss & Ramp Backdrop',
-      workDescription: 'Reviewed 3D layout of Glamour Nova runway ramp with light designer. Final dimensions confirmed as 32ft x 8ft.',
-      status: 'IN_PROGRESS',
-      progressPercentage: 70,
-      blockers: null,
-      operatorName: 'Tanvi Chawla',
-      operatorRollNo: '23BDES015',
-      operatorType: 'STUDENT',
-      attachmentsUrl: null,
-      superAdminRemarks: null,
-      superAdminReviewed: false,
-      createdAt: new Date(Date.now() - 3600000 * 7).toISOString(),
-      updatedAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-    },
-    {
-      id: 'dt-gaming-01',
-      committeeId: 'GAMING_COMMITTEE',
-      committeeName: 'Esports & Gaming Committee',
-      date: yesterday,
-      head: 'Logistics & Infrastructure',
-      subhead: 'Power, Generator & Cabling',
-      title: 'High-Speed LAN Switches & Power Backup',
-      workDescription: 'Setup 64-port Gigabit switch and tested ping latencies below 12ms for BGMI and Free Fire arena.',
-      status: 'COMPLETED',
-      progressPercentage: 100,
-      blockers: null,
-      operatorName: 'Kunal Joshi',
-      operatorRollNo: '22BCA073',
-      operatorType: 'STUDENT',
-      attachmentsUrl: null,
-      superAdminRemarks: 'Ready for tournament.',
-      superAdminReviewed: true,
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-      updatedAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      id: 'dt-theatre-01',
-      committeeId: 'THEATRE_COMMITTEE',
-      committeeName: 'Cultural Theatre Committee',
-      date: today,
-      head: 'Hospitality & Protocol',
-      subhead: 'Green Room Refreshments',
-      title: 'Outdoor Nukkad Natak Circle Demarcation',
-      workDescription: 'Chalked circular stage boundaries in central open courtyard; tested wireless lapel and boundary microphones.',
-      status: 'IN_PROGRESS',
-      progressPercentage: 85,
-      blockers: null,
-      operatorName: 'Devansh Roy',
-      operatorRollNo: '23BA007',
-      operatorType: 'STUDENT',
-      attachmentsUrl: null,
-      superAdminRemarks: null,
-      superAdminReviewed: false,
-      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-      updatedAt: new Date(Date.now() - 3600000 * 1).toISOString(),
-    },
-    {
-      id: 'dt-literary-01',
-      committeeId: 'LITERARY_COMMITTEE',
-      committeeName: 'Literary & Quizzing Committee',
-      date: today,
-      head: 'Event Rules & Execution',
-      subhead: 'Rulebooks & Eligibility Criteria',
-      title: 'Bilingual Debate Motions & Quiz Buzzer Software',
-      workDescription: 'Curated 10 debate motions and tested electronic buzzer system with Raspberry Pi interface.',
-      status: 'COMPLETED',
-      progressPercentage: 100,
-      blockers: null,
-      operatorName: 'Ananya Sen',
-      operatorRollNo: '22BCS112',
-      operatorType: 'STUDENT',
-      attachmentsUrl: null,
-      superAdminRemarks: null,
-      superAdminReviewed: false,
-      createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-      updatedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    },
-    {
-      id: 'dt-informalz-01',
-      committeeId: 'INFORMALZ_COMMITTEE',
-      committeeName: 'Informalz Committee',
-      date: today,
-      head: 'Operations & Coordination',
-      subhead: 'Inter-Committee Coordination',
-      title: 'Stall Allocation & Fun Games Equipment',
-      workDescription: 'Procured tug-of-war hemp ropes, arm wrestling table cushions, and printed token tickets for 16 informal games.',
-      status: 'IN_PROGRESS',
-      progressPercentage: 75,
-      blockers: null,
-      operatorName: 'Gaurav Bisht',
-      operatorRollNo: '23BBA045',
-      operatorType: 'STUDENT',
-      attachmentsUrl: null,
-      superAdminRemarks: null,
-      superAdminReviewed: false,
-      createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-      updatedAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-    },
-  ];
+  return [];
 }
 
 function loadTrackingFromDisk(): Map<string, DailyTrackingItem> {
@@ -455,7 +241,7 @@ export async function createDailyTrackingItem(
     title: input.title.trim(),
     workDescription: input.workDescription.trim(),
     status: input.status || 'IN_PROGRESS',
-    progressPercentage: Math.min(100, Math.max(0, input.progressPercentage ?? 0)),
+    progressPercentage: 0,
     blockers: input.blockers ? input.blockers.trim() : null,
     operatorName: input.operatorName.trim(),
     operatorRollNo: input.operatorRollNo.trim(),
@@ -558,10 +344,7 @@ export async function updateDailyTrackingItem(
     title: updates.title !== undefined ? updates.title.trim() : existing.title,
     workDescription: updates.workDescription !== undefined ? updates.workDescription.trim() : existing.workDescription,
     status: updates.status !== undefined ? updates.status : existing.status,
-    progressPercentage:
-      updates.progressPercentage !== undefined
-        ? Math.min(100, Math.max(0, updates.progressPercentage))
-        : existing.progressPercentage,
+    progressPercentage: 0,
     blockers: updates.blockers !== undefined ? updates.blockers : existing.blockers,
     attachmentsUrl: updates.attachmentsUrl !== undefined ? updates.attachmentsUrl : existing.attachmentsUrl,
     superAdminRemarks: updates.superAdminRemarks !== undefined ? updates.superAdminRemarks : existing.superAdminRemarks,
@@ -603,7 +386,7 @@ export async function updateDailyTrackingItem(
         operatorRollNo: operatorInfo.operatorRollNo,
         operatorType: operatorInfo.operatorType || 'STUDENT',
         committeeRoleId: operatorInfo.committeeRoleId,
-        changes: `Updated tracking item "${updated.title}" - Status: ${updated.status}, Progress: ${updated.progressPercentage}%`,
+        changes: `Updated tracking item "${updated.title}" - Status: ${updated.status}`,
       });
     } catch {
       // Non-fatal
@@ -685,10 +468,7 @@ export async function getDailyTrackingStats(): Promise<DailyTrackingStatsRespons
     }
 
     const totalItemsOverall = committeeItems.length;
-    const avgProgress =
-      totalItemsOverall > 0
-        ? Math.round(committeeItems.reduce((acc, curr) => acc + curr.progressPercentage, 0) / totalItemsOverall)
-        : 0;
+    const avgProgress = totalItemsOverall > 0 ? Math.round((committeeItems.filter((i) => i.status === 'COMPLETED').length / totalItemsOverall) * 100) : 0;
 
     const blockedCount = committeeItems.filter((i) => i.status === 'BLOCKED' || i.status === 'DELAYED').length;
 
@@ -712,10 +492,7 @@ export async function getDailyTrackingStats(): Promise<DailyTrackingStatsRespons
   const activeBlockers = allItems.filter((i) => i.status === 'BLOCKED' || i.status === 'DELAYED');
   const activeBlockersCount = activeBlockers.length;
 
-  const overallProgressPercentage =
-    allItems.length > 0
-      ? Math.round(allItems.reduce((acc, curr) => acc + curr.progressPercentage, 0) / allItems.length)
-      : 0;
+  const overallProgressPercentage = allItems.length > 0 ? Math.round((allItems.filter((i) => i.status === 'COMPLETED').length / allItems.length) * 100) : 0;
 
   // Head-wise progress aggregation
   const headMap = new Map<
@@ -731,7 +508,7 @@ export async function getDailyTrackingStats(): Promise<DailyTrackingStatsRespons
   for (const item of allItems) {
     const cur = headMap.get(item.head) || { total: 0, progressSum: 0, completed: 0, blocked: 0, inProgress: 0 };
     cur.total += 1;
-    cur.progressSum += item.progressPercentage;
+    cur.progressSum += item.status === 'COMPLETED' ? 100 : 0;
     if (item.status === 'COMPLETED') cur.completed += 1;
     else if (item.status === 'BLOCKED' || item.status === 'DELAYED') cur.blocked += 1;
     else cur.inProgress += 1;

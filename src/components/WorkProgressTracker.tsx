@@ -375,20 +375,6 @@ export default function WorkProgressTracker({
                   </p>
                 </div>
 
-                {/* Progress Percentage Bar */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-slate-500 font-medium">Completion Progress</span>
-                    <span className="font-bold text-slate-800">{item.progressPercentage}%</span>
-                  </div>
-                  <div className="w-full h-1.5 rounded-full bg-slate-200/80 overflow-hidden">
-                    <div
-                      className="h-full bg-linear-to-r from-indigo-500 to-violet-600 rounded-full transition-all duration-300"
-                      style={{ width: `${Math.min(Math.max(item.progressPercentage, 0), 100)}%` }}
-                    />
-                  </div>
-                </div>
-
                 {/* Bottom Row: Operator Details, Attachments & Admin Remark */}
                 <div className="pt-2 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-1.5 text-slate-500 font-medium">

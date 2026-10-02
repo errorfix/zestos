@@ -87,7 +87,6 @@ export default function CommitteeDailyTracker({
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formStatus, setFormStatus] = useState<TrackingStatus>('IN_PROGRESS');
-  const [formProgress, setFormProgress] = useState(50);
   const [formAttachmentsUrl, setFormAttachmentsUrl] = useState('');
   const [formSubmitting, setFormSubmitting] = useState(false);
 
@@ -212,7 +211,6 @@ export default function CommitteeDailyTracker({
     setFormTitle('');
     setFormDescription('');
     setFormStatus('IN_PROGRESS');
-    setFormProgress(50);
     setFormAttachmentsUrl('');
     setIsModalOpen(true);
   };
@@ -231,7 +229,6 @@ export default function CommitteeDailyTracker({
     setFormTitle(item.title);
     setFormDescription(item.workDescription);
     setFormStatus(item.status);
-    setFormProgress(item.progressPercentage);
     setFormAttachmentsUrl(item.attachmentsUrl || '');
     setIsModalOpen(true);
   };
@@ -298,7 +295,6 @@ export default function CommitteeDailyTracker({
             title: formTitle.trim(),
             workDescription: formDescription.trim(),
             status: formStatus,
-            progressPercentage: formProgress,
             attachmentsUrl: formAttachmentsUrl.trim() || null,
           }),
         });
@@ -324,7 +320,6 @@ export default function CommitteeDailyTracker({
             title: formTitle.trim(),
             workDescription: formDescription.trim(),
             status: formStatus,
-            progressPercentage: formProgress,
             attachmentsUrl: formAttachmentsUrl.trim() || null,
             operatorName: currentOp?.operatorName,
             operatorRollNo: currentOp?.operatorRollNo,
@@ -705,24 +700,6 @@ export default function CommitteeDailyTracker({
                               </div>
 
                               <div>
-                                {/* Progress Bar */}
-                                <div className="space-y-1 mb-3 pt-2 border-t border-slate-100">
-                                  <div className="flex justify-between text-[11px] font-semibold">
-                                    <span className="text-slate-500">Milestone Progress</span>
-                                    <span className="text-slate-900">{task.progressPercentage}%</span>
-                                  </div>
-                                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                    <div
-                                      className={`h-full rounded-full transition-all duration-300 ${
-                                        task.status === 'COMPLETED'
-                                          ? 'bg-emerald-500'
-                                          : 'bg-indigo-600'
-                                      }`}
-                                      style={{ width: `${task.progressPercentage}%` }}
-                                    />
-                                  </div>
-                                </div>
-
                                 {/* Card Footer: Operator & Proof */}
                                 <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
                                   <div className="flex items-center gap-1.5 truncate pr-2">
@@ -941,37 +918,19 @@ export default function CommitteeDailyTracker({
                 />
               </div>
 
-              {/* Status & Progress Slider */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Work Status</label>
-                  <select
-                    value={formStatus}
-                    onChange={(e) => setFormStatus(e.target.value as TrackingStatus)}
-                    className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-slate-300 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="DELAYED">Delayed</option>
-                    <option value="PENDING_REVIEW">Pending Review</option>
-                  </select>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-bold text-slate-700">Completion %</label>
-                    <span className="text-xs font-bold text-indigo-600">{formProgress}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="5"
-                    value={formProgress}
-                    onChange={(e) => setFormProgress(Number(e.target.value))}
-                    className="w-full accent-indigo-600"
-                  />
-                </div>
+              {/* Status */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Work Status</label>
+                <select
+                  value={formStatus}
+                  onChange={(e) => setFormStatus(e.target.value as TrackingStatus)}
+                  className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-slate-300 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="DELAYED">Delayed</option>
+                  <option value="PENDING_REVIEW">Pending Review</option>
+                </select>
               </div>
 
               {/* Attachments / Drive Link */}

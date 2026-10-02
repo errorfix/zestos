@@ -10,7 +10,7 @@ export interface DailyTrackingItem {
   title: string;
   workDescription: string;
   status: TrackingStatus;
-  progressPercentage: number;
+  progressPercentage?: number;
   blockers?: string | null;
   operatorName: string;
   operatorRollNo: string;

@@ -230,7 +230,6 @@ export default function SuperAdminDailyTracking() {
       'Title',
       'Work Description',
       'Status',
-      'Progress %',
       'Reported Blockers',
       'Operator Name',
       'Operator Roll No',
@@ -247,7 +246,6 @@ export default function SuperAdminDailyTracking() {
       `"${i.title.replace(/"/g, '""')}"`,
       `"${i.workDescription.replace(/"/g, '""')}"`,
       i.status,
-      `${i.progressPercentage}%`,
       `"${(i.blockers || '').replace(/"/g, '""')}"`,
       `"${i.operatorName}"`,
       i.operatorRollNo,
@@ -800,26 +798,6 @@ export default function SuperAdminDailyTracking() {
                                   </div>
 
                                   <div>
-                                    {/* Milestone Progress Bar */}
-                                    <div className="space-y-1 mb-2 pt-2 border-t border-slate-800">
-                                      <div className="flex justify-between text-[11px] font-semibold">
-                                        <span className="text-slate-400">Milestone Progress</span>
-                                        <span className="text-white">{task.progressPercentage}%</span>
-                                      </div>
-                                      <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                        <div
-                                          className={`h-full rounded-full transition-all duration-300 ${
-                                            task.status === 'COMPLETED'
-                                              ? 'bg-emerald-500'
-                                              : task.status === 'BLOCKED'
-                                              ? 'bg-rose-500'
-                                              : 'bg-indigo-500'
-                                          }`}
-                                          style={{ width: `${task.progressPercentage}%` }}
-                                        />
-                                      </div>
-                                    </div>
-
                                     {/* Card Footer: Operator & Proof */}
                                     <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-800">
                                       <div className="flex items-center gap-1.5 truncate pr-2">

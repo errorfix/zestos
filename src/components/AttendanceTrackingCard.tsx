@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 import AttendanceSheet from './AttendanceSheet';
 import { COMMITTEE_METAS } from '@/lib/committeeConstants';
-import { CheckSquare, ExternalLink, ShieldCheck, ChevronDown } from 'lucide-react';
-import Link from 'next/link';
+import { CheckSquare, ShieldCheck, ChevronDown } from 'lucide-react';
 
 interface AttendanceTrackingCardProps {
   initialCommitteeSlug?: string;
@@ -62,16 +61,6 @@ export default function AttendanceTrackingCard({
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
-
-          {/* Direct link to dedicated stream */}
-          <Link
-            href={`/committee/attendance?committee=${selectedCommittee}`}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-all shadow-2xs hover:shadow-xs active:scale-[0.98]"
-            title="Open Dedicated Fullscreen Attendance Terminal"
-          >
-            <span>Fullscreen View</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </Link>
         </div>
       </div>
 

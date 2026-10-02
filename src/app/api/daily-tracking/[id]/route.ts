@@ -64,7 +64,6 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
         title: body.title,
         workDescription: body.workDescription,
         status: body.status,
-        progressPercentage: body.progressPercentage !== undefined ? Number(body.progressPercentage) : undefined,
         blockers: body.blockers,
         attachmentsUrl: body.attachmentsUrl,
         superAdminRemarks: body.superAdminRemarks,

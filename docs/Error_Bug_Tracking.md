@@ -29,6 +29,7 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 | **ERR-021** | 2026-10-02 23:55 | Assessment Hub & CS&IT Override (`/api/attendance`, `MayIHelpYou`, `ComplaintsInbox`) | CS&IT override capability for pushed attendance; suppression of creation forms in Internal Assessment Hub | **RESOLVED** |
 | **ERR-022** | 2026-10-03 00:05 | Attendance Committee (`/committee/attendance-ops`, `/api/attendance`) | Added dedicated Attendance Tracking Card to Attendance Committee dashboard & enabled full edit permissions | **RESOLVED** |
 | **ERR-023** | 2026-10-03 01:05 | Core Architecture & Attendance (`committeeRosterData.ts`, `proxy.ts`, `.env`) | Purged all hardcoded mock volunteer test data & completely eliminated legacy Supabase references and packages | **RESOLVED** |
+| **ERR-024** | 2026-10-03 01:25 | Progress Logging & Attendance Card (`CommitteeDailyTracker`, `dailyTracking.ts`, `AttendanceTrackingCard`) | Removed percentage slider and collection from progress logging; removed fullscreen button; eliminated mock seed items & disk caches | **RESOLVED** |
 
 
 ---
@@ -411,6 +412,26 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
   5. Updated `AuditLogsViewer.tsx` badge to "PostgreSQL Database" and `prisma/seed.ts` logs to reference PostgreSQL.
   6. Removed `@supabase/ssr` and `@supabase/supabase-js` from `package.json` and updated `package-lock.json` via clean `npm install`.
   7. Removed Supabase fallback configuration and keys from `.env.example` and local `.env`.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-024: Progress Logging Percentage Decommissioning & Fullscreen Button Removal
+- **Component**: `src/components/CommitteeDailyTracker.tsx`, `src/lib/dailyTracking.ts`, `src/app/api/daily-tracking/route.ts`, `src/app/api/daily-tracking/[id]/route.ts`, `src/components/AttendanceTrackingCard.tsx`, `src/lib/sponsorship.ts`
+- **Symptom**:
+  1. The progress logging modal contained an artificial percentage slider (0-100%) and collected percentage values which were shown as progress bars across committee, super admin, and management panels.
+  2. The Attendance Tracking Card in the Attendance Committee panel contained a "Fullscreen View" button linking to `/committee/attendance` which failed due to role middleware routing constraints.
+  3. Pre-seeded mock tracking items (`dt-music-01`, `Aryan Verma`, etc.) and sponsorship deals (`Red Bull`, `boAt`, etc.) remained in code and cached on disk (`.festos_daily_tracking.json`, `.festos_sponsorship.json`).
+- **Root Cause Analysis**:
+  1. The initial daily tracking prototype utilized a manual integer slider (`progressPercentage: 50%`) rather than relying strictly on discrete operational statuses (`IN_PROGRESS`, `COMPLETED`, `DELAYED`, `PENDING_REVIEW`).
+  2. The Attendance Committee role dashboard is located at `/committee/attendance-ops`; the external link attempted to navigate to a route that redirected or conflicted with specific committee middleware rules.
+  3. Seed arrays in `dailyTracking.ts` and `sponsorship.ts` populated JSON files on disk when missing.
+- **Resolution**:
+  1. Removed the percentage slider and `Completion %` display from the progress logging modal, deleted `formProgress` state, and removed `progressPercentage` collection from both POST and PATCH daily-tracking routes.
+  2. Derived overall progress and committee metrics strictly from the completion ratio of real items (`status === 'COMPLETED'`) rather than user-entered percentages.
+  3. Removed the "Fullscreen View" button from `AttendanceTrackingCard.tsx`.
+  4. Emptied `getInitialSeedData()` in `dailyTracking.ts` and `getInitialSeedDeals()` in `sponsorship.ts` (both return `[]`).
+  5. Deleted cached seed files (`.festos_daily_tracking.json`, `.festos_sponsorship.json`, `.festos_cache.json`).
 - **Status**: **RESOLVED**
 
 ---
