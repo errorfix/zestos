@@ -17,22 +17,30 @@ import {
   Check,
   Send,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface WorkProgressTrackerProps {
   committeeSlug?: string;
   selectedDate?: string;
+  isAllTime?: boolean;
 }
 
 export default function WorkProgressTracker({
   committeeSlug,
   selectedDate,
+  isAllTime = false,
 }: WorkProgressTrackerProps) {
   const [items, setItems] = useState<DailyTrackingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Pagination (25-150)
+  const [pageSize, setPageSize] = useState<number>(50);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Remark Modal State
   const [remarkItem, setRemarkItem] = useState<DailyTrackingItem | null>(null);
@@ -54,7 +62,7 @@ export default function WorkProgressTracker({
       if (committeeSlug && committeeSlug !== 'all') {
         params.append('committeeId', committeeSlug);
       }
-      if (selectedDate) {
+      if (!isAllTime && selectedDate) {
         params.append('date', selectedDate);
       }
 
@@ -77,13 +85,13 @@ export default function WorkProgressTracker({
 
   useEffect(() => {
     fetchItems();
-  }, [committeeSlug, selectedDate]);
+  }, [committeeSlug, selectedDate, isAllTime]);
 
   // Client-side filtering for search & safe slug/date match
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
       // Date filter fallback
-      if (selectedDate && item.date !== selectedDate) {
+      if (!isAllTime && selectedDate && item.date !== selectedDate) {
         return false;
       }
 
@@ -111,7 +119,23 @@ export default function WorkProgressTracker({
 
       return true;
     });
-  }, [items, selectedDate, committeeSlug, committeeMeta, searchQuery]);
+  }, [items, selectedDate, committeeSlug, committeeMeta, searchQuery, isAllTime]);
+
+  // Reset pagination on filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, pageSize, committeeSlug, selectedDate, isAllTime]);
+
+  const totalFiltered = filteredItems.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = totalFiltered === 0 ? 0 : (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalFiltered);
+  const displayedItems = filteredItems.slice(startIndex, endIndex);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(Math.max(1, Math.min(totalPages, newPage)));
+  };
 
   const handleOpenRemark = (item: DailyTrackingItem) => {
     setRemarkItem(item);
@@ -203,7 +227,11 @@ export default function WorkProgressTracker({
               <span className="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md">
                 {effectiveCommitteeName}
               </span>
-              {selectedDate && (
+              {isAllTime ? (
+                <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  All Time
+                </span>
+              ) : selectedDate ? (
                 <>
                   <span>•</span>
                   <span>Date:</span>
@@ -211,13 +239,13 @@ export default function WorkProgressTracker({
                     {selectedDate}
                   </span>
                 </>
-              )}
+              ) : null}
             </div>
           </div>
 
-          {/* Search Box & Refresh */}
-          <div className="flex items-center gap-2.5">
-            <div className="relative w-full sm:w-64">
+          {/* Search Box, 25-150 Pagination Controls & Refresh */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="relative w-full sm:w-56">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
@@ -226,6 +254,52 @@ export default function WorkProgressTracker({
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
               />
+            </div>
+
+            {/* 25-150 Pagination Controls */}
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl">
+              <span className="text-slate-400 text-[11px]">Rows:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
+              >
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={75}>75</option>
+                <option value={100}>100</option>
+                <option value={150}>150</option>
+              </select>
+
+              <span className="text-xs font-bold text-slate-700 tracking-tight whitespace-nowrap px-1">
+                {totalFiltered === 0
+                  ? '0 of 0'
+                  : `${startIndex + 1}–${endIndex} of ${totalFiltered.toLocaleString()}`}
+              </span>
+
+              <div className="flex items-center gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(safeCurrentPage - 1)}
+                  disabled={safeCurrentPage <= 1}
+                  className="inline-flex items-center justify-center p-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-35 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
+                  title="Previous entries"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(safeCurrentPage + 1)}
+                  disabled={safeCurrentPage >= totalPages}
+                  className="inline-flex items-center justify-center p-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-35 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
+                  title="Next entries"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
 
             <button
@@ -253,7 +327,7 @@ export default function WorkProgressTracker({
           <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
             {error}
           </div>
-        ) : filteredItems.length === 0 ? (
+        ) : totalFiltered === 0 ? (
           <div className="py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl">
             <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-3" />
             <h3 className="text-sm font-bold text-slate-800">
@@ -261,12 +335,12 @@ export default function WorkProgressTracker({
             </h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
               No entries recorded for <strong className="text-slate-700">{effectiveCommitteeName}</strong>
-              {selectedDate ? <> on <strong className="text-slate-700">{selectedDate}</strong></> : ''}.
+              {isAllTime ? ' across all time' : selectedDate ? <> on <strong className="text-slate-700">{selectedDate}</strong></> : ''}.
             </p>
           </div>
         ) : (
           <div className="space-y-3.5">
-            {filteredItems.map((item) => (
+            {displayedItems.map((item) => (
               <div
                 key={item.id}
                 className="bg-slate-50/70 hover:bg-slate-50 border border-slate-200/90 rounded-2xl p-4 sm:p-5 transition-all shadow-2xs hover:shadow-xs space-y-3"

@@ -222,7 +222,7 @@ export default function UniversalOperationsModal({
           {onSelectModule && (
             <div className="hidden md:flex items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200">
               {(
-                ['attendance', 'documents', 'help', 'complaints'] as UniversalModuleType[]
+                ['attendance', 'documents', 'help', 'complaints', 'progress'] as UniversalModuleType[]
               ).map((mod) => (
                 <button
                   key={mod}
@@ -271,9 +271,21 @@ export default function UniversalOperationsModal({
           />
         )}
 
-        {activeModule === 'help' && <MayIHelpYou />}
+        {activeModule === 'help' && (
+          <MayIHelpYou
+            committeeSlug={effectiveSlug}
+            committeeName={effectiveName}
+            isHub={true}
+          />
+        )}
 
-        {activeModule === 'complaints' && <ComplaintsInbox />}
+        {activeModule === 'complaints' && (
+          <ComplaintsInbox
+            committeeSlug={effectiveSlug}
+            committeeName={effectiveName}
+            isHub={true}
+          />
+        )}
 
         {activeModule === 'progress' && (
           <CommitteeDailyTracker

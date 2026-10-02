@@ -96,6 +96,7 @@ export default function InternalAssessmentModal({
   }, []);
 
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  const [isAllTime, setIsAllTime] = useState<boolean>(false);
 
   // Committees arranged in alphabetical order by name
   const sortedCommittees = useMemo(() => {
@@ -217,19 +218,35 @@ export default function InternalAssessmentModal({
       <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-3 shrink-0 flex flex-wrap items-center justify-between gap-3 shadow-xs">
         {/* Left Side: Date Select + Alphabetical Committee Dropdown */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* 1. Date Select (Left-Most Side) */}
-          <div className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200/80 border border-slate-200 rounded-xl px-3 py-1.5 transition-colors">
-            <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline">
-              Date:
-            </span>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="text-xs font-bold text-slate-800 bg-transparent focus:outline-none cursor-pointer"
-              title="Filter by target date"
-            />
+          {/* 1. Date Select (Left-Most Side) + All Time Toggle */}
+          <div className="flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-xl p-1 transition-colors">
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-opacity ${isAllTime ? 'opacity-40 pointer-events-none' : ''}`}>
+              <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline">
+                Date:
+              </span>
+              <input
+                type="date"
+                value={selectedDate}
+                disabled={isAllTime}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="text-xs font-bold text-slate-800 bg-transparent focus:outline-none cursor-pointer"
+                title="Filter by target date"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsAllTime((prev) => !prev)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                isAllTime
+                  ? 'bg-slate-900 text-white shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/80'
+              }`}
+              title="Show records of all time (bypasses date filter)"
+            >
+              All Time
+            </button>
           </div>
 
           {/* 2. Committee Names Dropdown (Alphabetical Order) */}
@@ -310,42 +327,47 @@ export default function InternalAssessmentModal({
       <main className="flex-1 overflow-y-auto overscroll-contain px-3 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full">
         {activeModule === 'progress' && (
           <WorkProgressTracker
-            key={`progress-${selectedCommitteeSlug}-${selectedDate}`}
+            key={`progress-${selectedCommitteeSlug}-${isAllTime ? 'all' : selectedDate}`}
             committeeSlug={selectedCommitteeSlug}
             selectedDate={selectedDate}
+            isAllTime={isAllTime}
           />
         )}
 
         {activeModule === 'audits' && (
           <AuditLogsViewer
-            key={`audits-${selectedCommitteeSlug}-${selectedDate}`}
+            key={`audits-${selectedCommitteeSlug}-${isAllTime ? 'all' : selectedDate}`}
             committeeSlug={selectedCommitteeSlug}
             selectedDate={selectedDate}
+            isAllTime={isAllTime}
           />
         )}
 
         {activeModule === 'attendance' && (
           <AttendanceSheet
-            key={`attendance-${selectedCommitteeSlug}-${selectedDate}`}
+            key={`attendance-${selectedCommitteeSlug}-${isAllTime ? 'all' : selectedDate}`}
             committeeSlug={selectedCommitteeSlug}
             committeeName={effectiveCommitteeName}
             initialDate={selectedDate}
+            isAllTime={isAllTime}
           />
         )}
 
         {activeModule === 'help' && (
           <MayIHelpYou
-            key={`help-${selectedCommitteeSlug}-${selectedDate}`}
+            key={`help-${selectedCommitteeSlug}-${isAllTime ? 'all' : selectedDate}`}
             committeeSlug={selectedCommitteeSlug}
             selectedDate={selectedDate}
+            isAllTime={isAllTime}
           />
         )}
 
         {activeModule === 'complaints' && (
           <ComplaintsInbox
-            key={`complaints-${selectedCommitteeSlug}-${selectedDate}`}
+            key={`complaints-${selectedCommitteeSlug}-${isAllTime ? 'all' : selectedDate}`}
             committeeSlug={selectedCommitteeSlug}
             selectedDate={selectedDate}
+            isAllTime={isAllTime}
           />
         )}
       </main>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getOperatorFromRequest } from '@/lib/auth';
-import { getCommitteeById } from '@/lib/committeeConstants';
+import { getCommitteeById, getCommitteeBySlug } from '@/lib/committeeConstants';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -18,12 +18,13 @@ export async function GET(request: NextRequest) {
 
     const isCSIT = session.roleId === 'SUPER_ADMIN';
     const isGrievance = session.roleId === 'GRIEVANCES_COMMITTEE';
-    const isResolver = isCSIT || isGrievance;
+    const isHAM = session.roleId === 'MANAGEMENT';
+    const isResolver = isCSIT || isGrievance || isHAM;
 
     const comm = getCommitteeById(session.roleId);
     const committeeId = comm ? comm.slug : session.roleId.toLowerCase();
 
-    // Grievance Committee and CS&IT see ALL complaints (both solved and unsolved)
+    // Grievance Committee, HAM, and CS&IT see ALL complaints (both solved and unsolved)
     if (isResolver) {
       const complaints = await prisma.complaint.findMany({
         orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
@@ -32,6 +33,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         isResolver: true,
+        committeeId,
+        committeeName: comm?.name || (isHAM ? 'Higher Authority Management' : isCSIT ? 'CS&IT Administration' : 'Grievance Committee'),
         complaints,
       });
     }
@@ -71,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { topic, explanation } = body;
+    const { topic, explanation, committee: requestedCommittee } = body;
 
     if (!topic || typeof topic !== 'string' || !topic.trim()) {
       return NextResponse.json(
@@ -87,9 +90,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const comm = getCommitteeById(session.roleId);
-    const committeeId = comm ? comm.slug : session.roleId.toLowerCase();
-    const committeeName = comm ? comm.name : session.roleId;
+    const matchedComm = requestedCommittee && requestedCommittee !== 'all'
+      ? (getCommitteeBySlug(requestedCommittee) || getCommitteeById(requestedCommittee))
+      : getCommitteeById(session.roleId);
+    const committeeId = matchedComm ? matchedComm.slug : session.roleId.toLowerCase();
+    const committeeName = matchedComm ? matchedComm.name : session.roleId;
 
     const operator = getOperatorFromRequest(request);
 
@@ -100,8 +105,8 @@ export async function POST(request: NextRequest) {
         topic: topic.trim(),
         explanation: explanation.trim(),
         status: 'UNSOLVED',
-        operatorName: operator?.operatorName || 'Desk Operator',
-        operatorRollNo: operator?.operatorRollNo || 'OP',
+        operatorName: operator?.operatorName || (session.roleId === 'MANAGEMENT' ? 'Higher Authority Management' : session.roleId === 'SUPER_ADMIN' ? 'CS&IT Administration' : 'Desk Operator'),
+        operatorRollNo: operator?.operatorRollNo || (session.roleId === 'MANAGEMENT' ? 'MANAGEMENT' : session.roleId === 'SUPER_ADMIN' ? 'CSIT' : 'OP'),
         operatorType: operator?.operatorType || 'STUDENT',
       },
     });

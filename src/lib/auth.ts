@@ -431,7 +431,18 @@ export interface OperatorSession {
 export function parseOperatorSession(rawString: string | undefined | null): OperatorSession | null {
   if (!rawString) return null;
   try {
-    const decoded = decodeURIComponent(rawString);
+    let decoded = rawString;
+    // Attempt decoding up to 2 times to handle double-URL-encoded cookie values
+    if (decoded.includes('%')) {
+      try {
+        decoded = decodeURIComponent(decoded);
+      } catch {}
+      if (decoded.includes('%')) {
+        try {
+          decoded = decodeURIComponent(decoded);
+        } catch {}
+      }
+    }
     const parsed = JSON.parse(decoded);
     if (parsed && typeof parsed.operatorName === 'string' && typeof parsed.operatorRollNo === 'string') {
       return {

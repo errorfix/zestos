@@ -21,6 +21,9 @@ function resolveCommitteeScope(session: { roleId: string }, requestedParam?: str
   const canEdit = hasAssessmentAccess || isAttendanceComm;
 
   if (isUniversalViewer && requestedParam) {
+    if (requestedParam === 'all') {
+      return { slug: 'all', name: 'Master Campus View', isUniversalViewer, canEdit: hasAssessmentAccess };
+    }
     const match = getCommitteeBySlug(requestedParam) || getCommitteeById(requestedParam);
     if (match) {
       return { slug: match.slug, name: match.name, isUniversalViewer, canEdit: true };
@@ -28,7 +31,7 @@ function resolveCommitteeScope(session: { roleId: string }, requestedParam?: str
   }
 
   if (isUniversalViewer && !requestedParam) {
-    return { slug: 'all', name: 'Master Campus View', isUniversalViewer, canEdit: false };
+    return { slug: 'all', name: 'Master Campus View', isUniversalViewer, canEdit: hasAssessmentAccess };
   }
 
   const comm = getCommitteeById(session.roleId);
@@ -49,7 +52,8 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const requestedCommittee = searchParams.get('committee');
-    const requestedDate = searchParams.get('date') || new Date().toISOString().split('T')[0];
+    const isAllTime = searchParams.get('allTime') === 'true' || searchParams.get('date') === 'all';
+    const requestedDate = isAllTime ? 'all' : (searchParams.get('date') || new Date().toISOString().split('T')[0]);
     const exportCsv = searchParams.get('export') === 'csv';
 
     const scope = resolveCommitteeScope(session, requestedCommittee);
@@ -60,11 +64,20 @@ export async function GET(request: NextRequest) {
     const hasAssessmentAccess = session.roleId === 'SUPER_ADMIN' || session.roleId === 'MANAGEMENT';
     const isFaculty = operator?.operatorType === 'FACULTY' || hasAssessmentAccess;
 
+    const matchedComm = getCommitteeBySlug(committeeId) || getCommitteeById(committeeId);
+    const committeeIds = committeeId === 'all' ? [] : (matchedComm ? [matchedComm.slug, matchedComm.id] : [committeeId]);
+
+    const committeeWhere = committeeId === 'all' ? {} : { committeeId: { in: committeeIds } };
+    const dateWhere = isAllTime ? {} : { date: requestedDate };
+
     // CSV Export Flow
     if (exportCsv) {
       const records = await prisma.committeeAttendance.findMany({
-        where: committeeId === 'all' ? { date: requestedDate } : { committeeId, date: requestedDate },
-        orderBy: [{ committeeId: 'asc' }, { rollNumber: 'asc' }],
+        where: {
+          ...committeeWhere,
+          ...dateWhere,
+        },
+        orderBy: [{ date: 'desc' }, { committeeId: 'asc' }, { rollNumber: 'asc' }],
       });
 
       const header = 'Committee,Date,Roll Number,Attendance Status,Marked By Faculty,Faculty ID,Recorded At\n';
@@ -84,30 +97,55 @@ export async function GET(request: NextRequest) {
 
     // 1. Fetch roster members for this committee
     const roster = await prisma.committeeRosterMember.findMany({
-      where: committeeId === 'all' ? {} : { committeeId },
+      where: committeeWhere,
       orderBy: { rollNumber: 'asc' },
     });
 
-    // 2. Fetch existing records for this date
+    // 2. Fetch existing records
     const attendanceRecords = await prisma.committeeAttendance.findMany({
-      where: committeeId === 'all' ? { date: requestedDate } : { committeeId, date: requestedDate },
+      where: {
+        ...committeeWhere,
+        ...dateWhere,
+      },
+      orderBy: [{ date: 'desc' }, { rollNumber: 'asc' }],
     });
 
-    // 3. Fetch publish status for this date
-    const publishInfo = await prisma.committeeAttendancePublish.findFirst({
-      where: committeeId === 'all' ? { date: requestedDate } : { committeeId, date: requestedDate },
-      orderBy: { publishedAt: 'desc' },
-    });
+    // Synthesize roster entries if attendance records exist for unlisted members
+    const knownRolls = new Set(roster.map((r) => `${r.committeeId}_${r.rollNumber}`));
+    for (const att of attendanceRecords) {
+      const key = `${att.committeeId}_${att.rollNumber}`;
+      if (!knownRolls.has(key)) {
+        roster.push({
+          id: `syn-${att.id}`,
+          committeeId: att.committeeId,
+          rollNumber: att.rollNumber,
+          studentName: null,
+          createdAt: att.createdAt,
+        });
+        knownRolls.add(key);
+      }
+    }
+
+    // 3. Fetch publish status
+    const publishInfo = isAllTime
+      ? null
+      : await prisma.committeeAttendancePublish.findFirst({
+          where: {
+            ...committeeWhere,
+            date: requestedDate,
+          },
+          orderBy: { publishedAt: 'desc' },
+        });
 
     // 4. Fetch latest published date for this committee
     const latestPublish = await prisma.committeeAttendancePublish.findFirst({
-      where: committeeId === 'all' ? {} : { committeeId },
+      where: committeeWhere,
       orderBy: { date: 'desc' },
     });
 
     // 5. Fetch all published dates list for history
     const publishHistory = await prisma.committeeAttendancePublish.findMany({
-      where: committeeId === 'all' ? {} : { committeeId },
+      where: committeeWhere,
       orderBy: { date: 'desc' },
       take: 30,
     });
@@ -117,6 +155,7 @@ export async function GET(request: NextRequest) {
       committeeId,
       committeeName: scope.name,
       date: requestedDate,
+      isAllTime,
       roster,
       attendanceRecords,
       isPublished: Boolean(publishInfo),
@@ -124,8 +163,8 @@ export async function GET(request: NextRequest) {
       latestPublishedDate: latestPublish?.date || null,
       publishHistory,
       canMark: isFaculty,
-      operatorType: operator?.operatorType || 'STUDENT',
-      operatorName: operator?.operatorName || null,
+      operatorType: operator?.operatorType || (hasAssessmentAccess ? 'FACULTY' : 'STUDENT'),
+      operatorName: operator?.operatorName || (hasAssessmentAccess ? (session.roleId === 'MANAGEMENT' ? 'Higher Authority Management' : 'CS&IT Administration') : null),
       isUniversalViewer: scope.isUniversalViewer,
       committees: COMMITTEE_METAS.map((c) => ({ id: c.id, slug: c.slug, name: c.name, badge: c.badge })),
     });

@@ -27,9 +27,10 @@ export default async function CommitteeComplaintsPage() {
   }
 
   const isCSIT = session.roleId === 'SUPER_ADMIN';
+  const isHAM = session.roleId === 'MANAGEMENT';
   const isGrievance = session.roleId === 'GRIEVANCES_COMMITTEE';
   const comm = getCommitteeById(session.roleId);
-  const backUrl = isCSIT ? '/super-admin' : isGrievance ? '/committee/grievances' : `/committee/${comm?.slug || 'admin'}`;
+  const backUrl = isCSIT ? '/super-admin' : isHAM ? '/management' : isGrievance ? '/committee/grievances' : `/committee/${comm?.slug || 'admin'}`;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col antialiased">

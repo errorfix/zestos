@@ -12,6 +12,8 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Download,
   AlertCircle,
   CheckCircle2,
@@ -29,12 +31,14 @@ interface AuditLogsViewerProps {
   initialLogs?: LocalAuditLog[];
   committeeSlug?: string;
   selectedDate?: string;
+  isAllTime?: boolean;
 }
 
 export default function AuditLogsViewer({
   initialLogs,
   committeeSlug,
   selectedDate,
+  isAllTime,
 }: AuditLogsViewerProps) {
   const [logs, setLogs] = useState<LocalAuditLog[]>(initialLogs || []);
   const [loading, setLoading] = useState(!initialLogs);
@@ -42,6 +46,8 @@ export default function AuditLogsViewer({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAction, setSelectedAction] = useState<string>('ALL');
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(50);
 
   // Real-time streaming state
   const [isLiveStreamActive, setIsLiveStreamActive] = useState<boolean>(true);
@@ -154,14 +160,27 @@ export default function AuditLogsViewer({
         if (!matchesComm) return false;
       }
 
-      if (selectedDate) {
+      if (!isAllTime && selectedDate) {
         const dateStr = new Date(log.createdAt).toISOString();
         if (!dateStr.startsWith(selectedDate)) return false;
       }
 
       return true;
     });
-  }, [logs, selectedAction, searchQuery, committeeSlug, selectedDate]);
+  }, [logs, selectedAction, searchQuery, committeeSlug, selectedDate, isAllTime]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedAction, committeeSlug, selectedDate, isAllTime, pageSize]);
+
+  const totalFiltered = filteredLogs.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = totalFiltered === 0 ? 0 : (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalFiltered);
+  const displayedLogs = useMemo(() => {
+    return filteredLogs.slice(startIndex, endIndex);
+  }, [filteredLogs, startIndex, endIndex]);
 
   const handleExportCSV = () => {
     if (filteredLogs.length === 0) return;
@@ -368,32 +387,80 @@ export default function AuditLogsViewer({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-4 sm:p-5 border-b border-slate-200 bg-white flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by operator name, roll no, target ID, action..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white"
-          />
+      <div className="p-4 sm:p-5 border-b border-slate-200 bg-white flex flex-col md:flex-row gap-3 md:items-center justify-between">
+        <div className="flex flex-1 flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by operator name, roll no, target ID, action..."
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+            <select
+              value={selectedAction}
+              onChange={(e) => setSelectedAction(e.target.value)}
+              className="bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            >
+              <option value="ALL">All Actions ({logs.length})</option>
+              {uniqueActions.map((act) => (
+                <option key={act} value={act}>
+                  {act}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+        {/* 25-150 Pagination Controls */}
+        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl shrink-0 self-start md:self-auto">
+          <span className="text-slate-400 text-[11px]">Rows:</span>
           <select
-            value={selectedAction}
-            onChange={(e) => setSelectedAction(e.target.value)}
-            className="bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
           >
-            <option value="ALL">All Actions ({logs.length})</option>
-            {uniqueActions.map((act) => (
-              <option key={act} value={act}>
-                {act}
-              </option>
-            ))}
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={75}>75</option>
+            <option value={100}>100</option>
+            <option value={150}>150</option>
           </select>
+
+          <span className="text-xs font-bold text-slate-700 tracking-tight whitespace-nowrap px-1">
+            {totalFiltered === 0
+              ? '0 of 0'
+              : `${startIndex + 1}–${endIndex} of ${totalFiltered.toLocaleString()}`}
+          </span>
+
+          <div className="flex items-center gap-0.5">
+            <button
+              type="button"
+              disabled={safeCurrentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="p-1 rounded-lg text-slate-600 hover:bg-slate-200 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              title="Previous page"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              disabled={safeCurrentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="p-1 rounded-lg text-slate-600 hover:bg-slate-200 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              title="Next page"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -430,7 +497,7 @@ export default function AuditLogsViewer({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {filteredLogs.map((log) => {
+              {displayedLogs.map((log) => {
                 const isExpanded = expandedLogId === log.id;
                 let parsedChanges: Record<string, unknown> | null = null;
                 if (log.changes) {

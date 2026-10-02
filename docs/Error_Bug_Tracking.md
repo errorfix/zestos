@@ -20,8 +20,11 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 | **ERR-010** | 2026-09-25 04:50 | Auth / Next.js Router (`<Link>`) | Missing/Empty cookie on new device login immediately after landing on dashboard ("Unauthorized") — Next.js automatically prefetched the logout route. | **RESOLVED** |
 | **ERR-011** | 2026-09-26 18:15 | Metrics (`getAdminMetrics`) | Revenue Collected calculation uses event base fee instead of actual paid amount | **RESOLVED** |
 | **ERR-012** | 2026-09-26 21:15 | On-Spot Desk (`/desk`) | Razorpay order generation uses base online fee instead of on-spot fee, and creates duplicate unlinked registrations | **RESOLVED** |
-| **ERR-013** | 2026-09-26 22:00 | Build / Next.js | Middleware deprecation warnings leading to proxy migration, plus accidental syntax errors breaking the build | **RESOLVED** |
 | **ERR-014** | 2026-09-29 10:20 | Auth (`/management`) | Higher Authority password mismatch: `.env` on VPS defined `MANAGEMENT` / `management` instead of `MANAGEMENT_PASSWORD` | **RESOLVED** |
+| **ERR-015** | 2026-10-02 18:20 | Docker Storage / File Vault (`/api/documents/upload`) | Upload failure: `EACCES: permission denied, mkdir '/app/storage/documents/...'` inside Next.js container | **RESOLVED** |
+| **ERR-016** | 2026-10-02 18:45 | Universal Hub & Complaints (`/api/complaints`, `/api/help`) | HAM & CSIT unable to view complaints; read-only panels blocked from Universal Hub submissions | **RESOLVED** |
+| **ERR-017** | 2026-10-02 19:00 | Auth / Operator Sync (`src/lib/auth.ts`, `AttendanceSheet.tsx`) | Operator type switching to Faculty still displays as Student due to cookie double-encoding & unpassed headers | **RESOLVED** |
+| **ERR-018** | 2026-10-02 19:15 | Attendance & Assessment Hub (`/api/attendance`, `InternalAssessmentModal`) | Committee attendance not displaying; missing All-Time bypass & 25-150 range pagination across assessment modules | **RESOLVED** |
 
 
 ---
@@ -249,6 +252,72 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 - **Resolution**:
   1. Updated `src/lib/auth.ts` to fallback-check `process.env.MANAGEMENT_PASSWORD || process.env.MANAGEMENT || process.env.management || ''`.
   2. Verified that both variable naming conventions now authenticate successfully.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-015: Docker Document Storage Permission Denied (`EACCES: permission denied, mkdir '/app/storage/documents/...'`)
+- **Component**: `src/app/api/documents/upload/route.ts`, `Dockerfile`, `docker-compose.yml`
+- **Symptom**: Attempting to upload any document inside committee vaults or the Universal Operations Hub resulted in an immediate 500 error: `Error: EACCES: permission denied, mkdir '/app/storage/documents/attendance-ops'`.
+- **Root Cause Analysis**:
+  1. The multi-stage production Docker build switches from `root` to an unprivileged `USER nextjs` with UID `1001`.
+  2. While the `/app` directory was created by `root`, the subdirectories under `/app/storage` mounted from the VPS host volume did not have ownership set to `nextjs:nodejs` (`UID:GID 1001:1001`).
+  3. When `mkdir(..., { recursive: true })` ran inside the Next.js process, Linux threw `EACCES`.
+- **Resolution**:
+  1. Defined a named Docker volume `festos_storage` in `docker-compose.yml` mounted to `/app/storage`.
+  2. Updated `Dockerfile` to create `/app/storage` and execute `chown -R nextjs:nodejs /app/storage` before stepping down to `USER nextjs`.
+  3. Added directory existence verification and error trapping inside `src/app/api/documents/upload/route.ts` with appropriate fallback permissions.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-016: Complaint Visibility Deficit for HAM & CSIT and Read-Only Panel Hub Blocking
+- **Component**: `src/app/api/complaints/route.ts`, `src/app/api/help/route.ts`, `src/components/UniversalOperationsModal.tsx`, `src/components/ComplaintsInbox.tsx`, `src/components/MayIHelpYou.tsx`
+- **Symptom**:
+  1. Higher Authority Management (`MANAGEMENT`) and CS&IT committee (`SUPER_ADMIN`) could not view complaints submitted by other committees—only the submitting committee could view its own complaints.
+  2. For read-only panels (e.g. Higher Authority Management or discipline monitors), the Universal Operations Hub blocked submission forms, confusing view-only monitoring with campus service access.
+- **Root Cause Analysis**:
+  1. In `src/app/api/complaints/route.ts`, `isResolver` only checked for `SUPER_ADMIN` and `DISCIPLINE_COMMITTEE`, omitting `MANAGEMENT`. Non-resolver sessions were filtered to `where.committee = session.committee`.
+  2. The Universal Operations Hub forms checked `isReadOnly` or `isResolver` and hid the submission input drawers, preventing operators on those panels from logging their own complaints, requests, or attendance.
+- **Resolution**:
+  1. Updated `isResolver` in `src/app/api/complaints/route.ts` to include `session.roleId === 'MANAGEMENT'`, granting HAM comprehensive campus-wide complaint visibility.
+  2. Supported an explicit `committee` query parameter on POST endpoints so that hub submissions accurately tag the active committee workspace.
+  3. Decoupled read-only desk status from Universal Operations Hub submission forms: operators can always submit complaints, request help, log work, and upload documents while administrative editing controls remain strictly permission-guarded.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-017: Operator Type Switching to Faculty Persistently Falling Back to Student
+- **Component**: `src/lib/auth.ts`, `src/components/AttendanceSheet.tsx`, `src/components/OperatorIdentityModal.tsx`
+- **Symptom**: When an operator updated their identity from "STUDENT" to "FACULTY" in the operator modal, attendance sheets and desk actions still registered them as student operators, even after re-authenticating in a new incognito window.
+- **Root Cause Analysis**:
+  1. When stored into cookies across certain browser environments, the JSON cookie `festos_operator_session` underwent double URL-encoding (`%257B%2522...%2522%257D`).
+  2. In `src/lib/auth.ts`, `parseOperatorSession` executed only a single `decodeURIComponent`, causing `JSON.parse` to fail silently and fall back to the default student identity `{ operatorType: 'STUDENT' }`.
+  3. In `AttendanceSheet.tsx`, client-side API requests (`fetch('/api/attendance')`) relied solely on server cookie parsing rather than forwarding the client's local session headers (`x-operator-name`, `x-operator-roll`, `x-operator-type`), and did not subscribe to `festos_operator_updated` events.
+- **Resolution**:
+  1. Updated `parseOperatorSession` in `src/lib/auth.ts` to perform multi-pass recursive decoding until all percent-encoded sequences are resolved prior to `JSON.parse`.
+  2. In `AttendanceSheet.tsx`, integrated `getLocalOperator()` to forward `x-operator-name`, `x-operator-roll`, and `x-operator-type` on every attendance fetch and submission.
+  3. Added an event listener for `festos_operator_updated` so any operator change instantly updates active attendance views without a page reload.
+  4. Added a server fallback in `/api/attendance/route.ts` attributing `FACULTY` type to any session with administrative/assessment access (`SUPER_ADMIN`, `MANAGEMENT`).
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-018: Committee Attendance Resolution Failure, Missing All-Time Bypass & Pagination Container
+- **Component**: `src/app/api/attendance/route.ts`, `src/components/InternalAssessmentModal.tsx`, `src/components/AttendanceSheet.tsx`, `src/components/WorkProgressTracker.tsx`, `src/components/AuditLogsViewer.tsx`, `src/components/ComplaintsInbox.tsx`, `src/components/MayIHelpYou.tsx`
+- **Symptom**:
+  1. Attendance tracking failed to show committee member records for certain committees (showing blank rosters).
+  2. The assessment hub had no way to view all-time attendance across dates.
+  3. The 5 assessment modules lacked consistent Gmail-style `[25, 50, 75, 100, 150]` range pagination.
+- **Root Cause Analysis**:
+  1. `resolveCommitteeScope` returned `null` when `committeeSlug === 'all'`, and matched only on `slug` rather than both committee `slug` and `id` (`{ in: [match.slug, match.id] }`).
+  2. Several committees had attendance records recorded by operators without corresponding static `CommitteeRosterMember` entries, causing the attendance UI to skip them entirely.
+  3. The date filter strictly enforced single-day records, preventing cross-day attendance auditing.
+- **Resolution**:
+  1. Fixed `resolveCommitteeScope` to handle `requestedParam === 'all'` and dual-match on slug and ID.
+  2. Added dynamic roster synthesis: `attendanceRecords` without a roster member entry are synthesized into temporary roster items so historical marks are never omitted.
+  3. Added an "All Time" toggle switch in `InternalAssessmentModal.tsx` that bypasses date filtering and shows all-time records with committee and date badges.
+  4. Implemented standardized 25–150 row selector pagination (`[25, 50, 75, 100, 150]`, range indicator, `<ChevronLeft />` and `<ChevronRight />`) across Attendance Tracking, Progress Tracking, Audit Trail, May I Help You, and Complaints.
 - **Status**: **RESOLVED**
 
 ---

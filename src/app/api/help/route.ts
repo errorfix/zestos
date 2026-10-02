@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getOperatorFromRequest } from '@/lib/auth';
-import { getCommitteeById } from '@/lib/committeeConstants';
+import { getCommitteeById, getCommitteeBySlug } from '@/lib/committeeConstants';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { concern } = body;
+    const { concern, committee: requestedCommittee } = body;
 
     if (!concern || typeof concern !== 'string' || !concern.trim()) {
       return NextResponse.json(
@@ -80,9 +80,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const comm = getCommitteeById(session.roleId);
-    const committeeId = comm ? comm.slug : session.roleId.toLowerCase();
-    const committeeName = comm ? comm.name : session.roleId;
+    const matchedComm = requestedCommittee && requestedCommittee !== 'all'
+      ? (getCommitteeBySlug(requestedCommittee) || getCommitteeById(requestedCommittee))
+      : getCommitteeById(session.roleId);
+    const committeeId = matchedComm ? matchedComm.slug : session.roleId.toLowerCase();
+    const committeeName = matchedComm ? matchedComm.name : session.roleId;
 
     const operator = getOperatorFromRequest(request);
 
@@ -92,8 +94,8 @@ export async function POST(request: NextRequest) {
         committeeName,
         concern: concern.trim(),
         status: 'UNSOLVED',
-        operatorName: operator?.operatorName || 'Desk Operator',
-        operatorRollNo: operator?.operatorRollNo || 'OP',
+        operatorName: operator?.operatorName || (session.roleId === 'MANAGEMENT' ? 'Higher Authority Management' : session.roleId === 'SUPER_ADMIN' ? 'CS&IT Administration' : 'Desk Operator'),
+        operatorRollNo: operator?.operatorRollNo || (session.roleId === 'MANAGEMENT' ? 'MANAGEMENT' : session.roleId === 'SUPER_ADMIN' ? 'CSIT' : 'OP'),
         operatorType: operator?.operatorType || 'STUDENT',
       },
     });
