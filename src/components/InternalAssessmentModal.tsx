@@ -44,10 +44,10 @@ function AssessmentLoadingSkeleton({ title }: { title: string }) {
 }
 
 // ─── Lazy Dynamic Imports (Code-split to prevent DOM & bundle bloat) ────────────
-const SuperAdminDailyTracking = dynamic(
-  () => import('@/components/SuperAdminDailyTracking'),
+const WorkProgressTracker = dynamic(
+  () => import('@/components/WorkProgressTracker'),
   {
-    loading: () => <AssessmentLoadingSkeleton title="Progress Tracking" />,
+    loading: () => <AssessmentLoadingSkeleton title="Work Progress Tracking" />,
     ssr: false,
   }
 );
@@ -240,6 +240,7 @@ export default function InternalAssessmentModal({
               className="appearance-none pl-3 pr-8 py-1.5 bg-slate-100 hover:bg-slate-200/80 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none transition-colors cursor-pointer max-w-[220px] sm:max-w-xs truncate"
               title="Select committee"
             >
+              <option value="all">All Committees (Master Overview)</option>
               {sortedCommittees.map((c) => (
                 <option key={c.id} value={c.slug}>
                   {c.name}
@@ -307,22 +308,46 @@ export default function InternalAssessmentModal({
 
       {/* ─── Main Content Container (Isolated DOM Subtree) ──────────────── */}
       <main className="flex-1 overflow-y-auto overscroll-contain px-3 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full">
-        {activeModule === 'progress' && <SuperAdminDailyTracking />}
+        {activeModule === 'progress' && (
+          <WorkProgressTracker
+            key={`progress-${selectedCommitteeSlug}-${selectedDate}`}
+            committeeSlug={selectedCommitteeSlug}
+            selectedDate={selectedDate}
+          />
+        )}
 
-        {activeModule === 'audits' && <AuditLogsViewer />}
+        {activeModule === 'audits' && (
+          <AuditLogsViewer
+            key={`audits-${selectedCommitteeSlug}-${selectedDate}`}
+            committeeSlug={selectedCommitteeSlug}
+            selectedDate={selectedDate}
+          />
+        )}
 
         {activeModule === 'attendance' && (
           <AttendanceSheet
-            key={`${selectedCommitteeSlug}-${selectedDate}`}
+            key={`attendance-${selectedCommitteeSlug}-${selectedDate}`}
             committeeSlug={selectedCommitteeSlug}
             committeeName={effectiveCommitteeName}
             initialDate={selectedDate}
           />
         )}
 
-        {activeModule === 'help' && <MayIHelpYou />}
+        {activeModule === 'help' && (
+          <MayIHelpYou
+            key={`help-${selectedCommitteeSlug}-${selectedDate}`}
+            committeeSlug={selectedCommitteeSlug}
+            selectedDate={selectedDate}
+          />
+        )}
 
-        {activeModule === 'complaints' && <ComplaintsInbox />}
+        {activeModule === 'complaints' && (
+          <ComplaintsInbox
+            key={`complaints-${selectedCommitteeSlug}-${selectedDate}`}
+            committeeSlug={selectedCommitteeSlug}
+            selectedDate={selectedDate}
+          />
+        )}
       </main>
     </div>,
     document.body

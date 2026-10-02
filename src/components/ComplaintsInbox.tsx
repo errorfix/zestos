@@ -30,7 +30,12 @@ interface ComplaintItem {
   updatedAt: string;
 }
 
-export default function ComplaintsInbox() {
+interface ComplaintsInboxProps {
+  committeeSlug?: string;
+  selectedDate?: string;
+}
+
+export default function ComplaintsInbox({ committeeSlug, selectedDate }: ComplaintsInboxProps = {}) {
   const [complaints, setComplaints] = useState<ComplaintItem[]>([]);
   const [isResolver, setIsResolver] = useState(false);
   const [committeeName, setCommitteeName] = useState<string>('');
@@ -117,8 +122,23 @@ export default function ComplaintsInbox() {
   };
 
   const filteredComplaints = complaints.filter((c) => {
-    if (statusFilter === 'ALL') return true;
-    return c.status === statusFilter;
+    if (statusFilter !== 'ALL' && c.status !== statusFilter) return false;
+    if (committeeSlug && committeeSlug !== 'all') {
+      const targetSlug = committeeSlug.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const itemComm = (c.committeeId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const itemCommName = (c.committeeName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (
+        !itemComm.includes(targetSlug) &&
+        !targetSlug.includes(itemComm) &&
+        !itemCommName.includes(targetSlug)
+      ) {
+        return false;
+      }
+    }
+    if (selectedDate) {
+      if (!c.createdAt.startsWith(selectedDate)) return false;
+    }
+    return true;
   });
 
   return (

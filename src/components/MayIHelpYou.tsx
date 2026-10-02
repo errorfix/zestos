@@ -29,7 +29,12 @@ interface Ticket {
   updatedAt: string;
 }
 
-export default function MayIHelpYou() {
+interface MayIHelpYouProps {
+  committeeSlug?: string;
+  selectedDate?: string;
+}
+
+export default function MayIHelpYou({ committeeSlug, selectedDate }: MayIHelpYouProps = {}) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isResolver, setIsResolver] = useState(false);
   const [committeeName, setCommitteeName] = useState<string>('');
@@ -114,8 +119,23 @@ export default function MayIHelpYou() {
   };
 
   const filteredTickets = tickets.filter((t) => {
-    if (statusFilter === 'ALL') return true;
-    return t.status === statusFilter;
+    if (statusFilter !== 'ALL' && t.status !== statusFilter) return false;
+    if (committeeSlug && committeeSlug !== 'all') {
+      const targetSlug = committeeSlug.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const itemComm = (t.committeeId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const itemCommName = (t.committeeName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (
+        !itemComm.includes(targetSlug) &&
+        !targetSlug.includes(itemComm) &&
+        !itemCommName.includes(targetSlug)
+      ) {
+        return false;
+      }
+    }
+    if (selectedDate) {
+      if (!t.createdAt.startsWith(selectedDate)) return false;
+    }
+    return true;
   });
 
   return (

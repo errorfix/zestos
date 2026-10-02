@@ -180,7 +180,6 @@ export default async function CommitteePortalPage({ params }: PageProps) {
         {/* Universal Committee Quick Action Modules */}
         <UniversalCommitteeActions
           committeeSlug={committee.slug}
-          showInfra={committee.slug === 'infra'}
         />
 
         {/* Dynamic SuperAdmin Flags Notice Banner */}

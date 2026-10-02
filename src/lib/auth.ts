@@ -196,7 +196,7 @@ export function getRoleRegistry(): RoleDefinition[] {
   },
   {
     id: 'CP_COMMITTEE',
-    label: 'C&P (Coordination & Protocol) Committee',
+    label: 'C&P (Certifications & Prizes) Committee',
     password: process.env.CP_COMMITTEE_PASSWORD || '',
     permissions: ['view_dashboard', 'view_registrations'],
     dashboard: '/committee/cp',

@@ -70,7 +70,7 @@ export default async function SuperAdminPage() {
         </div>
 
         {/* Universal CS&IT Operations Quick Action Bar */}
-        <UniversalCommitteeActions showInfra={true} />
+        <UniversalCommitteeActions />
 
         {/* Cross-Committee Internal Assessment Hub */}
         <InternalAssessmentHub />

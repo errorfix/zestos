@@ -15,19 +15,20 @@ function resolveCommitteeScope(session: { roleId: string }, requestedParam?: str
   const isCSIT = session.roleId === 'SUPER_ADMIN';
   const isControls = session.roleId === 'MANAGEMENT';
   const isAttendanceComm = session.roleId === 'ATTENDANCE_COMMITTEE';
+  const hasAssessmentAccess = isCSIT || isControls;
 
   const isUniversalViewer = isCSIT || isControls || isAttendanceComm;
-  const canEdit = isCSIT || !isControls;
+  const canEdit = hasAssessmentAccess || isAttendanceComm;
 
   if (isUniversalViewer && requestedParam) {
     const match = getCommitteeBySlug(requestedParam) || getCommitteeById(requestedParam);
     if (match) {
-      return { slug: match.slug, name: match.name, isUniversalViewer, canEdit };
+      return { slug: match.slug, name: match.name, isUniversalViewer, canEdit: true };
     }
   }
 
   if (isUniversalViewer && !requestedParam) {
-    return { slug: 'all', name: 'Master Campus View', isUniversalViewer, canEdit };
+    return { slug: 'all', name: 'Master Campus View', isUniversalViewer, canEdit: false };
   }
 
   const comm = getCommitteeById(session.roleId);
@@ -54,9 +55,10 @@ export async function GET(request: NextRequest) {
     const scope = resolveCommitteeScope(session, requestedCommittee);
     const committeeId = scope.slug;
 
-    // Check operator identity for faculty status
+    // Check operator identity or administrative oversight for marking status
     const operator = getOperatorFromRequest(request);
-    const isFaculty = operator?.operatorType === 'FACULTY' || session.roleId === 'SUPER_ADMIN';
+    const hasAssessmentAccess = session.roleId === 'SUPER_ADMIN' || session.roleId === 'MANAGEMENT';
+    const isFaculty = operator?.operatorType === 'FACULTY' || hasAssessmentAccess;
 
     // CSV Export Flow
     if (exportCsv) {
@@ -146,12 +148,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (session.roleId === 'MANAGEMENT') {
-      return NextResponse.json(
-        { success: false, error: 'Management/Controls panel is strictly read-only.' },
-        { status: 403 }
-      );
-    }
+    const hasAssessmentAccess = session.roleId === 'SUPER_ADMIN' || session.roleId === 'MANAGEMENT';
 
     const body = await request.json();
     const { action, committee: requestedCommittee, rollNumber, studentName, date, entries } = body;
@@ -194,16 +191,16 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ─── ACTION 2: PUSH ATTENDANCE DATA (FACULTY ONLY) ─────────────────────────
+    // ─── ACTION 2: PUSH ATTENDANCE DATA (FACULTY OR ASSESSMENT HUB ONLY) ─────
     if (action === 'PUSH_ATTENDANCE') {
       const operator = getOperatorFromRequest(request);
 
-      const isFaculty = operator?.operatorType === 'FACULTY' || session.roleId === 'SUPER_ADMIN';
+      const isFaculty = operator?.operatorType === 'FACULTY' || hasAssessmentAccess;
       if (!isFaculty) {
         return NextResponse.json(
           {
             success: false,
-            error: 'Permission Denied: Only Faculty Staff In-Charge can officially push and seal attendance records.',
+            error: 'Permission Denied: Only Faculty Staff In-Charge or Internal Assessment Authority can officially push and seal attendance records.',
           },
           { status: 403 }
         );
@@ -233,7 +230,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      if (existingPublish && session.roleId !== 'SUPER_ADMIN') {
+      if (existingPublish && !hasAssessmentAccess) {
         return NextResponse.json(
           {
             success: false,
@@ -245,6 +242,9 @@ export async function POST(request: NextRequest) {
 
       let totalPresent = 0;
       let totalAbsent = 0;
+
+      const actorName = operator?.operatorName || (session.roleId === 'MANAGEMENT' ? 'Higher Authority Management' : session.roleId === 'SUPER_ADMIN' ? 'CS&IT Administration' : 'Faculty Desk');
+      const actorRollNo = operator?.operatorRollNo || (session.roleId === 'MANAGEMENT' ? 'MANAGEMENT-DESK' : session.roleId === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'FACULTY');
 
       // Upsert each attendance entry in transaction
       await prisma.$transaction(
@@ -265,13 +265,13 @@ export async function POST(request: NextRequest) {
               date,
               rollNumber: item.rollNumber.trim().toUpperCase(),
               isPresent: Boolean(item.isPresent),
-              facultyName: operator?.operatorName || 'Faculty Desk',
-              facultyRollNo: operator?.operatorRollNo || 'FACULTY',
+              facultyName: actorName,
+              facultyRollNo: actorRollNo,
             },
             update: {
               isPresent: Boolean(item.isPresent),
-              facultyName: operator?.operatorName || 'Faculty Desk',
-              facultyRollNo: operator?.operatorRollNo || 'FACULTY',
+              facultyName: actorName,
+              facultyRollNo: actorRollNo,
             },
           });
         })
@@ -288,15 +288,15 @@ export async function POST(request: NextRequest) {
         create: {
           committeeId,
           date,
-          facultyName: operator?.operatorName || 'Faculty Desk',
-          facultyRollNo: operator?.operatorRollNo || 'FACULTY',
+          facultyName: actorName,
+          facultyRollNo: actorRollNo,
           totalPresent,
           totalAbsent,
         },
         update: {
           publishedAt: new Date(),
-          facultyName: operator?.operatorName || 'Faculty Desk',
-          facultyRollNo: operator?.operatorRollNo || 'FACULTY',
+          facultyName: actorName,
+          facultyRollNo: actorRollNo,
           totalPresent,
           totalAbsent,
         },

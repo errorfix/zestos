@@ -1,13 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import {
   CheckSquare,
   FolderOpen,
   HelpCircle,
   AlertOctagon,
-  Building2,
   Calendar,
 } from 'lucide-react';
 import UniversalOperationsModal, {
@@ -18,7 +16,6 @@ interface UniversalCommitteeActionsProps {
   committeeSlug?: string;
   committeeName?: string;
   className?: string;
-  showInfra?: boolean;
   showProgress?: boolean;
 }
 
@@ -26,8 +23,7 @@ export default function UniversalCommitteeActions({
   committeeSlug,
   committeeName,
   className = '',
-  showInfra = false,
-  showProgress = false,
+  showProgress = true,
 }: UniversalCommitteeActionsProps) {
   const [activeModal, setActiveModal] = useState<UniversalModuleType | null>(
     null
@@ -91,21 +87,11 @@ export default function UniversalCommitteeActions({
               type="button"
               onClick={() => setActiveModal('progress')}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 transition-all shadow-2xs hover:shadow-xs active:scale-[0.98] cursor-pointer"
-              title="Open deliverables & milestone tracking"
+              title="Open committee work progress logging"
             >
               <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Progress Tracker</span>
+              <span>Progress Logging</span>
             </button>
-          )}
-
-          {showInfra && (
-            <Link
-              href="/committee/infra"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition-all shadow-2xs hover:shadow-xs active:scale-[0.98]"
-            >
-              <Building2 className="w-3.5 h-3.5 text-slate-700" />
-              <span>Infra Vendors</span>
-            </Link>
           )}
         </div>
       </div>

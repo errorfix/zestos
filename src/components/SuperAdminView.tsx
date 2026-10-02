@@ -7,7 +7,7 @@ import AdminRegistrationsTable from '@/components/AdminRegistrationsTable';
 import StageRegistrationsManager from '@/components/StageRegistrationsManager';
 import SuperAdminFlagsManager from '@/components/SuperAdminFlagsManager';
 import AuditLogsViewer from '@/components/AuditLogsViewer';
-import SuperAdminDailyTracking from '@/components/SuperAdminDailyTracking';
+import WorkProgressTracker from '@/components/WorkProgressTracker';
 import SponsorshipManager from '@/components/SponsorshipManager';
 import CollegeDelegationsView from '@/components/CollegeDelegationsView';
 import CollegePricingExceptionsManager from '@/components/CollegePricingExceptionsManager';
@@ -770,7 +770,7 @@ export default function SuperAdminView({
       {/* ========================================================================= */}
       {activeCommittee === 'DAILY_TRACKING' && (
         <div className="space-y-8 animate-in fade-in-50 duration-200">
-          <SuperAdminDailyTracking />
+          <WorkProgressTracker committeeSlug="all" />
         </div>
       )}
 

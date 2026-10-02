@@ -7,6 +7,7 @@ import {
   TrackingFilters,
   TrackingStatus,
 } from '@/lib/dailyTracking';
+import { getCommitteeById, getCommitteeBySlug } from '@/lib/committeeConstants';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,8 +98,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Authorization check: Super Admin can post for any committee; committees can post for their own committee
-    if (session.roleId !== 'SUPER_ADMIN' && session.roleId !== committeeId) {
+    // Authorization check: Super Admin & Higher Authority Management can post for any committee; committees can post for their own committee
+    const isSuperOrMgmt = session.roleId === 'SUPER_ADMIN' || session.roleId === 'MANAGEMENT';
+    const userComm = getCommitteeById(session.roleId);
+    const targetComm = getCommitteeById(committeeId) || getCommitteeBySlug(committeeId);
+
+    const isMatch =
+      session.roleId === committeeId ||
+      userComm?.slug === committeeId ||
+      userComm?.id === targetComm?.id;
+
+    if (!isSuperOrMgmt && !isMatch) {
       return NextResponse.json(
         { success: false, error: 'Forbidden: You can only record tracking for your assigned committee.' },
         { status: 403 }

@@ -160,8 +160,8 @@ export default function UniversalOperationsModal({
       colorClass: 'bg-rose-50 text-rose-800 border-rose-200/80',
     },
     progress: {
-      title: 'Progress Tracker',
-      subtitle: 'Live committee deliverables and milestone tracking',
+      title: 'Progress Logging',
+      subtitle: 'Log committee work deliverables and milestone updates',
       icon: <Calendar className="w-4 h-4 text-emerald-600" />,
       colorClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
     },

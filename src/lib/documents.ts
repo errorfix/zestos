@@ -13,16 +13,29 @@ export interface StoredDocument {
   rawUrl: string;
 }
 
-const STORAGE_ROOT = path.join(process.cwd(), 'storage', 'documents');
+const DEFAULT_STORAGE = path.join(process.cwd(), 'storage', 'documents');
+const STORAGE_ROOT = process.env.FESTOS_STORAGE_PATH || DEFAULT_STORAGE;
 
 export function getCommitteeStorageDir(committeeSlug: string): string {
   // Sanitize slug to prevent path traversal
   const cleanSlug = committeeSlug.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
   const dir = path.join(STORAGE_ROOT, cleanSlug);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    return dir;
+  } catch (err: unknown) {
+    const error = err as { code?: string };
+    if (error.code === 'EACCES') {
+      const fallbackDir = path.join('/tmp', 'festos-storage', 'documents', cleanSlug);
+      if (!fs.existsSync(fallbackDir)) {
+        fs.mkdirSync(fallbackDir, { recursive: true });
+      }
+      return fallbackDir;
+    }
+    throw err;
   }
-  return dir;
 }
 
 export function getFileCategory(ext: string): 'image' | 'pdf' | 'text' | 'spreadsheet' | 'document' | 'other' {

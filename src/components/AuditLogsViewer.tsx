@@ -27,9 +27,15 @@ import { LocalAuditLog } from '@/lib/db';
 
 interface AuditLogsViewerProps {
   initialLogs?: LocalAuditLog[];
+  committeeSlug?: string;
+  selectedDate?: string;
 }
 
-export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
+export default function AuditLogsViewer({
+  initialLogs,
+  committeeSlug,
+  selectedDate,
+}: AuditLogsViewerProps) {
   const [logs, setLogs] = useState<LocalAuditLog[]>(initialLogs || []);
   const [loading, setLoading] = useState(!initialLogs);
   const [error, setError] = useState<string | null>(null);
@@ -134,9 +140,28 @@ export default function AuditLogsViewer({ initialLogs }: AuditLogsViewerProps) {
         log.action.toLowerCase().includes(q) ||
         (log.changes && log.changes.toLowerCase().includes(q));
 
-      return matchesAction && matchesQuery;
+      if (!matchesAction || !matchesQuery) return false;
+
+      if (committeeSlug && committeeSlug !== 'all') {
+        const cLower = committeeSlug.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const roleLower = (log.committeeRoleId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const targetLower = (log.targetId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const changesLower = (log.changes || '').toLowerCase();
+        const matchesComm =
+          roleLower.includes(cLower) ||
+          targetLower.includes(cLower) ||
+          changesLower.includes(cLower);
+        if (!matchesComm) return false;
+      }
+
+      if (selectedDate) {
+        const dateStr = new Date(log.createdAt).toISOString();
+        if (!dateStr.startsWith(selectedDate)) return false;
+      }
+
+      return true;
     });
-  }, [logs, selectedAction, searchQuery]);
+  }, [logs, selectedAction, searchQuery, committeeSlug, selectedDate]);
 
   const handleExportCSV = () => {
     if (filteredLogs.length === 0) return;

@@ -87,7 +87,7 @@ export default async function ManagementPage() {
         </div>
 
         {/* Universal Committee Quick Action Modules */}
-        <UniversalCommitteeActions showInfra={true} />
+        <UniversalCommitteeActions />
 
         {/* Cross-Committee Internal Assessment Hub */}
         <InternalAssessmentHub />

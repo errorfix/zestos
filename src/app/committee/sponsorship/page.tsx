@@ -2,6 +2,7 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import SponsorshipManager from '@/components/SponsorshipManager';
 import CommitteeDailyTracker from '@/components/CommitteeDailyTracker';
+import UniversalCommitteeActions from '@/components/UniversalCommitteeActions';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminSessionToken, getRoleById } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -94,6 +95,12 @@ export default async function SponsorshipCommitteePage() {
             </a>
           </div>
         </div>
+
+        {/* Quick Universal Committee Operations */}
+        <UniversalCommitteeActions
+          committeeSlug="sponsorship"
+          committeeName="Sponsorship & Corporate Partnerships Committee"
+        />
 
         {/* Brand Outreach & Deals Pipeline Section */}
         <section className="space-y-4">

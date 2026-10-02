@@ -56,6 +56,9 @@ COPY --from=builder /app/src ./src
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Create persistent storage directory for committee documents & uploads and set permissions
+RUN mkdir -p /app/storage/documents && chown -R nextjs:nodejs /app/storage
+
 USER nextjs
 
 EXPOSE 3000
