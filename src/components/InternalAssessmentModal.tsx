@@ -78,6 +78,8 @@ interface InternalAssessmentModalProps {
   onClose: () => void;
   onSelectModule?: (module: AssessmentModuleType) => void;
   initialCommitteeSlug?: string;
+  canEditAttendance?: boolean;
+  isReadOnly?: boolean;
 }
 
 export default function InternalAssessmentModal({
@@ -86,6 +88,8 @@ export default function InternalAssessmentModal({
   onClose,
   onSelectModule,
   initialCommitteeSlug,
+  canEditAttendance = true,
+  isReadOnly = false,
 }: InternalAssessmentModalProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -294,9 +298,9 @@ export default function InternalAssessmentModal({
           ))}
         </div>
 
-        {/* Far Right: Apply Changes (Only for Attendance Tracking) + Close Button */}
+        {/* Far Right: Apply Changes (Only for Attendance Tracking & ONLY IF CAN EDIT ATTENDANCE) + Close Button */}
         <div className="flex items-center gap-2">
-          {activeModule === 'attendance' && (
+          {activeModule === 'attendance' && canEditAttendance && !isReadOnly && (
             <button
               type="button"
               onClick={handleApplyAttendance}
@@ -350,6 +354,7 @@ export default function InternalAssessmentModal({
             committeeName={effectiveCommitteeName}
             initialDate={selectedDate}
             isAllTime={isAllTime}
+            isReadOnly={!canEditAttendance || isReadOnly}
           />
         )}
 

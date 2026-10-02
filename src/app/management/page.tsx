@@ -89,8 +89,12 @@ export default async function ManagementPage() {
         {/* Universal Committee Quick Action Modules */}
         <UniversalCommitteeActions />
 
-        {/* Cross-Committee Internal Assessment Hub */}
-        <InternalAssessmentHub />
+        {/* Cross-Committee Internal Assessment Observatory (Read-Only) */}
+        <InternalAssessmentHub
+          canEditAttendance={false}
+          isReadOnly={true}
+          title="Internal Assessment Observatory:"
+        />
 
         {/* Management Observatory Main Dashboard Component */}
         <ManagementDashboardView

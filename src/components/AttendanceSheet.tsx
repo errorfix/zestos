@@ -51,18 +51,30 @@ interface AttendanceSheetProps {
   committeeSlug?: string;
   committeeName?: string;
   initialDate?: string;
+  selectedDate?: string;
   isAllTime?: boolean;
+  isReadOnly?: boolean;
 }
 
 export default function AttendanceSheet({
   committeeSlug,
   committeeName,
   initialDate,
+  selectedDate: propSelectedDate,
   isAllTime = false,
+  isReadOnly = false,
 }: AttendanceSheetProps) {
-  const [selectedDate, setSelectedDate] = useState<string>(
-    initialDate || new Date().toISOString().split('T')[0]
-  );
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    if (propSelectedDate) return propSelectedDate;
+    if (initialDate) return initialDate;
+    return new Date().toISOString().split('T')[0];
+  });
+
+  useEffect(() => {
+    if (propSelectedDate && propSelectedDate !== selectedDate) {
+      setSelectedDate(propSelectedDate);
+    }
+  }, [propSelectedDate]);
 
   useEffect(() => {
     if (initialDate && initialDate !== selectedDate) {
@@ -86,11 +98,6 @@ export default function AttendanceSheet({
   const [pageSize, setPageSize] = useState<number>(50);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchFilter, setSearchFilter] = useState<string>('');
-
-  // New Roll Number Input
-  const [newRollNo, setNewRollNo] = useState('');
-  const [newStudentName, setNewStudentName] = useState('');
-  const [addingMember, setAddingMember] = useState(false);
 
   const fetchAttendance = async () => {
     setLoading(true);
@@ -123,8 +130,8 @@ export default function AttendanceSheet({
         setPublishInfo(data.publishInfo || null);
         setLatestPublishedDate(data.latestPublishedDate || null);
 
-        const localIsFaculty = localOp?.operatorType === 'FACULTY';
-        const finalCanMark = Boolean(data.canMark || localIsFaculty);
+        const isHamObservatory = Boolean(data.isHAM || isReadOnly);
+        const finalCanMark = !isHamObservatory && Boolean(data.canMark || (data.canEdit && localOp?.operatorType === 'FACULTY'));
         setCanMark(finalCanMark);
         setOperatorType(localOp?.operatorType || data.operatorType || (finalCanMark ? 'FACULTY' : 'STUDENT'));
         setOperatorName(localOp?.operatorName || data.operatorName || (finalCanMark ? 'Faculty In-Charge' : null));
@@ -189,47 +196,6 @@ export default function AttendanceSheet({
       newMap[m.rollNumber] = val;
     }
     setPresenceMap(newMap);
-  };
-
-  const handleAddRollNumber = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newRollNo.trim()) return;
-
-    setAddingMember(true);
-    try {
-      const localOp = getLocalOperator();
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (localOp) {
-        headers['x-operator-name'] = localOp.operatorName;
-        headers['x-operator-roll'] = localOp.operatorRollNo;
-        headers['x-operator-type'] = localOp.operatorType;
-      }
-
-      const res = await fetch('/api/attendance', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          action: 'ADD_ROLL_NUMBER',
-          committee: committeeSlug,
-          rollNumber: newRollNo.trim().toUpperCase(),
-          studentName: newStudentName.trim() || undefined,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to add roll number');
-      }
-
-      showToast(`✓ Added Roll Number ${newRollNo.trim().toUpperCase()}`);
-      setNewRollNo('');
-      setNewStudentName('');
-      fetchAttendance();
-    } catch (err) {
-      showToast(`Error: ${(err as Error).message}`);
-    } finally {
-      setAddingMember(false);
-    }
   };
 
   const handlePushAttendance = async () => {
@@ -391,6 +357,12 @@ export default function AttendanceSheet({
                   Sealed &amp; Published
                 </span>
               )}
+              {!canMark && (
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-amber-700" />
+                  View-Only Observatory
+                </span>
+              )}
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
               {isAllTime ? 'Master Attendance Archive (All Time)' : 'Committee Attendance Roster & Daily Publish'}
@@ -398,7 +370,9 @@ export default function AttendanceSheet({
             <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
               {isAllTime
                 ? 'Comprehensive institutional record of student volunteer presence across all recorded dates and committees.'
-                : 'Mark student roll numbers present or absent for duty. Only Faculty Staff In-Charge can push and seal attendance records.'}
+                : canMark
+                ? 'Mark student roll numbers present or absent for duty. Only Faculty Staff In-Charge or CS&IT Administration can push and seal attendance records.'
+                : 'Higher Authority Observatory: View-only inspection mode. Attendance modifications and publishing are exclusive to CS&IT Committee.'}
             </p>
           </div>
 
@@ -431,17 +405,13 @@ export default function AttendanceSheet({
                   <Lock className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Pushed on {new Date(publishInfo.publishedAt).toLocaleDateString('en-IN')}</span>
                 </div>
-              ) : (
+              ) : canMark ? (
                 <button
                   type="button"
                   onClick={handlePushAttendance}
-                  disabled={submitting || !canMark}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold text-white shadow-md transition-all ${
-                    canMark
-                      ? 'bg-emerald-600 hover:bg-emerald-700 cursor-pointer'
-                      : 'bg-slate-400 cursor-not-allowed opacity-75'
-                  }`}
-                  title={canMark ? 'Push attendance to central system' : 'Only Faculty In-Charge can push attendance'}
+                  disabled={submitting}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold text-white shadow-md transition-all bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
+                  title="Push attendance to central system"
                 >
                   {submitting ? (
                     <>
@@ -455,6 +425,11 @@ export default function AttendanceSheet({
                     </>
                   )}
                 </button>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                  <Lock className="w-3.5 h-3.5 text-slate-500" />
+                  <span>View Only (CS&amp;IT Exclusive)</span>
+                </div>
               )
             )}
           </div>
@@ -506,39 +481,6 @@ export default function AttendanceSheet({
         </div>
       </div>
 
-      {/* Add New Student Roll Number Bar (Only in committee single-date view) */}
-      {!isAllTime && (
-        <form onSubmit={handleAddRollNumber} className="bg-white p-4 rounded-3xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-700 shrink-0">
-            <Plus className="w-4 h-4 text-emerald-600" />
-            <span>Add Roll Number to Roster:</span>
-          </div>
-          <input
-            type="text"
-            maxLength={20}
-            required
-            value={newRollNo}
-            onChange={(e) => setNewRollNo(e.target.value)}
-            placeholder="e.g. 23BTECH104 (max 20 chars)"
-            className="flex-1 px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold uppercase text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white"
-          />
-          <input
-            type="text"
-            value={newStudentName}
-            onChange={(e) => setNewStudentName(e.target.value)}
-            placeholder="Student Name (Optional)"
-            className="flex-1 px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white"
-          />
-          <button
-            type="submit"
-            disabled={addingMember}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-colors shrink-0 disabled:opacity-50 cursor-pointer"
-          >
-            {addingMember ? 'Adding...' : 'Add to Roster'}
-          </button>
-        </form>
-      )}
-
       {/* Attendance Table Container with Gmail-style 25-150 Pagination */}
       {loading ? (
         <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center shadow-xs">
@@ -554,7 +496,7 @@ export default function AttendanceSheet({
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
             {isAllTime
               ? 'No historical attendance records have been registered for this filter selection yet.'
-              : 'Use the bar above to enter volunteer roll numbers for this committee. Roll numbers are recorded once and persist across all days.'}
+              : 'No volunteer records found for this committee on the selected date.'}
           </p>
         </div>
       ) : (
@@ -698,18 +640,20 @@ export default function AttendanceSheet({
                   return (
                     <tr
                       key={member.id || idx}
-                      onClick={() => handleToggle(member.rollNumber)}
+                      onClick={() => canMark && !publishInfo && !isAllTime && handleToggle(member.rollNumber)}
                       className={`transition-colors ${
-                        canMark && !publishInfo ? 'cursor-pointer hover:bg-slate-50' : ''
+                        canMark && !publishInfo && !isAllTime ? 'cursor-pointer hover:bg-slate-50' : ''
                       } ${isPresent ? 'bg-emerald-50/30' : ''}`}
                     >
                       <td className="py-3 px-4 text-center">
                         <input
                           type="checkbox"
                           checked={isPresent}
-                          disabled={!canMark || Boolean(publishInfo)}
-                          onChange={() => handleToggle(member.rollNumber)}
-                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                          disabled={!canMark || Boolean(publishInfo) || isAllTime}
+                          onChange={() => canMark && !publishInfo && !isAllTime && handleToggle(member.rollNumber)}
+                          className={`w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 ${
+                            canMark && !publishInfo && !isAllTime ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+                          }`}
                         />
                       </td>
                       <td className="py-3 px-4 font-mono font-bold text-slate-900">

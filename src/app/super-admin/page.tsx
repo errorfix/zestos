@@ -72,8 +72,12 @@ export default async function SuperAdminPage() {
         {/* Universal CS&IT Operations Quick Action Bar */}
         <UniversalCommitteeActions />
 
-        {/* Cross-Committee Internal Assessment Hub */}
-        <InternalAssessmentHub />
+        {/* Cross-Committee Internal Assessment Hub (Full Edit & Administration) */}
+        <InternalAssessmentHub
+          canEditAttendance={true}
+          isReadOnly={false}
+          title="Internal Assessment Hub (CS&IT):"
+        />
 
         {/* Dynamic Super Admin View with Isolated Committee Switcher */}
         <SuperAdminView

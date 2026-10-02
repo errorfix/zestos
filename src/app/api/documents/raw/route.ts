@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const requestedCommittee = searchParams.get('committee');
     const fileName = searchParams.get('file');
+    const folder = searchParams.get('folder');
     const isDownload = searchParams.get('download') === 'true';
 
     if (!fileName) {
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized committee scope' }, { status: 403 });
     }
 
-    const dir = getCommitteeStorageDir(slug);
+    const dir = getCommitteeStorageDir(slug, folder || undefined);
     const cleanFileName = path.basename(fileName);
     const filePath = path.join(dir, cleanFileName);
 

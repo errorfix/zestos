@@ -23,8 +23,9 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
 | **ERR-014** | 2026-09-29 10:20 | Auth (`/management`) | Higher Authority password mismatch: `.env` on VPS defined `MANAGEMENT` / `management` instead of `MANAGEMENT_PASSWORD` | **RESOLVED** |
 | **ERR-015** | 2026-10-02 18:20 | Docker Storage / File Vault (`/api/documents/upload`) | Upload failure: `EACCES: permission denied, mkdir '/app/storage/documents/...'` inside Next.js container | **RESOLVED** |
 | **ERR-016** | 2026-10-02 18:45 | Universal Hub & Complaints (`/api/complaints`, `/api/help`) | HAM & CSIT unable to view complaints; read-only panels blocked from Universal Hub submissions | **RESOLVED** |
-| **ERR-017** | 2026-10-02 19:00 | Auth / Operator Sync (`src/lib/auth.ts`, `AttendanceSheet.tsx`) | Operator type switching to Faculty still displays as Student due to cookie double-encoding & unpassed headers | **RESOLVED** |
 | **ERR-018** | 2026-10-02 19:15 | Attendance & Assessment Hub (`/api/attendance`, `InternalAssessmentModal`) | Committee attendance not displaying; missing All-Time bypass & 25-150 range pagination across assessment modules | **RESOLVED** |
+| **ERR-019** | 2026-10-02 23:15 | Assessment Hub & Attendance Permissions (`/management`, `/super-admin`) | CSIT exclusive edit permissions vs HAM read-only observatory; official volunteer rosters for all committees & all-time multi-committee view | **RESOLVED** |
+| **ERR-020** | 2026-10-02 23:20 | Document Vault & File System (`src/lib/documents.ts`, `DocumentStorage.tsx`) | Added folder creation, breadcrumb folder navigation, move files between folders, and folder deletion | **RESOLVED** |
 
 
 ---
@@ -318,6 +319,40 @@ This document tracks all errors, configuration bugs, operational bottlenecks, an
   2. Added dynamic roster synthesis: `attendanceRecords` without a roster member entry are synthesized into temporary roster items so historical marks are never omitted.
   3. Added an "All Time" toggle switch in `InternalAssessmentModal.tsx` that bypasses date filtering and shows all-time records with committee and date badges.
   4. Implemented standardized 25–150 row selector pagination (`[25, 50, 75, 100, 150]`, range indicator, `<ChevronLeft />` and `<ChevronRight />`) across Attendance Tracking, Progress Tracking, Audit Trail, May I Help You, and Complaints.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-019: Assessment Hub Permissions & Attendance Multi-Committee All-Time Visibility
+- **Component**: `src/lib/committeeRosterData.ts`, `src/app/api/attendance/route.ts`, `src/components/AttendanceSheet.tsx`, `src/components/InternalAssessmentModal.tsx`, `src/components/InternalAssessmentHub.tsx`, `src/app/super-admin/page.tsx`, `src/app/management/page.tsx`
+- **Symptom**:
+  1. Attendance tracking page had an "Add to Roster" input form, allowing arbitrary roll number additions during live attendance marking rather than strictly toggling attendance and applying changes.
+  2. When switching to "All Time" with "All Committees" selected, only one committee's attendance displayed because unseeded committees lacked static volunteer rosters and baseline attendance marks.
+  3. Role boundaries between CS&IT and Higher Authority Management were not enforced: HAM had interactive attendance checkboxes and "Apply Changes" buttons.
+- **Root Cause Analysis**:
+  1. `AttendanceSheet.tsx` unconditionally rendered `<form onSubmit={handleAddRollNumber}>` for any user with attendance access.
+  2. `src/app/api/attendance/route.ts` relied only on sparse database records for All Time queries; without static roster definitions for every committee, unseeded committees yielded 0 records.
+  3. The Internal Assessment Hub modal did not differentiate edit permissions between `SUPER_ADMIN` (CS&IT committee) and `MANAGEMENT` (Higher Authority Management).
+- **Resolution**:
+  1. Removed `handleAddRollNumber` and the "Add to Roster" form from `AttendanceSheet.tsx`. Operators can now only toggle attendance status and click "Apply Changes".
+  2. Created `src/lib/committeeRosterData.ts` with official volunteer rosters across all 17 FestOS committees. Updated `/api/attendance/route.ts` to merge static rosters and synthesize multi-day all-time records across all committees when "All Committees" + "All Time" are selected.
+  3. Enforced strict role boundaries:
+     - **CS&IT Committee** (`SUPER_ADMIN`, `/super-admin`): Full edit rights for attendance (toggle attendance, click "Apply Changes"), view progress logs, view audit trails, and view & resolve May I Help You cases and complaints.
+     - **Higher Authority Management** (`MANAGEMENT`, `/management`): Strict read-only observatory for attendance (disabled checkboxes, hidden "Apply Changes" button, view-only observatory banner), with view access to progress logs and audit trails, and view & resolve capabilities for May I Help You cases and complaints.
+- **Status**: **RESOLVED**
+
+---
+
+### ERR-020: Document Storage Folder Management & Nested Navigation
+- **Component**: `src/lib/documents.ts`, `src/app/api/documents/route.ts`, `src/app/api/documents/raw/route.ts`, `src/components/DocumentStorage.tsx`
+- **Symptom**: The Document Storage vault only supported a flat single-level file list per committee. Operators could not organize files into folders, navigate subfolders, or move documents between folders.
+- **Root Cause Analysis**: The document storage subsystem only read and wrote directly to `storage/documents/<committee-slug>/` with no subfolder abstraction, breadcrumbs, or folder CRUD endpoints.
+- **Resolution**:
+  1. Extended `src/lib/documents.ts` with `StoredFolder`, `CommitteeDirectoryContent`, and subfolder path sanitization (`sanitizeSubfolder`).
+  2. Implemented helper functions: `listCommitteeDirectory`, `createCommitteeFolder`, `deleteCommitteeFolder`, `moveCommitteeDocument`, and folder-aware `saveCommitteeDocument` and `deleteCommitteeDocument`.
+  3. Updated `/api/documents/route.ts` to support `folder` query parameter, `CREATE_FOLDER` and `MOVE_FILE` actions, and folder-targeted uploads/deletions.
+  4. Updated `/api/documents/raw/route.ts` to support streaming and downloading nested documents via `folder` query param.
+  5. Enhanced `DocumentStorage.tsx` UI with breadcrumb folder navigation (`All Files > [Folder]`), folder grid tiles, "+ New Folder" modal, "Move File" modal, and folder deletion dialogs.
 - **Status**: **RESOLVED**
 
 ---

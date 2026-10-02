@@ -15,11 +15,17 @@ import InternalAssessmentModal, {
 interface InternalAssessmentHubProps {
   className?: string;
   initialCommitteeSlug?: string;
+  canEditAttendance?: boolean;
+  isReadOnly?: boolean;
+  title?: string;
 }
 
 export default function InternalAssessmentHub({
   className = '',
   initialCommitteeSlug,
+  canEditAttendance = true,
+  isReadOnly = false,
+  title = 'Internal Assessment Hub:',
 }: InternalAssessmentHubProps) {
   const [activeModal, setActiveModal] = useState<AssessmentModuleType | null>(
     null
@@ -33,8 +39,13 @@ export default function InternalAssessmentHub({
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-            Internal Assessment Hub:
+            {title}
           </span>
+          {isReadOnly && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+              Observatory
+            </span>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -97,6 +108,8 @@ export default function InternalAssessmentHub({
         onClose={() => setActiveModal(null)}
         onSelectModule={(mod) => setActiveModal(mod)}
         initialCommitteeSlug={initialCommitteeSlug}
+        canEditAttendance={canEditAttendance}
+        isReadOnly={isReadOnly}
       />
     </>
   );
